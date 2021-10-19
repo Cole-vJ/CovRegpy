@@ -237,7 +237,7 @@ if __name__ == "__main__":
         cov_3d[:, :, depth] = Psi_est + np.matmul(np.matmul(B_est.T, mod_x_cov[:, depth]).reshape(2, -1),
                                                   np.matmul(mod_x_cov[:, depth].T, B_est).reshape(-1, 2))
 
-    fig, axs = plt.subplots(1, 2, figsize=(10, 10))
+    fig, axs = plt.subplots(1, 2, figsize=(8, 5))
     fig.suptitle('Rank 1 Figure 5 in Hoff and Niu (2012)')
     axs[0].scatter(peter_hoff_data['age'], peter_hoff_data['fev'], facecolor='none', edgecolor='black')
     axs[0].plot(np.linspace(4, 18, 15), mean_fev, linewidth=3, c='k')
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     axs[1].set_yticks([45, 50, 55, 60, 65, 70, 75])
     plt.show()
 
-    fig, axs = plt.subplots(1, 3, figsize=(10, 10))
+    fig, axs = plt.subplots(1, 3, figsize=(8, 5))
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
     fig.suptitle('Rank 1 Figure 6 in Hoff and Niu (2012)')
     axs[0].plot(np.linspace(4, 18, 15), cov_3d[0, 0, :], c='grey')

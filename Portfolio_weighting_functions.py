@@ -8,6 +8,11 @@ def obj_fun(x, p_cov, rb):
     return np.sum((x * np.dot(p_cov, x) / np.dot(x.transpose(), np.dot(p_cov, x)) - rb) ** 2)
 
 
+# risk budgeting approach
+def global_obj_fun(x, p_cov):
+    return np.sum(x * np.dot(p_cov, x))
+
+
 # equality constraint: = 0
 def cons_sum_weight(x):
    return np.sum(x) - 1
@@ -20,9 +25,16 @@ def cons_long_only_weight(x):
 
 # risk budgeting weighting
 def rb_p_weights(cov):
-   w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
-   cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
-   return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]), method='SLSQP', constraints=cons)
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
+    return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]), method='SLSQP', constraints=cons)
+
+
+# global minimum weights
+def global_weights(cov):
+    return (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
+            np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1), np.matmul(np.linalg.inv(cov),
+                                                                          np.ones(np.shape(cov)[1]).flatten())))[:, 0]
 
 
 if __name__ == "__main__":
