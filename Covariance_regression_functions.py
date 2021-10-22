@@ -103,7 +103,15 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups):
 def gamma_v_m_error(errors, x, Psi, B):
 
     # follows calculation at the bottom of page 9 of paper
-    const = np.matmul(np.linalg.solve(Psi.astype(np.float64), B.T.astype(np.float64)), x)
+    try:
+        const = np.matmul(np.linalg.solve(Psi.astype(np.float64), B.T.astype(np.float64)), x)
+    except:
+        const = np.matmul(np.linalg.lstsq(Psi.astype(np.float64), B.T.astype(np.float64), rcond=None)[0], x)
+
+        # # pseudo-inverse solution approximation
+        # const = np.matmul(np.linalg.solve(Psi.astype(np.float64).dot(Psi.astype(np.float64).T),
+        #                                   Psi.astype(np.float64).dot(B.T.astype(np.float64))), x)
+
     v = (1 + (x * np.matmul(B, const)).sum(0)) ** (-1)
     m = v * sum(errors * const)
 

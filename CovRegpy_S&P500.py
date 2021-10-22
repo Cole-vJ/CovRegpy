@@ -9,8 +9,8 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 
 tickers = pd.read_csv('constituents.csv', header=0)
-# tickers_format = [f"{np.asarray(tickers)[i, 0]}" for i in range(np.shape(tickers)[0])]
-tickers_format = [f"{np.asarray(tickers)[i, 0]}" for i in range(100)]  # temp debugging
+tickers_format = [f"{np.asarray(tickers)[i, 0].replace('.', '-')}" for i in range(np.shape(tickers)[0])]
+# tickers_format = [f"{np.asarray(tickers)[i, 0].replace('.', '-')}" for i in range(50)]  # temp debugging
 data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
 close_data = data['Close']
 # close_data.to_csv('sp_500_close_3_year.csv')
@@ -20,6 +20,8 @@ close_data = data['Close']
 # close_data = close_data.set_index('Date')
 date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
 close_data = close_data.reindex(date_index).interpolate()
+close_data = close_data = close_data[::-1].interpolate()
+close_data = close_data = close_data[::-1]
 
 risk_free = (0.02 / 365)  # daily risk free rate
 
@@ -79,6 +81,10 @@ for lag in range(forecast_days):
         returns_subset = returns[int(lag + 29):int(model_days + lag + 29), :]  # extract relevant returns
 
         actual_covariance = np.cov(returns_subset.T)  # calculation of realised covariance
+
+        # # find coefficents for mean splines
+        # coef = np.linalg.lstsq(spline_basis_transform.T, returns_subset, rcond=None)[0]
+        # mean = np.matmul(coef.T, spline_basis_transform)  # calculate mean
 
         try:
             # find coefficents for mean splines

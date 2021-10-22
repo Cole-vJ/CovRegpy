@@ -32,9 +32,14 @@ def rb_p_weights(cov):
 
 # global minimum weights
 def global_weights(cov):
-    return (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
-            np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1), np.matmul(np.linalg.inv(cov),
-                                                                          np.ones(np.shape(cov)[1]).flatten())))[:, 0]
+    try:
+        return (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
+                np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
+                          np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
+    except:
+        return (np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
+                np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
+                          np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
 
 
 if __name__ == "__main__":
