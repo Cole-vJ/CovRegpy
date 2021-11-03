@@ -23,6 +23,15 @@ def cons_long_only_weight(x):
 # risk budgeting weighting
 def sharpe_rb_p_weights(cov, returns, risk_free):
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
-    cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
+    cons = ({'type': 'eq', 'fun': cons_sum_weight})
     return minimize(sharpe_obj_fun, w0, args=(cov, returns, risk_free), method='SLSQP', constraints=cons)
+
+
+# global minimum weights
+def sharpe_weights(cov, returns, risk_free):
+
+    return (np.matmul(np.linalg.inv(cov),
+                     (returns - risk_free * np.ones_like(returns)).reshape(-1, 1)) / \
+            np.matmul(np.ones_like(returns).reshape(1, -1),
+                      np.matmul(np.linalg.inv(cov), (returns - risk_free * np.ones_like(returns)).reshape(-1, 1))))[:, 0]
 

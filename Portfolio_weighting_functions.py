@@ -42,6 +42,13 @@ def global_weights(cov):
                           np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
 
 
+# risk budgeting weighting
+def global_weights_long(cov):
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
+    return minimize(global_obj_fun, w0, args=(cov), constraints=cons)
+
+
 if __name__ == "__main__":
 
     variance = np.zeros((2, 2))
