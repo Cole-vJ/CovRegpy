@@ -26,7 +26,7 @@ returns = (np.log(np.asarray(close_data)[1:, :]) -
 
 tickers = close_data.columns.values.tolist()
 model_days = 701  # 2 years - less a month
-forecast_days = np.shape(close_data)[0] - model_days
+forecast_days = np.shape(close_data)[0] - model_days - 30
 
 spline_basis_transform = emd_basis.Basis(time_series=np.arange(model_days), time=np.arange(model_days))
 spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=np.linspace(0, model_days - 1, knots))
@@ -154,7 +154,7 @@ for lag in range(forecast_days):
         plt.title(f'Efficient Frontier')
         plt.ylabel('Expected returns')
         plt.xlabel('Expected variance of returns')
-        plt.legend(loc='centre right')
+        plt.legend(loc='best')
         plt.show()
 
     weights[lag, :] = weights_Model
@@ -164,9 +164,10 @@ for lag in range(forecast_days):
     risk_return_Equal.append(np.exp(sum(((1 / np.shape(close_data)[1]) * np.ones(np.shape(close_data)[1])) *
                                         returns[int(model_days + lag + 29), :])))
 
-plt.plot(risk_return_Model)
-plt.plot(risk_return_Covariance)
-plt.plot(risk_return_Equal)
+plt.plot(np.cumprod(risk_return_Model), label='Model')
+plt.plot(np.cumprod(risk_return_Covariance), label='Realised')
+plt.plot(np.cumprod(risk_return_Equal), label='Equal')
+plt.legend(loc='best')
 plt.show()
 
 temp = 0

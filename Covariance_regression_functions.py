@@ -74,6 +74,9 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups):
         reg_ridge.fit(x_tilda, y_tilda)
         B_est = reg_ridge.coef_
     elif technique == 'elastic-net':
+        # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html
+        # Minimize:
+        # 1 / (2 * n_samples) * ||y - Xw||^2_2 + alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
         # l1_ratio = 0 --> l2 penalty only --> linear_model.Ridge(alpha=alpha, fit_intercept=False)
         # l1_ratio = 1 --> l1 penalty only --> linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False)
         reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.5, max_iter=max_iter)
