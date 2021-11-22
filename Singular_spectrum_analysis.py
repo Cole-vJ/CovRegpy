@@ -2,8 +2,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Hassani, H. (2007). Singular Spectrum Analysis: Methodology and Comparison.
+# Cardiff University and Central Bank of the Islamic Republic of Iran.
+# https://mpra.ub.uni-muenchen.de/4991/
 
-def ssa(time_series, L, est=3):
+
+def ssa(time_series, L, est=3, plot=False):
 
     # decomposition - embedding
     X = np.zeros((L, len(time_series) - L + 1))
@@ -21,7 +25,7 @@ def ssa(time_series, L, est=3):
 
     # reconstruction - grouping
     X_estimate = X_storage[0]
-    for j in range(1, 3):
+    for j in range(1, est):
         X_estimate += X_storage[j]
 
     # reconstruction - averaging
@@ -34,8 +38,9 @@ def ssa(time_series, L, est=3):
             averaging_vector[-int(col + 1)] -= (L - col - 1)
     time_series_est /= averaging_vector
 
-    plt.plot(time_series)
-    plt.plot(time_series_est, '--')
-    plt.show()
+    if plot:
+        plt.plot(time_series)
+        plt.plot(time_series_est, '--')
+        plt.show()
 
     return time_series_est

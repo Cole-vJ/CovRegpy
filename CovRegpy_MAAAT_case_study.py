@@ -2,7 +2,8 @@
 import numpy as np
 import pandas as pd
 from PCA_functions import pca_func
-from singular_spectrum_analysis import ssa
+from Singular_spectrum_analysis import ssa
+from Singular_spectrum_decomposition import ssd
 from AdvEMDpy import AdvEMDpy, emd_basis
 from Covariance_regression_functions import cov_reg_given_mean
 from Portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
@@ -24,7 +25,13 @@ close_data = close_data = close_data[::-1]
 del date_index
 
 # singular spectrum analysis
-temp = ssa(np.asarray(close_data['MSFT'][-100:]), 10)
+plt.title('Singular Spectrum Analysis Example')
+for i in range(10):
+    plt.plot(ssa(np.asarray(close_data['MSFT'][-100:]), 10, est=i), '--')
+plt.show()
+
+# singular spectrum decomposition
+temp = ssd(np.asarray(close_data['MSFT'][-100:]), plot=True)
 
 # daily risk free rate
 risk_free = (0.02 / 365)
