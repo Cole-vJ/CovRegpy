@@ -31,7 +31,9 @@ for i in range(10):
 plt.show()
 
 # singular spectrum decomposition
-temp = ssd(np.asarray(close_data['MSFT'][-100:]), plot=True)
+temp = ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
+plt.plot(temp.T)
+plt.show()
 
 # daily risk free rate
 risk_free = (0.02 / 365)
