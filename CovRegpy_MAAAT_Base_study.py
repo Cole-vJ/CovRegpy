@@ -1,6 +1,9 @@
 
+import textwrap
 import numpy as np
 import pandas as pd
+import yfinance as yf
+from scipy.stats import norm
 from PCA_functions import pca_func
 from Singular_spectrum_analysis import ssa
 from Singular_spectrum_decomposition import ssd
@@ -8,8 +11,9 @@ from AdvEMDpy import AdvEMDpy, emd_basis
 from Covariance_regression_functions import cov_reg_given_mean
 from Portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
 from Maximum_Sharpe_ratio_portfolio import sharpe_weights, sharpe_rb_p_weights
-import yfinance as yf
 import matplotlib.pyplot as plt
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import ExpSineSquared, RBF, ConstantKernel
 
 # pull all close data
 tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
@@ -25,15 +29,15 @@ close_data = close_data = close_data[::-1]
 del date_index
 
 # singular spectrum analysis
-plt.title('Singular Spectrum Analysis Example')
-for i in range(10):
-    plt.plot(ssa(np.asarray(close_data['MSFT'][-100:]), 10, est=i), '--')
-plt.show()
+# plt.title('Singular Spectrum Analysis Example')
+# for i in range(10):
+#     plt.plot(ssa(np.asarray(close_data['MSFT'][-100:]), 10, est=i), '--')
+# plt.show()
 
 # singular spectrum decomposition
-temp = ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
-plt.plot(temp.T)
-plt.show()
+# temp = ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=False)
+# plt.plot(temp.T)
+# plt.show()
 
 # daily risk free rate
 risk_free = (0.02 / 365)
@@ -103,11 +107,78 @@ for lag in range(forecast_days):
         all_data = np.asarray(all_data)  # convert to numpy array
         groups = np.zeros((76, 1))  # to be used for group LASSO - to be developed later
 
+        # normalise data
+        x = np.asarray(all_data).T
+        # x = (x - np.tile(x.mean(axis=1).reshape(-1, 1),
+        #                  (1, np.shape(x)[1]))) / np.tile(x.std(axis=1).reshape(-1, 1), (1, np.shape(x)[1]))
+
         # extract returns one month ahead for forecasting
         returns_subset = returns[int(lag + 29):int(model_days + lag + 29), :]
 
         # calculation of realised covariance for comparison
         realised_covariance = np.cov(returns_subset.T)
+
+        # Gaussian Process - top
+
+        forecast_x = np.zeros((np.shape(all_data)[1], 1))
+        forecast_sigma = np.zeros((np.shape(all_data)[1], 1))
+        for imf in range(np.shape(all_data)[1]):
+            # assume function requires 2-D vector
+            subset_X = np.atleast_2d(time[int(model_days + lag - 100):int(model_days + lag + 1)]).T
+            X = np.atleast_2d(time[int(model_days + lag - 100):int(model_days + lag + 30)]).T
+            # financial data periodic kernel most appropriate
+            kernel = ExpSineSquared(length_scale=1.0, length_scale_bounds=(1e-01, 10.0),
+                                    periodicity=2 * np.pi, periodicity_bounds=(1e-01, 10.0))
+            # constant kernel and rbf kernel combination
+            # kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
+            # locally periodic kernel
+            # kernel = ExpSineSquared(length_scale=1.0, length_scale_bounds=(1e-01, 100.0),
+            #                         periodicity=2 * np.pi, periodicity_bounds=(1e-01, 100.0)) * RBF(10, (1e-2, 1e2))
+            # noise and quantify uncertainty
+            gaus_proc = GaussianProcessRegressor(kernel=kernel, alpha=1 ** 2, n_restarts_optimizer=10)
+            # fit process to time and signal subset
+            y = all_data[int(model_days - 100):, imf].ravel()
+            gaus_proc.fit(subset_X, y)
+            # predict full signal over full time sets
+            y_pred, sigma = gaus_proc.predict(np.atleast_2d(X), return_std=True)
+            forecast_x[imf, 0] = y_pred[-1]
+            forecast_sigma[imf, 0] = sigma[-1]
+            # calculate confidence bounds
+            confidence_level = 0.95
+            bounds = norm.ppf(1 - (1 - confidence_level) / 2)
+
+            # plot Gaussian Process
+            # plt.plot(X, y_pred, 'b-', label='Prediction')
+            # plt.plot(subset_X, y, 'k:', label='True')
+            # plt.fill(np.concatenate([X, X[::-1]]),
+            #          np.concatenate([y_pred - bounds * sigma,
+            #                          (y_pred + bounds * sigma)[::-1]]),
+            #          alpha=.5, fc='b', ec='None',
+            #          label=textwrap.fill(f'{round(100 * confidence_level)}% confidence interval', 12))
+            # plt.show()
+
+        # find coefficents for mean splines
+        returns_subset_forecast = returns[lag:int(model_days + lag), :]
+        coef_forecast = np.linalg.lstsq(spline_basis_transform.T, returns_subset_forecast, rcond=None)[0]
+        mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform)  # calculate mean
+
+        # calculate covariance regression using forecasted x
+        B_est_forecast, Psi_est_forecast = cov_reg_given_mean(A_est=coef_forecast, basis=spline_basis_transform,
+                                                              x=x[:, :-1], y=returns_subset_forecast.T,
+                                                              iterations=10, technique='ridge', max_iter=500,
+                                                              groups=groups)
+
+        # final output of covariance regression model - used to forecast
+        variance_Model_forecast = Psi_est_forecast + np.matmul(np.matmul(B_est_forecast.T,
+                                                                forecast_x).astype(np.float64).reshape(-1, 1),
+                                                      np.matmul(forecast_x.T,
+                                                                B_est_forecast).astype(np.float64).reshape(1, -1)).astype(np.float64)
+        weights_Model_forecast = rb_p_weights(variance_Model_forecast).x
+        model_variance_forecast = global_obj_fun(weights_Model_forecast, variance_Model_forecast)
+        model_returns_forecast = sum(weights_Model_forecast * returns[int(model_days + lag + 29), :])
+        plt.scatter(np.sqrt(model_variance_forecast), model_returns_forecast, label='Model forecast')
+
+        # Gaussian Process - bottom
 
         # PCA portfolio - top
         pca_weights = pca_func(realised_covariance, 3)
@@ -121,11 +192,6 @@ for lag in range(forecast_days):
         coef = np.linalg.lstsq(spline_basis_transform.T, returns_subset, rcond=None)[0]
         mean = np.matmul(coef.T, spline_basis_transform)  # calculate mean
 
-        # normalise data
-        x = np.asarray(all_data).T
-        x = (x - np.tile(x.mean(axis=1).reshape(-1, 1),
-                         (1, np.shape(x)[1]))) / np.tile(x.std(axis=1).reshape(-1, 1), (1, np.shape(x)[1]))
-
         # calculate covariance regression matrices
         B_est, Psi_est = cov_reg_given_mean(A_est=coef, basis=spline_basis_transform,
                                             x=x[:, :-1], y=returns_subset.T,
@@ -136,6 +202,9 @@ for lag in range(forecast_days):
         variance_Model = Psi_est + np.matmul(np.matmul(B_est.T, x[:, -1]).astype(np.float64).reshape(-1, 1),
                                              np.matmul(x[:, -1].T, B_est).astype(np.float64).reshape(1, -1)).astype(np.float64)
         weights_Model = rb_p_weights(variance_Model).x
+        model_variance = global_obj_fun(weights_Model, variance_Model)
+        model_returns = sum(weights_Model * returns[int(model_days + lag + 29), :])
+        plt.scatter(np.sqrt(model_variance), model_returns, label='Model')
 
         # plot returns and variance of constituent stocks
         all_returns = returns[int(model_days + lag + 29), :]
