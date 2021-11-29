@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import linear_model
-from sklearn.linear_model import SGDRegressor
+from sklearn.linear_model import SGDRegressor, LassoLars, Lars
 
 sns.set(style='darkgrid')
 
@@ -125,7 +125,21 @@ def gamma_v_m_error(errors, x, Psi, B):
 
 
 def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', alpha=1, max_iter=10000,
-                       groups=np.arange(76)):
+                       groups=np.arange(76), LARS=False, true_coefficients=np.zeros((5, 15))):
+
+    if LARS:
+        reg = LassoLars(normalize=False, alpha=1e-05)
+        # reg = Lars(normalize=False)
+        reg.fit(X=x.T, y=y.T)
+        coef_paths = reg.coef_path_
+        xx = np.sum(np.abs(coef_paths[0]), axis=0)
+        xx /= xx[-1]
+        for path in range(len(coef_paths)):
+            for row in range(np.shape(coef_paths[path])[0]):
+                plt.plot(xx, coef_paths[path][row, :], label=f'Structure: {int(row + 1)} coef: {int(true_coefficients[path, row])}')
+            plt.vlines(xx, min(coef_paths[path][:, -1]), max(coef_paths[path][:, -1]), linestyle="dashed")
+            plt.legend(loc='upper left', fontsize=6)
+            plt.show()
 
     m = (np.random.normal(0, 1, np.shape(y)[1])).reshape(-1, 1)  # initialise m
     v = np.ones_like(m)  # initialise v
