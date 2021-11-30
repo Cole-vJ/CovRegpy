@@ -3,10 +3,9 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from AdvEMDpy import emd_basis
-from Covariance_regression_functions import cov_reg_given_mean
+from CovRegpy_covariance_regression_functions import cov_reg_given_mean
 import matplotlib.pyplot as plt
 from scipy.linalg import cholesky
-from sklearn.linear_model import Lars, LassoLars, lars_path
 from mpl_toolkits.mplot3d import Axes3D
 
 # set seed for random number generation - consistent results
@@ -16,9 +15,13 @@ np.random.seed(0)
 time = np.arange(1098)
 imfs_synth = np.zeros((15, 1098))
 for row in range(15):
-    imfs_synth[row, :] = 5 * np.cos(time * (3 * (row + 1) / 1097) * 2 * np.pi +
-                                    2 * np.pi * np.random.uniform(0, 1))  # easily distinguishable
+    imfs_synth[row, :] = np.cos(time * (3 * (row + 1) / 1097) * 2 * np.pi +
+                                2 * np.pi * np.random.uniform(0, 1))  # easily distinguishable
 del row
+
+# plot of synthetic underlying structures
+# plt.plot(imfs_synth.T)
+# plt.show()
 
 # daily risk free rate
 risk_free = (0.02 / 365)
@@ -42,18 +45,25 @@ del close_data, data, date_index, tickers_format
 
 # create correlation structure - random structure
 B = np.zeros((5, 15))
-# for i in range(5):
-#     for j in range(15):
-#         rand_uni = np.random.uniform(0, 1)
-#         B[i, j] = (-1) ** (i + j) if rand_uni > 1 / 2 else 0
-# del i, j, rand_uni
+for i in range(5):
+    for j in range(15):
+        rand_uni = np.random.uniform(0, 1)
+        B[i, j] = 0.1 * (-1) ** (i + j) if rand_uni > 1 / 2 else 0
+del i, j, rand_uni
 
-# LARS test
-B[:, 2] = 1
-B[:, 5] = -1
-B[:, 8] = 1
-B[:, 11] = -1
-B[:, 14] = 1
+# LARS test - best results
+# B[:, 2] = 1
+# B[:, 5] = -1
+# B[:, 8] = 1
+# B[:, 11] = -1
+# B[:, 14] = 1
+
+# LARS test - structures too close to be isolated
+# B[:, 2] = 1
+# B[:, 3] = -1
+# B[:, 4] = 1
+# B[:, 5] = -1
+# B[:, 6] = 1
 
 covariance_structure = np.zeros((5, 5, 1097))
 for day in range(np.shape(covariance_structure)[2]):
@@ -64,6 +74,10 @@ for day in range(np.shape(covariance_structure)[2]):
     returns[day, :] = np.dot(cholesky(covariance_structure[:, :, day], lower=True), returns[day, :])
 del day
 
+print(np.mean(np.mean(np.mean(np.abs(covariance_structure)))) / np.mean(np.mean(np.abs(base_covariance))))
+plt.plot(np.mean(np.mean(np.abs(covariance_structure), axis=0), axis=0) / np.mean(np.mean(np.abs(base_covariance))))
+plt.show()
+
 cumulative_returns = np.ones((1098, 5))
 cumulative_returns[1:, :] = np.cumprod(np.exp(returns), axis=0)
 date_index = pd.date_range(start='31/12/2018', end='01/01/2022')
@@ -73,18 +87,6 @@ close_data.iloc[:] = cumulative_returns
 
 plt.plot(cumulative_returns)
 plt.show()
-
-# https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_lars.html#sphx-glr-auto-examples-linear-model-plot-lasso-lars-py
-# reg = Lars(normalize=False)
-# reg.fit(X=imfs_synth[:, :-1].T, y=returns)
-# coef_paths = reg.coef_path_
-# xx = np.sum(np.abs(coef_paths[0]), axis=0)
-# xx /= xx[-1]
-
-# plt.plot(xx, coef_paths[0].T)
-# for i in xx:
-#     plt.plot(i * np.ones(101), np.linspace(np.min(coef_paths[0]), np.max(coef_paths[0]), 101), '--', label=i)
-# plt.show()
 
 model_days = 701  # 2 years - less a month
 forecast_days = np.shape(close_data)[0] - model_days - 30
@@ -115,17 +117,22 @@ for lag in range(forecast_days):
                                             groups=groups, LARS=True, true_coefficients=B)
 
         fig, axs = plt.subplots(5, 1)
-        assets = ['A', 'B', 'C', 'D', 'E']
+        assets = ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E']
         plt.suptitle('True Underlying Coefficients versus Estimated Coefficents')
         for i in range(5):
             axs[i].plot(np.arange(1, 16, 1), B[i, :],
                         label=f'True coefficents underlying returns of asset {assets[i]}')
             axs[i].plot(np.arange(1, 16, 1), (1 / risk_free) * -B_est[:, i].T, '--',
                         label=f'Estimate coefficents underlying returns of asset {assets[i]}')
-            axs[i].set_ylabel(f'{assets[i]}', rotation=90)
+            axs[i].set_ylabel(f'{assets[i]}', rotation=90, fontsize=10)
+            axs[i].set_xticks((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))
+            # axs[i].set_yticks((-1, 0, 1))
+            # axs[i].set_yticklabels(('-1', '0', '1'), fontsize=8)
             if i == 4:
-                axs[i].set_xticks((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))
-                axs[i].set_xlabel('Sinusoidal structures')
+                axs[i].set_xticklabels(('1', '2', '3', '4', '5',
+                                        '6', '7', '8', '9', '10',
+                                        '11', '12', '13', '14', '15'), fontsize=8)
+                axs[i].set_xlabel('Sinusoidal structures', fontsize=10)
         plt.savefig('figures/Synthetic_case_study.png')
         plt.show()
 

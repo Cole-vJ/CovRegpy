@@ -2,9 +2,9 @@
 import numpy as np
 import pandas as pd
 from AdvEMDpy import AdvEMDpy, emd_basis
-from Covariance_regression_functions import cov_reg_given_mean
-from Portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights
-from Maximum_Sharpe_ratio_portfolio import sharpe_rb_p_weights
+from CovRegpy_covariance_regression_functions import cov_reg_given_mean
+from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights
+from CovRegpy_portfolio_sharpe_ratio import sharpe_rb_p_weights
 import yfinance as yf
 import matplotlib.pyplot as plt
 

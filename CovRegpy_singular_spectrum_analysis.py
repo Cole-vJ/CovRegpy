@@ -1,5 +1,7 @@
 
 import numpy as np
+import pandas as pd
+import yfinance as yf
 import matplotlib.pyplot as plt
 
 # Hassani, H. (2007). Singular Spectrum Analysis: Methodology and Comparison.
@@ -44,3 +46,25 @@ def ssa(time_series, L, est=3, plot=False):
         plt.show()
 
     return time_series_est
+
+
+if __name__ == "__main__":
+
+    # pull all close data
+    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
+    data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
+    close_data = data['Close']
+    del data, tickers_format
+
+    # create date range and interpolate
+    date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
+    close_data = close_data.reindex(date_index).interpolate()
+    close_data = close_data[::-1].interpolate()
+    close_data = close_data[::-1]
+    del date_index
+
+    # singular spectrum analysis
+    plt.title('Singular Spectrum Analysis Example')
+    for i in range(10):
+        plt.plot(ssa(np.asarray(close_data['MSFT'][-100:]), 10, est=i), '--')
+    plt.show()

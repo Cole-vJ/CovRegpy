@@ -2,14 +2,17 @@
 import textwrap
 import scipy as sp
 import numpy as np
+import pandas as pd
+import yfinance as yf
 from matplotlib import mlab
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-from Singular_spectrum_analysis import ssa
+from CovRegpy_singular_spectrum_analysis import ssa
+from scipy.fft import fft
 
 # Bonizzi, P., Karel, J., Meste, O., & Peeters, R. (2014).
 # Singular Spectrum Decomposition: A New Method for Time Series Decomposition.
-# Advances in Adaptive Data Analysis, 6(04), 1450011-1 - 1450011-34. World Scientific.
+# Advances in Adaptive Data Analysis, 6(04), 1450011 (1-34). World Scientific.
 
 
 def gaussian(f, A, mu, sigma):
@@ -212,3 +215,24 @@ def ssd(time_series, nmse_threshold=0.01, plot=False):
     time_series_est_mat = np.vstack((time_series_est_mat, time_series_resid))
 
     return time_series_est_mat
+
+
+if __name__ == "__main__":
+
+    # pull all close data
+    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
+    data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
+    close_data = data['Close']
+    del data, tickers_format
+
+    # create date range and interpolate
+    date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
+    close_data = close_data.reindex(date_index).interpolate()
+    close_data = close_data[::-1].interpolate()
+    close_data = close_data[::-1]
+    del date_index
+
+    # singular spectrum decomposition
+    test = ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
+    plt.plot(test.T)
+    plt.show()

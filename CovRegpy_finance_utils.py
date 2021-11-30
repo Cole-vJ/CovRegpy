@@ -1,8 +1,8 @@
 
 import numpy as np
 from PCA_functions import pca_func
-from Maximum_Sharpe_ratio_portfolio import sharpe_weights
-from Portfolio_weighting_functions import global_obj_fun, global_weights
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights
+from CovRegpy_portfolio_weighting_functions import global_obj_fun, global_weights
 
 
 def efficient_frontier(global_minimum_weights, global_minimum_returns, global_minimum_sd,

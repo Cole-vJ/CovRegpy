@@ -5,11 +5,11 @@ import pandas as pd
 import yfinance as yf
 from scipy.stats import norm
 from AdvEMDpy import AdvEMDpy, emd_basis
-from Covariance_regression_functions import cov_reg_given_mean
-from Portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
-from Maximum_Sharpe_ratio_portfolio import sharpe_weights, sharpe_rb_p_weights
+from CovRegpy_covariance_regression_functions import cov_reg_given_mean
+from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_rb_p_weights
 import matplotlib.pyplot as plt
-from sklearn.gaussian_process.kernels import ExpSineSquared
+from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, RationalQuadratic
 
 from CovRegpy_finance_utils import efficient_frontier, global_minimum_information, sharpe_information, pca_information
 from CovRegpy_forecasting import gp_forecast
@@ -126,15 +126,25 @@ for lag in range(forecast_days):
 
             for imf in range(np.shape(all_data)[1]):
 
-                # financial data periodic kernel most appropriate
-                kernel = ExpSineSquared(length_scale=1.0, length_scale_bounds=(0.9, 1.1),
-                                        periodicity=2 * np.pi, periodicity_bounds=(10.0, 100.0))
+                # https://scikit-learn.org/stable/auto_examples/gaussian_process/plot_gpr_co2.html#sphx-glr-auto-examples-gaussian-process-plot-gpr-co2-py
+                # long term smooth rising trend
+                k1 = 66.0 ** 2 * RBF(length_scale=67.0)
+                # seasonal component
+                k2 = (2.4 ** 2 * RBF(length_scale=90.0) * ExpSineSquared(length_scale=1.3, periodicity=1.0))
+                # medium term irregularity
+                k3 = 0.66 ** 2 * RationalQuadratic(length_scale=1.2, alpha=0.78)
+                # noise terms
+                k4 = 0.18 ** 2 * RBF(length_scale=0.134) + WhiteKernel(noise_level=0.19 ** 2)
+
+                kernel = k1 + k2 + k3 + k4
+
+                forecast_lag = 100
 
                 # forecast time series
                 y_forecast, sigma, y_forecast_upper, y_forecast_lower = \
-                    gp_forecast(time[int(model_days + lag - 100):int(model_days + lag + 1)],
-                                all_data[int(model_days - 100):, imf],
-                                time[int(model_days + lag - 100):int(model_days + lag + 30)],
+                    gp_forecast(time[int(model_days + lag - forecast_lag):int(model_days + lag + 1)],
+                                all_data[int(model_days - forecast_lag):, imf],
+                                time[int(model_days + lag - forecast_lag):int(model_days + lag + 30)],
                                 kernel, 0.95, plot=False)
 
                 # store forecasted time series

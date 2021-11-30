@@ -5,12 +5,12 @@ import pandas as pd
 import yfinance as yf
 from scipy.stats import norm
 from PCA_functions import pca_func
-from Singular_spectrum_analysis import ssa
-from Singular_spectrum_decomposition import ssd
+from CovRegpy_singular_spectrum_analysis import ssa
+from CovRegpy_singular_spectrum_decomposition import ssd
 from AdvEMDpy import AdvEMDpy, emd_basis
-from Covariance_regression_functions import cov_reg_given_mean
-from Portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
-from Maximum_Sharpe_ratio_portfolio import sharpe_weights, sharpe_rb_p_weights
+from CovRegpy_covariance_regression_functions import cov_reg_given_mean
+from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_rb_p_weights
 import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ExpSineSquared, RBF, ConstantKernel

@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from AdvEMDpy import AdvEMDpy, emd_basis
-from Covariance_regression_functions import cov_reg_given_mean
-from Portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
-from Maximum_Sharpe_ratio_portfolio import sharpe_weights, sharpe_rb_p_weights
+from CovRegpy_covariance_regression_functions import cov_reg_given_mean
+from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_rb_p_weights
 import matplotlib.pyplot as plt
 
 np.random.seed(1)
@@ -49,9 +49,7 @@ weights = np.zeros((forecast_days, np.shape(close_data)[1]))
 
 # create list to which accumulated returns will be stored
 risk_return_Model = [1]
-risk_return_Equal = [1]
 risk_return_Covariance = [1]
-risk_return_pca = [1]
 
 # having created storage vectors, etc - proceed with algorithm
 for lag in range(forecast_days):
@@ -83,7 +81,7 @@ for lag in range(forecast_days):
                 for imf in range(np.shape(imfs)[0]):
                     all_data[f'{tickers[j]}_close_imf_{int(imf + 1)}'] = imfs[imf, :]
                 all_data_high_freq[f'{tickers[j]}_close_imf_{1}'] = imfs[0, :]
-                all_data_low_freq[f'{tickers[j]}_close_imf_{4}'] = imfs[-1, :]
+                all_data_low_freq[f'{tickers[j]}_close_imf_last'] = imfs[-1, :]
 
             except:
                 all_data[f'{tickers[j]}_close_imf_{1}'] = imfs
@@ -162,13 +160,6 @@ for lag in range(forecast_days):
             plt.scatter(np.sqrt(sharpe_maximum_variance), sharpe_maximum_returns,
                         zorder=11, c='black')
 
-            # equal weighting comparison
-            equal_variance = global_obj_fun(((1 / np.shape(close_data)[1]) * np.ones(np.shape(close_data)[1])),
-                                            variance_Model)
-            equal_returns = sum(((1 / np.shape(close_data)[1]) * np.ones(np.shape(close_data)[1]) *
-                                 returns[int(model_days + lag + 29), :]))
-            # plt.scatter(np.sqrt(equal_variance), equal_returns, label=f'Equal {low_high[j]}')
-
             # calculate efficient frontier
             efficient_frontier_sd = np.zeros(101)
             efficient_frontier_return = np.zeros(101)
@@ -198,13 +189,9 @@ for lag in range(forecast_days):
 
     risk_return_Model.append(np.exp(sum(weights_Model * returns[int(model_days + lag + 29), :])))
     risk_return_Covariance.append(np.exp(sum(weights_covariance * returns[int(model_days + lag + 29), :])))
-    risk_return_Equal.append(np.exp(sum(((1 / np.shape(close_data)[1]) * np.ones(np.shape(close_data)[1])) *
-                                        returns[int(model_days + lag + 29), :])))
 
 plt.plot(np.cumprod(risk_return_Model), label='Model')
 plt.plot(np.cumprod(risk_return_Covariance), label='Realised')
-# plt.plot(np.cumprod(risk_return_Equal), label='Equal')
-plt.plot(np.cumprod(risk_return_pca), label='PCA')
 plt.legend(loc='best')
 plt.show()
 

@@ -128,16 +128,21 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
                        groups=np.arange(76), LARS=False, true_coefficients=np.zeros((5, 15))):
 
     if LARS:
-        reg = LassoLars(normalize=False, alpha=1e-05)
+        # https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_lars.html#sphx-glr-auto-examples-linear-model-plot-lasso-lars-py
+        reg = LassoLars(normalize=False, alpha=1e-06)
         # reg = Lars(normalize=False)
         reg.fit(X=x.T, y=y.T)
         coef_paths = reg.coef_path_
-        xx = np.sum(np.abs(coef_paths[0]), axis=0)
-        xx /= xx[-1]
         for path in range(len(coef_paths)):
             for row in range(np.shape(coef_paths[path])[0]):
-                plt.plot(xx, coef_paths[path][row, :], label=f'Structure: {int(row + 1)} coef: {int(true_coefficients[path, row])}')
-            plt.vlines(xx, min(coef_paths[path][:, -1]), max(coef_paths[path][:, -1]), linestyle="dashed")
+                xx = np.sum(np.abs(coef_paths[path]), axis=0)
+                xx /= xx[-1]
+                plt.plot(xx[:len(coef_paths[path][row, :])], coef_paths[path][row, :],
+                         label=f'Structure: {int(row + 1)} coef: {int(true_coefficients[path, row])}')
+                if np.abs(true_coefficients[path, row]) > 0:
+                    plt.plot(xx[:len(coef_paths[path][row, :])], coef_paths[path][row, :], ':', Linewidth=3)
+            plt.vlines(xx[:len(coef_paths[path][row, :])], min(coef_paths[path][:, -1]),
+                       max(coef_paths[path][:, -1]), linestyle="dashed")
             plt.legend(loc='upper left', fontsize=6)
             plt.show()
 
