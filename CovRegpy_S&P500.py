@@ -4,7 +4,7 @@ import pandas as pd
 from AdvEMDpy import AdvEMDpy, emd_basis
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean
 from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights
-from CovRegpy_portfolio_sharpe_ratio import sharpe_rb_p_weights
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights_long, sharpe_weights
 import yfinance as yf
 import matplotlib.pyplot as plt
 
@@ -122,9 +122,7 @@ for lag in range(forecast_days):
         global_minimum_variance = global_obj_fun(global_minimum_weights, variance_Model)
         global_minimum_returns = sum(global_minimum_weights * returns[int(model_days + lag + 29), :])
 
-        sharpe_maximum_weights = sharpe_rb_p_weights(variance_Model,
-                                                     returns[int(model_days + lag + 29), :],
-                                                     risk_free).x
+        sharpe_maximum_weights = sharpe_weights(variance_Model, returns[int(model_days + lag + 29), :], risk_free)
         sharpe_maximum_variance = global_obj_fun(sharpe_maximum_weights, variance_Model)
         sharpe_maximum_returns = sum(sharpe_maximum_weights * returns[int(model_days + lag + 29), :])
 

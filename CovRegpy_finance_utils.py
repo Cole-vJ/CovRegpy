@@ -1,6 +1,6 @@
 
 import numpy as np
-from PCA_functions import pca_func
+from CovRegpy_PCA_functions import pca_func
 from CovRegpy_portfolio_sharpe_ratio import sharpe_weights
 from CovRegpy_portfolio_weighting_functions import global_obj_fun, global_weights
 

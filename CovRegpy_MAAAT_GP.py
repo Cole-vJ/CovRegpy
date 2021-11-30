@@ -7,7 +7,7 @@ from scipy.stats import norm
 from AdvEMDpy import AdvEMDpy, emd_basis
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean
 from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights, global_weights_long
-from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_rb_p_weights
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_weights_long
 import matplotlib.pyplot as plt
 from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, RationalQuadratic
 
