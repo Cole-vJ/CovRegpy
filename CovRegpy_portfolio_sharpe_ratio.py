@@ -71,12 +71,12 @@ if __name__ == "__main__":
     weights = sharpe_weights(realised_covariance, returns[-1, :], risk_free)  # approx [0.25, 0.75]
     msft_weight = np.linspace(-1, 2, 3001)
     aapl_weight = 1 - msft_weight
-    global_variance = np.zeros(3001)
+    sharpe_ratio = np.zeros(3001)
     for i in range(3001):
-        global_variance[i] = sharpe_obj_fun(np.asarray([msft_weight[i], aapl_weight[i]]),
-                                            realised_covariance, returns[-1, :], risk_free)
+        sharpe_ratio[i] = sharpe_obj_fun(np.asarray([msft_weight[i], aapl_weight[i]]),
+                                         realised_covariance, returns[-1, :], risk_free)
     plt.title('Maximum Sharpe Ratio with No Restrictions')
-    plt.plot(msft_weight, global_variance)
+    plt.plot(msft_weight, sharpe_ratio)
     plt.xlabel('MSFT Weights')
     plt.ylabel('Sharpe Ratio')
     plt.xticks(fontsize=8)
@@ -92,12 +92,12 @@ if __name__ == "__main__":
     weights = sharpe_weights_long(negative_covariance, returns[-1, :], risk_free).x  #
     msft_weight = np.linspace(0, 1, 1001)
     aapl_weight = 1 - msft_weight
-    global_variance = np.zeros(1001)
+    sharpe_ratio = np.zeros(1001)
     for i in range(1001):
-        global_variance[i] = sharpe_obj_fun(np.asarray([msft_weight[i], aapl_weight[i]]),
-                                            negative_covariance, returns[-1, :], risk_free)
+        sharpe_ratio[i] = sharpe_obj_fun(np.asarray([msft_weight[i], aapl_weight[i]]),
+                                         negative_covariance, returns[-1, :], risk_free)
     plt.title('Maximum Sharpe Ratio with Long Restriction')
-    plt.plot(msft_weight, global_variance)
+    plt.plot(msft_weight, sharpe_ratio)
     plt.xlabel('MSFT Weights')
     plt.ylabel('Sharpe Ratio')
     plt.xticks(fontsize=8)
