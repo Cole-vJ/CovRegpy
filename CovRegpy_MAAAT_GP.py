@@ -19,12 +19,12 @@ np.random.seed(1)
 
 # pull all close data
 tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
-data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
+data = yf.download(tickers_format, start="2018-12-31", end="2022-01-01")
 close_data = data['Close']
 del data, tickers_format
 
 # create date range and interpolate
-date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
+date_index = pd.date_range(start='31/12/2018', end='01/01/2022')
 close_data = close_data.reindex(date_index).interpolate()
 close_data = close_data = close_data[::-1].interpolate()
 close_data = close_data = close_data[::-1]
@@ -43,7 +43,7 @@ returns = (np.log(np.asarray(close_data)[1:, :]) -
 
 # store tickers and partition model days and forecast days
 tickers = close_data.columns.values.tolist()
-model_days = 701  # 2 years - less a month
+model_days = 731  # 2 years - less a month
 forecast_days = np.shape(close_data)[0] - model_days - 30
 
 # set up basis for mean extraction in CRC
@@ -66,7 +66,7 @@ for lag in range(forecast_days):
     all_data_low_freq = all_data.copy()
     all_data_high_freq = all_data.copy()
 
-    if lag in [0, 30, 61, 91, 122, 153, 181, 212, 242, 273, 303, 334]:  # 0 : 16-09-2021
+    if lag in [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]:  # 0 : 31-12-2020 # 365 : 31-12-2021
 
         # for each stock decompose into IMFs
         for j in range(np.shape(all_data)[1]):
@@ -89,7 +89,7 @@ for lag in range(forecast_days):
                 for imf in range(np.shape(imfs)[0]):
                     all_data[f'{tickers[j]}_close_imf_{int(imf + 1)}'] = imfs[imf, :]
                 all_data_high_freq[f'{tickers[j]}_close_imf_{1}'] = imfs[0, :]
-                all_data_low_freq[f'{tickers[j]}_close_imf_{4}'] = imfs[3, :]
+                all_data_low_freq[f'{tickers[j]}_close_imf_{4}'] = imfs[-1, :]
 
             except:
                 all_data[f'{tickers[j]}_close_imf_{1}'] = imfs
