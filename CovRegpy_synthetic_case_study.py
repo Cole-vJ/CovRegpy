@@ -45,18 +45,19 @@ del close_data, data, date_index, tickers_format
 
 # create correlation structure - random structure
 B = np.zeros((5, 15))
-for i in range(5):
-    for j in range(15):
-        rand_uni = np.random.uniform(0, 1)
-        B[i, j] = 0.1 * (-1) ** (i + j) if rand_uni > 1 / 2 else 0
-del i, j, rand_uni
+# for i in range(5):
+#     for j in range(15):
+#         rand_uni = np.random.uniform(0, 1)
+#         B[i, j] = 1 * (-1) ** (i + j) if rand_uni > 1 / 2 else 0
+# del i, j, rand_uni
 
 # LARS test - best results
-# B[:, 2] = 1
-# B[:, 5] = -1
-# B[:, 8] = 1
-# B[:, 11] = -1
-# B[:, 14] = 1
+B[:, 2] = 1
+B[:, 5] = -1
+B[:, 8] = 1
+B[:, 11] = -1
+B[:, 14] = 1
+B = 0.01 * B
 
 # LARS test - structures too close to be isolated
 # B[:, 2] = 1
@@ -97,7 +98,7 @@ spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=np.linspace
 for lag in range(forecast_days):
     print(lag)
 
-    if lag in [0, 30, 61, 91, 122, 153, 181, 212, 242, 273, 303, 334]:
+    if lag in [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]:  # 0 : 31-12-2020 # 365 : 31-12-2021
 
         all_data = imfs_synth[:, lag:int(model_days + lag + 1)].T  # use actual underlying structures
         groups = np.zeros((76, 1))  # LATER
@@ -114,7 +115,7 @@ for lag in range(forecast_days):
         B_est, Psi_est = cov_reg_given_mean(A_est=np.zeros_like(coef), basis=spline_basis_transform,
                                             x=x[:, :-1], y=returns_subset.T,
                                             iterations=10, technique='direct', max_iter=500,
-                                            groups=groups, LARS=True, true_coefficients=B)
+                                            groups=groups, LARS=False, true_coefficients=B)
 
         fig, axs = plt.subplots(5, 1)
         assets = ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E']

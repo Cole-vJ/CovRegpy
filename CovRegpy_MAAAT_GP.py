@@ -89,7 +89,7 @@ for lag in range(forecast_days):
                 for imf in range(np.shape(imfs)[0]):
                     all_data[f'{tickers[j]}_close_imf_{int(imf + 1)}'] = imfs[imf, :]
                 all_data_high_freq[f'{tickers[j]}_close_imf_{1}'] = imfs[0, :]
-                all_data_low_freq[f'{tickers[j]}_close_imf_{4}'] = imfs[-1, :]
+                all_data_low_freq[f'{tickers[j]}_close_imf_last'] = imfs[-1, :]
 
             except:
                 all_data[f'{tickers[j]}_close_imf_{1}'] = imfs
