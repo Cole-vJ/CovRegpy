@@ -38,11 +38,17 @@ def sharpe_weights_long(cov, returns, risk_free):
 
 # global minimum weights
 def sharpe_weights(cov, returns, risk_free):
-
-    return (np.matmul(np.linalg.inv(cov),
-                     (returns - risk_free * np.ones_like(returns)).reshape(-1, 1)) / \
-            np.matmul(np.ones_like(returns).reshape(1, -1),
-                      np.matmul(np.linalg.inv(cov), (returns - risk_free * np.ones_like(returns)).reshape(-1, 1))))[:, 0]
+    try:
+        return (np.matmul(np.linalg.inv(cov),
+                         (returns - risk_free * np.ones_like(returns)).reshape(-1, 1)) / \
+                np.matmul(np.ones_like(returns).reshape(1, -1),
+                          np.matmul(np.linalg.inv(cov), (returns - risk_free * np.ones_like(returns)).reshape(-1, 1))))[:, 0]
+    except:
+        return (np.matmul(np.linalg.pinv(cov),
+                          (returns - risk_free * np.ones_like(returns)).reshape(-1, 1)) / \
+                np.matmul(np.ones_like(returns).reshape(1, -1),
+                          np.matmul(np.linalg.pinv(cov), (returns - risk_free * np.ones_like(returns)).reshape(-1, 1))))[
+               :, 0]
 
 
 if __name__ == "__main__":
