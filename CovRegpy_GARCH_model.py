@@ -1,4 +1,16 @@
 
+# Reference work:
+
+# Bauwens, L., Laurent, S. and Rombouts, J.,
+# Multivariate GARCH Models: A Survey. Journal of Applied
+# Econometrics, 2006, 21, 79–109.
+
+# Log-likelihood reference work:
+
+# Engle, R., Dynamic Conditional Correlation: A Simple Class of
+# Multivariate Generalized Autoregressive Conditional Heteroskedasticity Models.
+# Journal of Business & Economic Statistics, 2002, 20, 339–350.
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -49,23 +61,6 @@ mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform).T
 #     plt.plot(mean_forecast[:, i])
 #     plt.show()
 
-# set hyper-parameters
-ndays = 10
-P = 1
-Q = 1
-params = np.zeros(P + Q + 1)
-modelled_variance = np.zeros_like(returns_subset_forecast)
-
-# calculate garch parameters of each stock
-# averaging the parameters does not work - parameters are wildly different!
-for stock in range(5):
-    returns_minus_mean = returns_subset_forecast[:, stock] - mean_forecast[:, stock]
-    model = arch_model(returns_minus_mean, mean='Zero', vol='GARCH', p=P, q=Q)
-    model_fit = model.fit()
-    modelled_variance[:, stock] = model_fit.conditional_volatility
-    params += np.asarray(model_fit.params)
-    print(model_fit.params)
-
 # # not necessary, but helps to follow process
 # rt = returns_subset_forecast
 # import mgarch
@@ -77,57 +72,83 @@ for stock in range(5):
 returns_minus_mean = returns_subset_forecast - mean_forecast
 
 
-def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, correlation=False):
+def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
 
+    # flip matrix to be consistent
     if np.shape(returns_matrix)[0] < np.shape(returns_matrix)[1]:
         returns_matrix = returns_matrix.T
-    if p != q:
-        p = np.min(p, q)
-        q = np.min(p, q)
 
+    # initialised modelled variance matrix
     modelled_variance = np.zeros_like(returns_matrix)
 
+    # iteratively calculate modelled variance using univariate GARCH model
     for stock in range(np.shape(returns_matrix)[1]):
         model = arch_model(returns_matrix[:, stock], mean='Zero', vol='GARCH', p=p, q=q)
         model_fit = model.fit()
         modelled_variance[:, stock] = model_fit.conditional_volatility
 
+    # optimise alpha & beta parameters to be used in page 90 equation (40)
     params = minimize(custom_loglike, (0.01, 0.94),
                       args=(returns_matrix, modelled_variance),
-                      bounds=((1e-6, 1), (1e-6, 1)))
+                      bounds=((1e-6, 1), (1e-6, 1)),
+                      method='Nelder-Mead')
+
+    # list of optimisation methods available
+
+    # Nelder-Mead, Powell, CG, BFGS, Newton-CG,
+    # L-BFGS-B, TNC, COBYLA, SLSQP, trust-constr,
+    # dogleg, trust-ncg, trust-exact, trust-krylov
+
     a = params.x[0]
     b = params.x[1]
 
-    t = np.shape(returns_matrix)[0]
-    q_bar = np.cov(returns_matrix.T)
-    q_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    h_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    for q_row in range(p):
-        q_t[q_row] = np.matmul(returns_matrix[q_row, :].reshape(-1, 1) / 2,
-                               returns_matrix[q_row, :].reshape(1, -1) / 2)
-    dts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
+    # debugging
+    print(a)
+    print(b)
+    print(a + b)
+
+    t = np.shape(returns_matrix)[0]  # time interval
+    q_bar = np.cov(returns_matrix.T)  # base (unconditional) covariance
+
+    # setup matrices
+    q_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 90 - Equation (40)
+    h_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 89 - Equation (35)
+    dts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 88 - Equation (32)
+    dts_inv = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # used in calculation of u_t
+    u_t = np.zeros((np.shape(q_bar)[0], t))  # page 89 - defined between Equation (37) and (38)
+    qts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 90 - defined within Equation (39)
+    r_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 90 - Equation (39)
+
+    # initialise q_t
+    # unsure of initialisation
+    q_t[0] = np.zeros_like(np.matmul(returns_matrix[0, :].reshape(-1, 1) / 2, returns_matrix[0, :].reshape(1, -1) / 2))
+
     for var in range(t):
-        dts[var] = np.diag(modelled_variance[var, :])
-    dts_inv = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    for var in range(t):
+        # page 88 - Equation (32)
+        dts[var] = np.diag(modelled_variance[int(var - 1), :])  # modelled variance - page 89 - Equation (34)
+        # page 89 - defined between Equation (37) and (38)
         dts_inv[var] = np.linalg.inv(dts[var])
-    et = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    for var in range(t):
-        et[var] = dts_inv[var] * returns_matrix[var, :].T
-    qts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    r_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
+        u_t[:, var] = np.matmul(dts_inv[var], returns_matrix[var, :].reshape(-1, 1))[:, 0]
+
     for var in range(1, t):
+
+        # page 90 - Equation (40)
         q_t[var] = (1 - a - b) * q_bar + \
-                   np.sum(a * (et[var] * et[var]), axis=0) + \
-                   np.sum(b * q_t[var], axis=0)
-        # q_t[var] = q_bar
+                   a * np.matmul(u_t[:, int(var - 1)].reshape(-1, 1), u_t[:, int(var - 1)].reshape(1, -1)) + \
+                   b * q_t[int(var - 1)]
+
+        # page 90 - defined within Equation (39)
         qts[var] = np.linalg.inv(np.sqrt(np.diag(np.diag(q_t[var]))))
+
+        # page 90 - Equation (39)
         r_t[var] = np.matmul(qts[var], np.matmul(q_t[var], qts[var]))
+
+        # page 89 - Equation (35)
         h_t[var] = np.matmul(dts[var], np.matmul(r_t[var], dts[var]))
 
     forecasted_covariance = h_t[-1] * np.sqrt(days)
 
-    if correlation:
+    if print_correlation:
         corr = np.zeros_like(forecasted_covariance)
         for i in range(np.shape(corr)[0]):
             for j in range(np.shape(corr)[1]):
@@ -140,40 +161,58 @@ def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, correlation=False):
 
 def custom_loglike(params, returns_matrix, modelled_variance):
 
-    t = np.shape(returns_matrix)[0]
+    t = np.shape(returns_matrix)[0]  # time interval
+    q_bar = np.cov(returns_matrix.T)  # base (unconditional) covariance
 
-    q_bar = np.cov(returns_matrix.T)
-    q_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    h_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
+    # setup matrices
+    q_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 90 - Equation (40)
+    h_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 89 - Equation (35)
+    dts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 88 - Equation (32)
+    dts_inv = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # used in calculation of u_t
+    u_t = np.zeros((np.shape(q_bar)[0], t))  # page 89 - defined between Equation (37) and (38)
+    qts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 90 - defined within Equation (39)
+    r_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))  # page 90 - Equation (39)
 
-    dts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    dts_inv = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    et = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    qts = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
-    r_t = np.zeros((t, np.shape(q_bar)[0], np.shape(q_bar)[1]))
+    # initialise q_t
+    # unsure of initialisation
+    q_t[0] = np.zeros_like(np.matmul(returns_matrix[0, :].reshape(-1, 1) / 2, returns_matrix[0, :].reshape(1, -1) / 2))
 
-    q_t[0] = np.matmul(returns_matrix[0, :].reshape(-1, 1) / 2, returns_matrix[0, :].reshape(1, -1) / 2)
-
-    loglike = 0
-    for var in range(1, t):
-        dts[var] = np.diag(modelled_variance[var, :])
+    for var in range(t):
+        # page 88 - Equation (32)
+        dts[var] = np.diag(modelled_variance[int(var - 1), :])  # modelled variance - page 89 - Equation (34)
+        # page 89 - defined between Equation (37) and (38)
         dts_inv[var] = np.linalg.inv(dts[var])
-        et[var] = dts_inv[var] * returns_matrix[var, :].T
-        q_t[var] = (1 - sum(params)) * q_bar + \
-                   np.sum(params[0] * (et[var] * et[var]), axis=0) + \
-                   np.sum(params[1] * q_t[var], axis=0)
+        u_t[:, var] = np.matmul(dts_inv[var], returns_matrix[var, :].reshape(-1, 1))[:, 0]
+
+    # initialise log-likehood value
+    loglike = 0
+
+    for var in range(1, t):
+
+        # page 90 - Equation (40)
+        q_t[var] = (1 - params[0] - params[1]) * q_bar + \
+                   params[0] * np.matmul(u_t[:, int(var - 1)].reshape(-1, 1), u_t[:, int(var - 1)].reshape(1, -1)) + \
+                   params[1] * q_t[int(var - 1)]
+
+        # page 90 - defined within Equation (39)
         qts[var] = np.linalg.inv(np.sqrt(np.diag(np.diag(q_t[var]))))
+
+        # page 90 - Equation (39)
         r_t[var] = np.matmul(qts[var], np.matmul(q_t[var], qts[var]))
+
+        # page 89 - Equation (35)
         h_t[var] = np.matmul(dts[var], np.matmul(r_t[var], dts[var]))
 
-        loglike = loglike + np.shape(q_bar)[0] * np.log(2 * np.pi) + \
-                  2 * np.log(modelled_variance[var].sum()) + \
-                  np.log(np.linalg.det(r_t[var])) + \
-                  np.matmul(returns_matrix[var], (np.matmul(np.linalg.inv(h_t[var]), returns_matrix[var].T)))
+        # likelihood function from reference work page 11 - Equation 26
+        loglike -= (np.shape(q_bar)[0] * np.log(2 * np.pi) +
+                    2 * np.log(np.linalg.det(dts[var])) + np.log(np.linalg.det(r_t[var])) +
+                    np.matmul(u_t[:, var].reshape(1, -1),
+                              np.matmul(np.linalg.inv(r_t[var]),
+                                        u_t[:, var].reshape(-1, 1)))[0][0])
 
     return loglike
 
 
-temp = covregpy_mgarch(returns_minus_mean, p=3, q=3, days=10, correlation=True)
+temp = covregpy_mgarch(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
 
 print(temp)
