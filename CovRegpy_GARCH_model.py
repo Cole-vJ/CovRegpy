@@ -1,4 +1,6 @@
 
+# formatted
+
 # Reference work:
 
 # Bauwens, L., Laurent, S. and Rombouts, J.,
@@ -20,57 +22,6 @@ import matplotlib.pyplot as plt
 
 from AdvEMDpy import emd_basis
 
-np.random.seed(3)
-
-# pull all close data
-tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
-data = yf.download(tickers_format, start="2018-12-31", end="2022-01-01")
-close_data = data['Close']
-del data, tickers_format
-
-# create date range and interpolate
-date_index = pd.date_range(start='31/12/2018', end='01/01/2022')
-close_data = close_data.reindex(date_index).interpolate()
-close_data = close_data[::-1].interpolate()
-close_data = close_data[::-1]
-del date_index
-
-# calculate returns and realised covariance
-returns = (np.log(np.asarray(close_data)[1:, :]) -
-           np.log(np.asarray(close_data)[:-1, :]))
-realised_covariance = np.cov(returns.T)
-risk_free = (0.02 / 365)
-
-# calculate knots and returns subset
-model_days = 731
-knots = 80
-forecast_days = 30
-knots_vector = np.linspace(0, model_days - 1, int(knots - 6))
-knots_vector = np.linspace(-knots_vector[3], 2 * (model_days - 1) - knots_vector[-4], knots)
-returns_subset_forecast = returns[:model_days, :]
-
-# calculate spline basis and mean forecast
-spline_basis_transform = emd_basis.Basis(time_series=np.arange(model_days), time=np.arange(model_days))
-spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=knots_vector)
-coef_forecast = np.linalg.lstsq(spline_basis_transform.T, returns_subset_forecast, rcond=None)[0]
-mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform).T
-
-# # plot returns and means
-# for i in range(5):
-#     plt.plot(returns_subset_forecast[:, i])
-#     plt.plot(mean_forecast[:, i])
-#     plt.show()
-
-# # not necessary, but helps to follow process
-# rt = returns_subset_forecast
-# import mgarch
-# vol = mgarch.mgarch()
-# vol.fit(rt)
-# ndays = 10 # volatility of nth day
-# cov_nextday = vol.predict(ndays)
-
-returns_minus_mean = returns_subset_forecast - mean_forecast
-
 
 def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
 
@@ -84,7 +35,7 @@ def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
     # iteratively calculate modelled variance using univariate GARCH model
     for stock in range(np.shape(returns_matrix)[1]):
         model = arch_model(returns_matrix[:, stock], mean='Zero', vol='GARCH', p=p, q=q)
-        model_fit = model.fit()
+        model_fit = model.fit(disp="off")
         modelled_variance[:, stock] = model_fit.conditional_volatility
 
     # optimise alpha & beta parameters to be used in page 90 equation (40)
@@ -146,6 +97,7 @@ def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
         # page 89 - Equation (35)
         h_t[var] = np.matmul(dts[var], np.matmul(r_t[var], dts[var]))
 
+    # Brownian uncertainty with  variance increasing linearly with square root of time
     forecasted_covariance = h_t[-1] * np.sqrt(days)
 
     if print_correlation:
@@ -213,6 +165,58 @@ def custom_loglike(params, returns_matrix, modelled_variance):
     return loglike
 
 
-temp = covregpy_mgarch(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
+if __name__ == "__main__":
 
-print(temp)
+    np.random.seed(3)
+
+    # pull all close data
+    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
+    data = yf.download(tickers_format, start="2018-12-31", end="2022-01-01")
+    close_data = data['Close']
+    del data, tickers_format
+
+    # create date range and interpolate
+    date_index = pd.date_range(start='31/12/2018', end='01/01/2022')
+    close_data = close_data.reindex(date_index).interpolate()
+    close_data = close_data[::-1].interpolate()
+    close_data = close_data[::-1]
+    del date_index
+
+    # calculate returns and realised covariance
+    returns = (np.log(np.asarray(close_data)[1:, :]) -
+               np.log(np.asarray(close_data)[:-1, :]))
+    realised_covariance = np.cov(returns.T)
+    risk_free = (0.02 / 365)
+
+    # calculate knots and returns subset
+    model_days = 731
+    knots = 80
+    forecast_days = 30
+    knots_vector = np.linspace(0, model_days - 1, int(knots - 6))
+    knots_vector = np.linspace(-knots_vector[3], 2 * (model_days - 1) - knots_vector[-4], knots)
+    returns_subset_forecast = returns[:model_days, :]
+
+    # calculate spline basis and mean forecast
+    spline_basis_transform = emd_basis.Basis(time_series=np.arange(model_days), time=np.arange(model_days))
+    spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=knots_vector)
+    coef_forecast = np.linalg.lstsq(spline_basis_transform.T, returns_subset_forecast, rcond=None)[0]
+    mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform).T
+
+    # # plot returns and means
+    # for i in range(5):
+    #     plt.plot(returns_subset_forecast[:, i])
+    #     plt.plot(mean_forecast[:, i])
+    #     plt.show()
+
+    # # not necessary, but helps to follow process
+    # rt = returns_subset_forecast
+    # import mgarch
+    # vol = mgarch.mgarch()
+    # vol.fit(rt)
+    # ndays = 10 # volatility of nth day
+    # cov_nextday = vol.predict(ndays)
+
+    returns_minus_mean = returns_subset_forecast - mean_forecast
+
+    forecasted_covariance = covregpy_mgarch(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
+    print(forecasted_covariance)

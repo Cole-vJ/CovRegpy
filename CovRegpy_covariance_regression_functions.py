@@ -1,4 +1,6 @@
 
+# formatted
+
 import numpy as np
 import group_lasso
 import pandas as pd
@@ -210,7 +212,7 @@ def subgrad_opt(x_tilda, y_tilda, alpha, max_iter):
 if __name__ == "__main__":
 
     # load raw data
-    raw_data = pd.read_csv('data/peter_hoff_data', header=0)
+    raw_data = pd.read_csv('Peter_Hoff_Data/peter_hoff_data', header=0)
     raw_data = np.asarray(raw_data)
 
     # prepare data
