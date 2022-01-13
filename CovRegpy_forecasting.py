@@ -49,6 +49,18 @@ def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
 
 if __name__ == "__main__":
 
+    # simple sinusoid
+    time_full = np.linspace(0, 120, 1201)
+    time = time_full[:1002]
+    time_series = np.sin((1 / 10) * time) + np.cos((1 / 5) * time)
+    sinusiod_kernel = RBF(length_scale=10.0) * ExpSineSquared(length_scale=1.3, periodicity=1.0)
+
+    y_forecast, sigma, y_forecast_upper, y_forecast_lower = \
+        gp_forecast(time, time_series, time_full, sinusiod_kernel, 0.95, plot=False)
+    plt.plot(time, time_series)
+    plt.plot(time_full, y_forecast, '--')
+    plt.show()
+
     # pull all close data
     tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
     data = yf.download(tickers_format, start="2018-12-31", end="2021-12-01")
