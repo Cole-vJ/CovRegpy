@@ -73,7 +73,7 @@ def omega_ratio_return(weights, all_returns, window):
     return omega_ratio_returns
 
 
-def sortino_ratio_return(weights, all_returns, window, risk_free=(0.02/365)):
+def sortino_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
 
     portfolio_returns = portfolio_return(weights, all_returns)
     sortino_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
@@ -85,7 +85,7 @@ def sortino_ratio_return(weights, all_returns, window, risk_free=(0.02/365)):
     return sortino_ratio_returns
 
 
-def sharpe_ratio_return(weights, all_returns, window, risk_free=(0.02/365)):
+def sharpe_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
 
     portfolio_returns = portfolio_return(weights, all_returns)
     sharpe_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))

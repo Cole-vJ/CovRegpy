@@ -17,7 +17,7 @@ def sharpe_obj_fun(x, p_cov, returns, risk_free):
 
 # Sharpe Ratio long weighting
 def sharpe_obj_fun_long(x, p_cov, returns, risk_free):
-    return (sum(x * returns) - risk_free) / np.sqrt(np.sum(x * np.dot(p_cov, x)))
+    return -(sum(x * returns) - risk_free) / np.sqrt(np.sum(x * np.dot(p_cov, x)))
 
 
 # equality constraint: = 0
@@ -30,10 +30,23 @@ def cons_long_only_weight(x):
     return x
 
 
+# shorting constraint: > k
+def cons_short_limit_weight(x, k):
+    return x + k  # some limit to shorting weight in portfolio
+
+
 # risk budgeting weighting
 def sharpe_weights_long(cov, returns, risk_free):
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
+    return minimize(sharpe_obj_fun_long, w0, args=(cov, returns, risk_free),
+                    method='SLSQP', constraints=cons, options={'ftol': 1e-9})
+
+# risk budgeting weighting
+def sharpe_weights_restriction(cov, returns, risk_free, short_limit=3):
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
     return minimize(sharpe_obj_fun_long, w0, args=(cov, returns, risk_free),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
@@ -83,7 +96,7 @@ if __name__ == "__main__":
     for i in range(3001):
         sharpe_ratio[i] = sharpe_obj_fun(np.asarray([msft_weight[i], aapl_weight[i]]),
                                          realised_covariance, returns[-1, :], risk_free)
-    plt.title('Maximum Sharpe Ratio with No Restrictions')
+    plt.title('Maximum Sharpe Ratio with No Restrictions (Positive Correlation)')
     plt.plot(msft_weight, sharpe_ratio)
     plt.xlabel('MSFT Weights')
     plt.ylabel('Sharpe Ratio')
@@ -97,14 +110,14 @@ if __name__ == "__main__":
     negative_covariance = realised_covariance.copy()
     negative_covariance[0, -1] = -negative_covariance[0, -1]
     negative_covariance[-1, 0] = -negative_covariance[-1, 0]
-    weights = sharpe_weights_long(negative_covariance, returns[-1, :], risk_free).x  #
+    weights = sharpe_weights(negative_covariance, returns[-1, :], risk_free)  # approx [0.47, 0.53]
     msft_weight = np.linspace(0, 1, 1001)
     aapl_weight = 1 - msft_weight
     sharpe_ratio = np.zeros(1001)
     for i in range(1001):
         sharpe_ratio[i] = sharpe_obj_fun(np.asarray([msft_weight[i], aapl_weight[i]]),
                                          negative_covariance, returns[-1, :], risk_free)
-    plt.title('Maximum Sharpe Ratio with Long Restriction')
+    plt.title('Maximum Sharpe Ratio with No Restrictions (Negative Correlation)')
     plt.plot(msft_weight, sharpe_ratio)
     plt.xlabel('MSFT Weights')
     plt.ylabel('Sharpe Ratio')

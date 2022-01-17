@@ -6,8 +6,8 @@ import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 from CovRegpy_PCA_functions import pca_func
-from CovRegpy_portfolio_sharpe_ratio import sharpe_weights
-from CovRegpy_portfolio_weighting_functions import global_obj_fun, global_weights
+from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_weights_restriction
+from CovRegpy_portfolio_weighting_functions import global_obj_fun, global_weights, global_weights_long
 
 
 def efficient_frontier(global_minimum_weights, global_minimum_returns, global_minimum_sd,
@@ -50,6 +50,16 @@ def global_minimum_forward_applied_information(weight_calculating_variance, appl
     return global_minimum_weights, global_minimum_sd, global_minimum_returns
 
 
+def global_minimum_forward_applied_information_long(weight_calculating_variance, applied_variance, returns):
+    # Weights calculated on realised covariance, applied to monthly covariance and returns looking forward
+
+    global_minimum_weights = global_weights_long(weight_calculating_variance).x
+    global_minimum_sd = np.sqrt(global_obj_fun(global_minimum_weights, applied_variance))
+    global_minimum_returns = sum(global_minimum_weights * returns)
+
+    return global_minimum_weights, global_minimum_sd, global_minimum_returns
+
+
 def sharpe_information(variance, returns, risk_free, global_minimum_weights, global_minimum_returns):
 
     sharpe_maximum_weights = sharpe_weights(variance, returns, risk_free)
@@ -70,6 +80,24 @@ def sharpe_forward_applied_information(weight_calculating_variance, applied_vari
     # Weights calculated on realised covariance, applied to monthly covariance and returns looking forward
 
     sharpe_maximum_weights = sharpe_weights(weight_calculating_variance, returns, risk_free)
+    sharpe_maximum_sd = np.sqrt(global_obj_fun(sharpe_maximum_weights, applied_variance))
+    sharpe_maximum_returns = sum(sharpe_maximum_weights * returns)
+
+    # reflect if negative
+    if sharpe_maximum_returns < global_minimum_returns:
+        sharpe_maximum_weights = 2 * global_minimum_weights - sharpe_maximum_weights
+        sharpe_maximum_sd = np.sqrt(global_obj_fun(sharpe_maximum_weights, applied_variance))
+        sharpe_maximum_returns = sum(sharpe_maximum_weights * returns)
+
+    return sharpe_maximum_weights, sharpe_maximum_sd, sharpe_maximum_returns
+
+
+def sharpe_forward_applied_information_restriction(weight_calculating_variance, applied_variance, returns, risk_free,
+                                                   global_minimum_weights, global_minimum_returns, short_limit=3):
+    # Weights calculated on realised covariance, applied to monthly covariance and returns looking forward
+
+    sharpe_maximum_weights = sharpe_weights_restriction(weight_calculating_variance, returns, risk_free,
+                                                        short_limit=short_limit).x
     sharpe_maximum_sd = np.sqrt(global_obj_fun(sharpe_maximum_weights, applied_variance))
     sharpe_maximum_returns = sum(sharpe_maximum_weights * returns)
 

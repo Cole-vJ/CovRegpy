@@ -15,6 +15,8 @@ from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun
 
 from CovRegpy_forecasting import gp_forecast
 
+from CovRegpy_measures import cumulative_return
+
 from CovRegpy_singular_spectrum_analysis import ssa
 
 from AdvEMDpy import AdvEMDpy
@@ -99,6 +101,15 @@ months = 12
 #     plt.legend(loc='upper left', fontsize=8)
 #     plt.show()
 
+# store all weights from respective models
+weight_matrix_global_minimum = np.zeros_like(sector_11_indices_array)
+weight_matrix_maximum_sharpe_ratio = np.zeros_like(sector_11_indices_array)
+weight_matrix_pca = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_imf_covreg = np.zeros_like(sector_11_indices_array)
+# weight_matrix_gp_imf_covreg = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_ssa_covreg = np.zeros_like(sector_11_indices_array)
+# weight_matrix_gp_ssa_covreg = np.zeros_like(sector_11_indices_array)
+
 # weights calculated on and used on different data (one month ahead)
 for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
@@ -127,19 +138,19 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     # calculate global minimum variance portfolio
     gm_w, gm_sd, gm_r = global_minimum_forward_applied_information(annual_covariance, monthly_covariance, monthly_returns)
-    plt.scatter(gm_sd, gm_r, label='Global minimum variance portfolio', zorder=2)
+    # plt.scatter(gm_sd, gm_r, label='Global minimum variance portfolio', zorder=2)
 
     # calculate maximum sharpe ratio portfolio
     ms_w, ms_sd, ms_r = sharpe_forward_applied_information(annual_covariance, monthly_covariance, monthly_returns, risk_free, gm_w, gm_r)
-    plt.scatter(ms_sd, ms_r, label='Maximum Sharpe ratio portfolio', zorder=2)
+    # plt.scatter(ms_sd, ms_r, label='Maximum Sharpe ratio portfolio', zorder=2)
 
     # calculate efficient frontier
     ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, monthly_covariance)
-    plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier', zorder=1)
+    # plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier', zorder=1)
 
     # calculate pca portfolio
     pc_w, pc_sd, pc_r = pca_forward_applied_information(annual_covariance, monthly_covariance, monthly_returns, factors=3)
-    plt.scatter(pc_sd, pc_r, label='Principle portfolio (3 components)', zorder=2)
+    # plt.scatter(pc_sd, pc_r, label='Principle portfolio (3 components)', zorder=2)
 
     ##################################################
     # direct application Covariance Regression - TOP #
@@ -280,7 +291,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     #########################################################
 
     # matrix to store forecasted IMFs
-    forecasted_imfs = np.zeros((np.shape(x)[0], end_of_month_vector[int(months + 1)]))
+    forecasted_imfs = np.zeros((np.shape(x)[0], end_of_month_vector[int(day + months + 1)]))
 
     # https://scikit-learn.org/stable/auto_examples/gaussian_process/plot_gpr_co2.html#sphx-glr-auto-examples-gaussian-process-plot-gpr-co2-py
     # long term smooth rising trend
@@ -307,19 +318,33 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     x_fit = np.arange(end_of_month_vector_cumsum[day], end_of_month_vector_cumsum[int(day + months)])
     gp_forecast_days = np.arange(end_of_month_vector_cumsum[int(day + months)], end_of_month_vector_cumsum[int(day + months + 1)])
 
-    forecast_range = 50
-    for forecast_day in range(np.shape(forecasted_imfs)[0]):
-        full_estimate = gp_forecast(x_fit[-forecast_range:],
-                                    x[forecast_day, :][-forecast_range:] -
-                                    np.mean(x[forecast_day, :][-forecast_range:]),
-                                    x_forecast=np.hstack((x_fit[-forecast_range:], gp_forecast_days)),
-                                    kernel=kernel, confidence_level=0.95)
-        forecasted_imfs[forecast_day, :] = full_estimate[0][-np.shape(forecasted_imfs)[1]:] + np.mean(x[forecast_day, :][-forecast_range:])
+    forecast_range_imf = 50
+    # for forecast_day in range(np.shape(forecasted_imfs)[0]):
+    #     full_estimate = gp_forecast(x_fit[-forecast_range_imf:],
+    #                                 x[forecast_day, :][-forecast_range_imf:] -
+    #                                 np.mean(x[forecast_day, :][-forecast_range_imf:]),
+    #                                 x_forecast=np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+    #                                 kernel=kernel, confidence_level=0.95)
+    #     forecasted_imfs[forecast_day, :] = full_estimate[0][-np.shape(forecasted_imfs)[1]:] + \
+    #                                        np.mean(x[forecast_day, :][-forecast_range_imf:])
+    #
+    #     # debugging
+    #     # plt.plot(x_fit[-forecast_range:], x[forecast_day, :][-forecast_range:])
+    #     # plt.plot(np.hstack((x_fit[-forecast_range:], gp_forecast_days)), full_estimate[0] + np.mean(x[forecast_day, :][-forecast_range:]))
+    #     # plt.show()
 
-        # debugging
-        # plt.plot(x_fit[-forecast_range:], x[forecast_day, :][-forecast_range:])
-        # plt.plot(np.hstack((x_fit[-forecast_range:], gp_forecast_days)), full_estimate[0] + np.mean(x[forecast_day, :][-forecast_range:]))
-        # plt.show()
+    # matrix to store forecasted IMFs
+    forecasted_ssa = np.zeros((np.shape(x_ssa)[0], end_of_month_vector[int(day + months + 1)]))
+
+    forecast_range_ssa = 50
+    # for forecast_day in range(np.shape(x_ssa_trunc)[0]):
+    #     full_estimate_ssa = gp_forecast(x_fit[-forecast_range_ssa:],
+    #                                     x_ssa[forecast_day, :][-forecast_range_ssa:] -
+    #                                     np.mean(x_ssa[forecast_day, :][-forecast_range_ssa:]),
+    #                                     x_forecast=np.hstack((x_fit[-forecast_range_ssa:], gp_forecast_days)),
+    #                                     kernel=kernel, confidence_level=0.95)
+    #     forecasted_ssa[forecast_day, :] = full_estimate_ssa[0][-np.shape(forecasted_ssa)[1]:] + \
+    #                                        np.mean(x_ssa[forecast_day, :][-forecast_range_ssa:])
 
     # Gaussian Process truncation of matrix
     spline_basis_gp_trunc = spline_basis[:, :-1]
@@ -332,9 +357,17 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     y_gp = sector_11_indices_array[end_of_month_vector_cumsum[day]:int(end_of_month_vector_cumsum[int(day + months)] - 1), :]
     y_gp = y_gp.T
 
+    # ssa gp
+
+    x_gp_trunc_ssa = x_ssa[:, :int(end_of_month_vector_cumsum[int(day + months)] - end_of_month_vector_cumsum[day] - 1)]
+    # B_est_gp_ssa, Psi_est_gp_ssa = \
+    #     cov_reg_given_mean(A_est=A_est_ssa, basis=spline_basis_gp_trunc, x=x_gp_trunc_ssa, y=y_gp, iterations=100)
+
+    # ssa gp
+
     # calculate B_est and Psi_est - Gaussian Processes
-    B_est_gp, Psi_est_gp = \
-        cov_reg_given_mean(A_est=A_est, basis=spline_basis_gp_trunc, x=x_gp_trunc, y=y_gp, iterations=100)
+    # B_est_gp, Psi_est_gp = \
+    #     cov_reg_given_mean(A_est=A_est, basis=spline_basis_gp_trunc, x=x_gp_trunc, y=y_gp, iterations=100)
 
     # imf days that will be used to forecast variance of returns - Gaussain Process
     forecast_days_gp = np.arange(int(end_of_month_vector_cumsum[int(day + months)] - 1),
@@ -343,19 +376,34 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     days_in_month_forecast_gp = end_of_month_vector_cumsum[int(day + months + 1)]
 
     # empty forecasted variance storage matrix - Gaussian Process
-    variance_Model_forecast_gp = np.zeros((days_in_month_forecast_gp, np.shape(B_est_gp)[1], np.shape(B_est_gp)[1]))
+    # variance_Model_forecast_gp = np.zeros((days_in_month_forecast_gp, np.shape(B_est_gp)[1], np.shape(B_est_gp)[1]))
+
+    # empty forecasted variance storage matrix - Gaussian Process ssa
+    # variance_Model_forecast_gp_ssa = np.zeros((days_in_month_forecast_gp, np.shape(B_est_gp_ssa)[1], np.shape(B_est_gp_ssa)[1]))
 
     # iteratively calculate variance
-    for forecasted_variance_index in range(len(forecast_days_gp)):
+    # for forecasted_variance_index in range(len(forecast_days_gp)):
 
-        variance_Model_forecast_gp[forecasted_variance_index] = \
-            Psi_est_gp + np.matmul(np.matmul(B_est_gp.T,
-                                             forecasted_imfs[:, forecasted_variance_index]).astype(np.float64).reshape(-1, 1),
-                                   np.matmul(forecasted_imfs[:, forecasted_variance_index].T,
-                                             B_est_gp).astype(np.float64).reshape(1, -1)).astype(np.float64)
+        # variance_Model_forecast_gp[forecasted_variance_index] = \
+        #     Psi_est_gp + np.matmul(np.matmul(B_est_gp.T,
+        #                                      forecasted_imfs[:, forecasted_variance_index]).astype(np.float64).reshape(-1, 1),
+        #                            np.matmul(forecasted_imfs[:, forecasted_variance_index].T,
+        #                                      B_est_gp).astype(np.float64).reshape(1, -1)).astype(np.float64)
+
+        # ssa gp
+
+        # variance_Model_forecast_gp_ssa[forecasted_variance_index] = \
+        #     Psi_est_gp_ssa + np.matmul(np.matmul(B_est_gp_ssa.T,
+        #                                      forecasted_ssa[:, forecasted_variance_index]).astype(np.float64).reshape(
+        #         -1, 1),
+        #                            np.matmul(forecasted_ssa[:, forecasted_variance_index].T,
+        #                                      B_est_gp_ssa).astype(np.float64).reshape(1, -1)).astype(np.float64)
+
+        # ssa gp
 
     # plt.plot(np.mean(np.mean(np.abs(variance_Model_forecast_gp), axis=1), axis=1))
-    variance_median_gp = np.median(variance_Model_forecast_gp, axis=0)
+    # variance_median_gp = np.median(variance_Model_forecast_gp, axis=0)
+    # variance_median_gp_ssa = np.median(variance_Model_forecast_gp_ssa, axis=0)
 
     ############################################################
     # Gaussian Process forecast Covariance Regression - BOTTOM #
@@ -363,21 +411,38 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression
     weights_Model_forecast_direct_ssa = rb_p_weights(variance_median_direct_ssa).x
-    model_variance_forecast_direct_ssa = global_obj_fun(weights_Model_forecast_direct_ssa, variance_median_direct_ssa)
+    model_variance_forecast_direct_ssa = global_obj_fun(weights_Model_forecast_direct_ssa, monthly_covariance)
     model_returns_forecast_direct_ssa = sum(weights_Model_forecast_direct_ssa * monthly_returns)
-    plt.scatter(np.sqrt(model_variance_forecast_direct_ssa), model_returns_forecast_direct_ssa, label='CovReg Direct Model SSA')
+    # plt.scatter(np.sqrt(model_variance_forecast_direct_ssa), model_returns_forecast_direct_ssa,
+    #             label='CovReg Direct Model SSA')
+
+    # calculate weights, variance, and returns - Gaussain Process ssa Covariance Regression
+    # weights_Model_forecast_gp_ssa = rb_p_weights(variance_median_gp_ssa).x
+    # model_variance_forecast_gp_ssa = global_obj_fun(weights_Model_forecast_gp_ssa,monthly_covariance)
+    # model_returns_forecast_gp_ssa = sum(weights_Model_forecast_gp_ssa * monthly_returns)
+    # plt.scatter(np.sqrt(model_variance_forecast_gp_ssa), model_returns_forecast_gp_ssa,
+    #             label='CovReg GP Model SSA')
 
     # calculate weights, variance, and returns - direct application Covariance Regression
     weights_Model_forecast_direct = rb_p_weights(variance_median_direct).x
-    model_variance_forecast_direct = global_obj_fun(weights_Model_forecast_direct, variance_median_direct)
+    model_variance_forecast_direct = global_obj_fun(weights_Model_forecast_direct, monthly_covariance)
     model_returns_forecast_direct = sum(weights_Model_forecast_direct * monthly_returns)
-    plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
+    # plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
 
     # calculate weights, variance, and returns - Gaussian Process application Covariance Regression
-    weights_Model_forecast_gp = rb_p_weights(variance_median_gp).x
-    model_variance_forecast_gp = global_obj_fun(weights_Model_forecast_gp, variance_median_gp)
-    model_returns_forecast_gp = sum(weights_Model_forecast_gp * monthly_returns)
-    plt.scatter(np.sqrt(model_variance_forecast_gp), model_returns_forecast_gp, label='CovReg GP Model')
+    # weights_Model_forecast_gp = rb_p_weights(variance_median_gp).x
+    # model_variance_forecast_gp = global_obj_fun(weights_Model_forecast_gp, monthly_covariance)
+    # model_returns_forecast_gp = sum(weights_Model_forecast_gp * monthly_returns)
+    # plt.scatter(np.sqrt(model_variance_forecast_gp), model_returns_forecast_gp, label='CovReg GP Model')
+
+    # filled weight matrices iteratively
+    weight_matrix_global_minimum[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = gm_w
+    weight_matrix_maximum_sharpe_ratio[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = ms_w
+    weight_matrix_pca[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = pc_w
+    weight_matrix_direct_imf_covreg[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = weights_Model_forecast_direct
+    # weight_matrix_gp_imf_covreg[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = weights_Model_forecast_gp
+    weight_matrix_direct_ssa_covreg[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = weights_Model_forecast_direct_ssa
+    # weight_matrix_gp_ssa_covreg[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = weights_Model_forecast_gp_ssa
 
     # graph options
     plt.title(f'Actual Portfolio Returns versus Portfolio Variance for '
@@ -389,4 +454,32 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     plt.xlabel('Portfolio variance', fontsize=10)
     plt.ylabel('Portfolio returns', fontsize=10)
     plt.legend(loc='upper left', fontsize=8)
-    plt.show()
+    # plt.show()
+
+    print(day)
+
+# measure performances - cumulative returns
+cumulative_returns_global_minimum_portfolio = cumulative_return(weight_matrix_global_minimum.T,
+                                                                sector_11_indices_array.T)
+cumulative_returns_maximum_sharpe_ratio_portfolio = cumulative_return(weight_matrix_maximum_sharpe_ratio.T,
+                                                                      sector_11_indices_array.T)
+cumulative_returns_pca_portfolio = cumulative_return(weight_matrix_pca.T,
+                                                     sector_11_indices_array.T)
+cumulative_returns_covreg_imf_direct_portfolio = cumulative_return(weight_matrix_direct_imf_covreg.T,
+                                                                   sector_11_indices_array.T)
+# cumulative_returns_covreg_imf_gp_portfolio = cumulative_return(weight_matrix_gp_imf_covreg.T,
+#                                                                sector_11_indices_array.T)
+cumulative_returns_covreg_ssa_direct_portfolio = cumulative_return(weight_matrix_direct_ssa_covreg.T,
+                                                                   sector_11_indices_array.T)
+# cumulative_returns_covreg_ssa_gp_portfolio = cumulative_return(weight_matrix_gp_ssa_covreg.T,
+#                                                                sector_11_indices_array.T)
+
+plt.plot(cumulative_returns_global_minimum_portfolio, label='Global minimum variance portfolio')
+plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
+plt.plot(cumulative_returns_pca_portfolio, label='PCA portofolio (3 components)')
+plt.plot(cumulative_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy Direct')
+# plt.plot(cumulative_returns_covreg_imf_gp_portfolio)
+plt.plot(cumulative_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy Direct')
+# plt.plot(cumulative_returns_covreg_ssa_gp_portfolio)
+plt.legend(loc='upper left', fontsize=8)
+plt.show()

@@ -1,6 +1,7 @@
 
 # formatted
 
+import textwrap
 import numpy as np
 import group_lasso
 import pandas as pd
@@ -8,6 +9,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import linear_model
 from sklearn.linear_model import SGDRegressor, LassoLars, Lars
+
+np.random.seed(0)
 
 sns.set(style='darkgrid')
 
@@ -65,12 +68,16 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups):
         reg_lasso.fit(x_tilda, y_tilda)
         B_est = reg_lasso.coef_
     elif technique == 'group-lasso':
-        # need to fix and finalise
+        # need to fix and finalise - breaks correlation structure
         # https://group-lasso.readthedocs.io/en/latest/
         # https://group-lasso.readthedocs.io/en/latest/auto_examples/index.html
-        reg_group_lasso = group_lasso.GroupLasso(groups=groups)
-        reg_group_lasso.fit(x_tilda, y_tilda)
-        B_est = reg_group_lasso.coef_
+        B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))
+        for covariate in range(np.shape(y_tilda)[1]):
+            reg_group_lasso = group_lasso.GroupLasso(groups=groups, old_regularisation=True, supress_warning=True,
+                                                     fit_intercept=False, group_reg=1e-06, l1_reg=1e-06)
+            reg_group_lasso.fit(x_tilda, y_tilda[:, covariate].reshape(-1, 1))
+            B_est[covariate, :] = reg_group_lasso.coef_[0]
+            print(reg_group_lasso.coef_[:, 0])
     elif technique == 'ridge':
         reg_ridge = linear_model.Ridge(alpha=alpha, fit_intercept=False, max_iter=max_iter)
         reg_ridge.fit(x_tilda, y_tilda)
@@ -81,14 +88,16 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups):
         # 1 / (2 * n_samples) * ||y - Xw||^2_2 + alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
         # l1_ratio = 0 --> l2 penalty only --> linear_model.Ridge(alpha=alpha, fit_intercept=False)
         # l1_ratio = 1 --> l1 penalty only --> linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False)
-        reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.5, max_iter=max_iter)
+        reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.1, max_iter=max_iter)
         reg_elas_net.fit(x_tilda, y_tilda)
         B_est = reg_elas_net.coef_
     elif technique == 'sub-gradient':
-        # need to fix and finalise
-        reg_sgd = SGDRegressor()
-        reg_sgd.fit(x_tilda, y_tilda[:, 0])
-        B_est = reg_sgd.coef_
+        # need to fix and finalise - breaks correlation structure
+        B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))
+        for covariate in range(np.shape(y_tilda)[1]):
+            reg_sgd = SGDRegressor()
+            reg_sgd.fit(x_tilda, y_tilda[:, covariate])
+            B_est[covariate, :] = reg_sgd.coef_
         # B_est = subgrad_opt(x_tilda, y_tilda, alpha=alpha, max_iter=max_iter)
 
     C_est = np.vstack((A_est, B_est.T))
@@ -153,7 +162,7 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
 
     mean = np.matmul(A_est.T, basis)
 
-    for iter in range(iterations):
+    for iter in range(iterations):  # loop i - Generalised Cross-Validation
         print(iter + 1)
 
         B_est, Psi_est = calc_B_Psi(m=m, v=v, x=x, y=y, basis=basis, A_est=A_est, technique=technique,
@@ -321,4 +330,166 @@ if __name__ == "__main__":
     axs[2].set_ylabel('Cor(FEV,height)')
     axs[2].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
     axs[2].set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
+    plt.show()
+
+    # additions - ridge, lasso
+
+    A_est = np.hstack((coef_fev.reshape(6, 1), coef_height.reshape(6, 1)))
+    B_est_ridge, Psi_est_ridge = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
+                                                    iterations=100, technique='ridge')
+    B_est_lasso, Psi_est_lasso = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
+                                                    iterations=100, technique='lasso', alpha=0.05)
+    B_est_net, Psi_est_net = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
+                                                iterations=100, technique='elastic-net', alpha=0.01)
+    B_est_sub, Psi_est_sub = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
+                                                iterations=100, technique='sub-gradient', alpha=0.01)
+    B_est_group, Psi_est_group = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
+                                                    iterations=100, technique='group-lasso', alpha=0.01,
+                                                    groups=np.asarray([0, 1, 1]).reshape(-1, 1))
+
+    # mean and covariance plots
+
+    cov_3d_ridge = np.zeros((2, 2, 15))
+    cov_3d_lasso = np.zeros((2, 2, 15))
+    cov_3d_net = np.zeros((2, 2, 15))
+    cov_3d_sub = np.zeros((2, 2, 15))
+    cov_3d_group = np.zeros((2, 2, 15))
+    for depth in range(np.shape(cov_3d)[2]):
+        cov_3d_ridge[:, :, depth] = \
+            Psi_est_ridge + np.matmul(np.matmul(B_est_ridge.T, mod_x_cov[:, depth]).reshape(2, -1),
+                                      np.matmul(mod_x_cov[:, depth].T, B_est_ridge).reshape(-1, 2))
+        cov_3d_lasso[:, :, depth] = \
+            Psi_est_lasso + np.matmul(np.matmul(B_est_lasso.T, mod_x_cov[:, depth]).reshape(2, -1),
+                                      np.matmul(mod_x_cov[:, depth].T, B_est_lasso).reshape(-1, 2))
+        cov_3d_net[:, :, depth] = \
+            Psi_est_net + np.matmul(np.matmul(B_est_net.T, mod_x_cov[:, depth]).reshape(2, -1),
+                                    np.matmul(mod_x_cov[:, depth].T, B_est_net).reshape(-1, 2))
+        cov_3d_sub[:, :, depth] = \
+            Psi_est_sub + np.matmul(np.matmul(B_est_sub.T, mod_x_cov[:, depth]).reshape(2, -1),
+                                    np.matmul(mod_x_cov[:, depth].T, B_est_sub).reshape(-1, 2))
+        cov_3d_group[:, :, depth] = \
+            Psi_est_group + np.matmul(np.matmul(B_est_group.T, mod_x_cov[:, depth]).reshape(2, -1),
+                                      np.matmul(mod_x_cov[:, depth].T, B_est_group).reshape(-1, 2))
+
+    fig, axs = plt.subplots(1, 2, figsize=(8, 5))
+    fig.suptitle('Rank 1 Figure 5 in Hoff and Niu (2012)')
+    axs[0].scatter(peter_hoff_data['age'], peter_hoff_data['fev'], facecolor='none', edgecolor='black')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev, linewidth=3, c='k')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev + 2 * np.sqrt(cov_3d[0, 0, :]), c='grey')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev - 2 * np.sqrt(cov_3d[0, 0, :]), c='grey')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev + 2 * np.sqrt(cov_3d_ridge[0, 0, :]), c='red')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev - 2 * np.sqrt(cov_3d_ridge[0, 0, :]), c='red')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev + 2 * np.sqrt(cov_3d_lasso[0, 0, :]), c='green')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev - 2 * np.sqrt(cov_3d_lasso[0, 0, :]), c='green')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev + 2 * np.sqrt(cov_3d_net[0, 0, :]), c='blue')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev - 2 * np.sqrt(cov_3d_net[0, 0, :]), c='blue')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev + 2 * np.sqrt(cov_3d_sub[0, 0, :]), c='cyan')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev - 2 * np.sqrt(cov_3d_sub[0, 0, :]), c='cyan')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev + 2 * np.sqrt(cov_3d_group[0, 0, :]), c='magenta')
+    axs[0].plot(np.linspace(4, 18, 15), mean_fev - 2 * np.sqrt(cov_3d_group[0, 0, :]), c='magenta')
+    axs[0].set_xlabel('age')
+    axs[0].set_ylabel('FEV')
+    axs[0].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
+    axs[0].set_yticks([1, 2, 3, 4, 5, 6])
+    box_0 = axs[0].get_position()
+    axs[0].set_position([box_0.x0 - 0.06, box_0.y0, box_0.width, box_0.height])
+    axs[1].scatter(peter_hoff_data['age'], peter_hoff_data['height'], facecolor='none', edgecolor='black')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height, linewidth=3, c='k')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height + 2 * np.sqrt(cov_3d[1, 1, :]), c='grey',
+                label=textwrap.fill('Direct estimation', 11))
+    axs[1].plot(np.linspace(4, 18, 15), mean_height - 2 * np.sqrt(cov_3d[1, 1, :]), c='grey')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height + 2 * np.sqrt(cov_3d_ridge[1, 1, :]), c='red',
+                label=textwrap.fill('Ridge regression', 11))
+    axs[1].plot(np.linspace(4, 18, 15), mean_height - 2 * np.sqrt(cov_3d_ridge[1, 1, :]), c='red')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height + 2 * np.sqrt(cov_3d_lasso[1, 1, :]), c='green',
+                label=textwrap.fill('LASSO regression', 11))
+    axs[1].plot(np.linspace(4, 18, 15), mean_height - 2 * np.sqrt(cov_3d_lasso[1, 1, :]), c='green')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height + 2 * np.sqrt(cov_3d_net[1, 1, :]), c='blue',
+                label=textwrap.fill('Elastic-net regression', 11))
+    axs[1].plot(np.linspace(4, 18, 15), mean_height - 2 * np.sqrt(cov_3d_net[1, 1, :]), c='blue')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height + 2 * np.sqrt(cov_3d_sub[1, 1, :]), c='cyan',
+                label=textwrap.fill('Subgradient optimization', 12))
+    axs[1].plot(np.linspace(4, 18, 15), mean_height - 2 * np.sqrt(cov_3d_sub[1, 1, :]), c='cyan')
+    axs[1].plot(np.linspace(4, 18, 15), mean_height + 2 * np.sqrt(cov_3d_group[1, 1, :]), c='magenta',
+                label=textwrap.fill('Group LASSO regression', 11))
+    axs[1].plot(np.linspace(4, 18, 15), mean_height - 2 * np.sqrt(cov_3d_group[1, 1, :]), c='magenta')
+    axs[1].set_xlabel('age')
+    axs[1].set_ylabel('height')
+    axs[1].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
+    axs[1].set_yticks([45, 50, 55, 60, 65, 70, 75])
+    box_1 = axs[1].get_position()
+    axs[1].set_position([box_1.x0 - 0.06, box_1.y0, box_1.width, box_1.height])
+    axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+    plt.show()
+
+    fig, axs = plt.subplots(1, 3, figsize=(8, 5))
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
+    fig.suptitle('Rank 1 Figure 6 in Hoff and Niu (2012)')
+    axs[0].plot(np.linspace(4, 18, 15), cov_3d[0, 0, :], c='grey')
+    axs[0].plot(np.linspace(4, 18, 15), cov_3d_ridge[0, 0, :], c='red')
+    axs[0].plot(np.linspace(4, 18, 15), cov_3d_lasso[0, 0, :], c='green')
+    axs[0].plot(np.linspace(4, 18, 15), cov_3d_net[0, 0, :], c='blue')
+    axs[0].plot(np.linspace(4, 18, 15), cov_3d_sub[0, 0, :], c='cyan')
+    axs[0].plot(np.linspace(4, 18, 15), cov_3d_group[0, 0, :], c='magenta')
+    fev_var = np.zeros_like(np.linspace(4, 18, 15))
+    for i, age in enumerate(range(4, 19)):
+        fev_var[i] = np.var(np.asarray(peter_hoff_data['fev'])[np.asarray(peter_hoff_data['age']) == age])
+    axs[0].scatter(np.linspace(4, 18, 15), fev_var, facecolor='none', edgecolor='black')
+    axs[0].set_xlabel('age', fontsize=8)
+    axs[0].set_ylabel('Var(FEV)', fontsize=8)
+    axs[0].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
+    axs[0].set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+    plt.setp(axs[0].get_xticklabels(), Fontsize=8)
+    plt.setp(axs[0].get_yticklabels(), Fontsize=8)
+    box_0 = axs[0].get_position()
+    axs[0].set_position([box_0.x0 - 0.051, box_0.y0, box_0.width, box_0.height])
+    axs[1].plot(np.linspace(4, 18, 15), cov_3d[1, 1, :], c='grey')
+    axs[1].plot(np.linspace(4, 18, 15), cov_3d_ridge[1, 1, :], c='red')
+    axs[1].plot(np.linspace(4, 18, 15), cov_3d_lasso[1, 1, :], c='green')
+    axs[1].plot(np.linspace(4, 18, 15), cov_3d_net[1, 1, :], c='blue')
+    axs[1].plot(np.linspace(4, 18, 15), cov_3d_sub[1, 1, :], c='cyan')
+    axs[1].plot(np.linspace(4, 18, 15), cov_3d_group[1, 1, :], c='magenta')
+    height_var = np.zeros_like(np.linspace(4, 18, 15))
+    for i, age in enumerate(range(4, 19)):
+        height_var[i] = np.var(np.asarray(peter_hoff_data['height'])[np.asarray(peter_hoff_data['age']) == age])
+    axs[1].scatter(np.linspace(4, 18, 15), height_var, facecolor='none', edgecolor='black')
+    axs[1].set_xlabel('age', fontsize=8)
+    axs[1].set_ylabel('Var(height)', fontsize=8)
+    axs[1].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
+    axs[1].set_yticks([4, 6, 8, 10, 12])
+    plt.setp(axs[1].get_xticklabels(), Fontsize=8)
+    plt.setp(axs[1].get_yticklabels(), Fontsize=8)
+    box_1 = axs[1].get_position()
+    axs[1].set_position([box_1.x0 - 0.051, box_1.y0, box_1.width, box_1.height])
+    axs[2].plot(np.linspace(4, 18, 15), cov_3d[0, 1, :] / (np.sqrt(cov_3d[0, 0, :]) * np.sqrt(cov_3d[1, 1, :])),
+                c='grey', label=textwrap.fill('Direct estimation', 11))
+    axs[2].plot(np.linspace(4, 18, 15), cov_3d_ridge[0, 1, :] / (np.sqrt(cov_3d_ridge[0, 0, :]) * np.sqrt(cov_3d_ridge[1, 1, :])),
+                c='red', label=textwrap.fill('Ridge regression', 11))
+    axs[2].plot(np.linspace(4, 18, 15),
+                cov_3d_lasso[0, 1, :] / (np.sqrt(cov_3d_lasso[0, 0, :]) * np.sqrt(cov_3d_lasso[1, 1, :])),
+                c='green', label=textwrap.fill('LASSO regression', 11))
+    axs[2].plot(np.linspace(4, 18, 15),
+                cov_3d_net[0, 1, :] / (np.sqrt(cov_3d_net[0, 0, :]) * np.sqrt(cov_3d_net[1, 1, :])),
+                c='blue', label=textwrap.fill('Elastic-net regression', 11))
+    axs[2].plot(np.linspace(4, 18, 15),
+                cov_3d_sub[0, 1, :] / (np.sqrt(cov_3d_sub[0, 0, :]) * np.sqrt(cov_3d_sub[1, 1, :])),
+                c='cyan', label=textwrap.fill('Subgradient optimization', 12))
+    axs[2].plot(np.linspace(4, 18, 15),
+                cov_3d_group[0, 1, :] / (np.sqrt(cov_3d_group[0, 0, :]) * np.sqrt(cov_3d_group[1, 1, :])),
+                c='magenta', label=textwrap.fill('Group LASSO regression', 11))
+    fev_height_cov = np.zeros_like(np.linspace(4, 18, 15))
+    for i, age in enumerate(range(4, 19)):
+        fev_height_cov[i] = np.corrcoef(np.asarray(peter_hoff_data['fev'])[np.asarray(peter_hoff_data['age']) == age],
+                                        np.asarray(peter_hoff_data['height'])[
+                                            np.asarray(peter_hoff_data['age']) == age])[0, 1]
+    axs[2].scatter(np.linspace(4, 18, 15), fev_height_cov, facecolor='none', edgecolor='black')
+    axs[2].set_xlabel('age', fontsize=8)
+    axs[2].set_ylabel('Cor(FEV,height)', fontsize=8)
+    axs[2].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
+    axs[2].set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
+    plt.setp(axs[2].get_xticklabels(), Fontsize=8)
+    plt.setp(axs[2].get_yticklabels(), Fontsize=8)
+    box_2 = axs[2].get_position()
+    axs[2].set_position([box_2.x0 - 0.051, box_2.y0, box_2.width, box_2.height])
+    axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
     plt.show()

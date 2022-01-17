@@ -28,11 +28,26 @@ def cons_long_only_weight(x):
    return x
 
 
+# shorting constraint: > k
+def cons_short_limit_weight(x, k):
+    return x + k  # some limit to shorting weight in portfolio
+
+
 # risk budgeting weighting
 def rb_p_weights(cov):
-    # constrained optimisation - 'SLSQP' won't change if variance is too low - much change 'ftol' to smaller value
+    # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
+    return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+                    method='SLSQP', constraints=cons, options={'ftol': 1e-9})
+
+
+# risk budgeting weighting
+def rb_p_weights_not_long(cov, short_limit=3):
+    # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
     return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
