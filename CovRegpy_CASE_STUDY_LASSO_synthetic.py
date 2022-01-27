@@ -116,8 +116,9 @@ for lag in range(forecast_days):
         # calculate covariance regression matrices
         B_est, Psi_est = cov_reg_given_mean(A_est=np.zeros_like(coef), basis=spline_basis_transform,
                                             x=x[:, :-1], y=returns_subset.T,
-                                            iterations=10, technique='direct', max_iter=500,
-                                            groups=groups, LARS=False, true_coefficients=B)
+                                            iterations=10, technique='lasso', max_iter=500,
+                                            groups=groups, LARS=False, true_coefficients=B, alpha=1e-08,
+                                            test_lasso=True)
 
         fig, axs = plt.subplots(5, 1)
         assets = ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E']
@@ -129,8 +130,6 @@ for lag in range(forecast_days):
                         label=f'Estimate coefficents underlying returns of asset {assets[i]}')
             axs[i].set_ylabel(f'{assets[i]}', rotation=90, fontsize=10)
             axs[i].set_xticks((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))
-            # axs[i].set_yticks((-1, 0, 1))
-            # axs[i].set_yticklabels(('-1', '0', '1'), fontsize=8)
             if i == 4:
                 axs[i].set_xticklabels(('1', '2', '3', '4', '5',
                                         '6', '7', '8', '9', '10',
@@ -138,15 +137,6 @@ for lag in range(forecast_days):
                 axs[i].set_xlabel('Sinusoidal structures', fontsize=10)
         plt.savefig('figures/Synthetic_case_study.png')
         plt.show()
-
-        # x = np.linspace(1, 15, 15)
-        # y = np.linspace(1, 5, 5)
-        # X, Y = np.meshgrid(x, y)
-        # ax = plt.axes(projection='3d')
-        # cov_plot = ax.plot_surface(X, Y, B, rstride=1, cstride=1, cmap='gist_rainbow', edgecolor='none')
-        # ax.plot_surface(X, Y, -B_est.T * (1 / risk_free) + 100, rstride=1, cstride=1, cmap='gist_rainbow', edgecolor='none')
-        # cbar = plt.colorbar(cov_plot)
-        # plt.show()
 
         variance_Model = Psi_est + np.matmul(np.matmul(B_est.T,
                                                        x[:, -1]).astype(np.float64).reshape(-1, 1),

@@ -5,6 +5,9 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from CovRegpy_forecasting import gp_forecast
+from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, RationalQuadratic
+
 from CovRegpy_finance_utils import efficient_frontier, global_minimum_forward_applied_information, \
     sharpe_forward_applied_information, pca_forward_applied_information, \
     global_minimum_forward_applied_information_long, sharpe_forward_applied_information_restriction, \
@@ -93,6 +96,10 @@ weight_matrix_direct_imf_covreg = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_ssa_covreg = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_imf_covreg_not_long = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_ssa_covreg_not_long = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_imf_covreg_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_ssa_covreg_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_imf_covreg_not_long_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_ssa_covreg_not_long_forecast = np.zeros_like(sector_11_indices_array)
 weight_matrix_dcc = np.zeros_like(sector_11_indices_array)
 weight_matrix_realised = np.zeros_like(sector_11_indices_array)
 
@@ -271,8 +278,8 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # DCC forecast
     known_returns = \
         sector_11_indices_array[end_of_month_vector_cumsum[int(day)]:end_of_month_vector_cumsum[int(day + months)], :]
-    dcc_forecast = \
-        covregpy_dcc_mgarch(known_returns, days=1)
+    # dcc_forecast = \
+    #     covregpy_dcc_mgarch(known_returns, days=1)
 
     # realised covariance
     variance_Model_forecast_realised = np.zeros(
@@ -300,7 +307,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
                                 B_est_direct_ssa).astype(np.float64).reshape(1, -1)).astype(np.float64)
 
         # dcc mgarch
-        variance_Model_forecast_dcc[forecasted_variance_index] = dcc_forecast * np.sqrt(forecasted_variance_index + 1)
+        # variance_Model_forecast_dcc[forecasted_variance_index] = dcc_forecast * np.sqrt(forecasted_variance_index + 1)
 
         # realised covariance
         variance_Model_forecast_realised[forecasted_variance_index] = annual_covariance
@@ -320,6 +327,187 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     #####################################################
     # direct application Covariance Regression - BOTTOM #
     #####################################################
+
+    #########################################################
+    # Gaussian Process forecast Covariance Regression - TOP #
+    #########################################################
+
+    # matrix to store forecasted IMFs
+    forecasted_imfs = np.zeros((np.shape(x)[0], end_of_month_vector[int(day + months + 1)]))
+
+    # https://scikit-learn.org/stable/auto_examples/gaussian_process/plot_gpr_co2.html#sphx-glr-auto-examples-gaussian-process-plot-gpr-co2-py
+    # long term smooth rising trend
+    k1 = 1.0 ** 2 * RBF(length_scale=10.0,
+                        length_scale_bounds=(1e-00, 1e+02))
+    # seasonal component
+    k2 = (2.4 ** 2 * RBF(length_scale=90.0,
+                         length_scale_bounds=(1e-00, 1e+02)) *
+          ExpSineSquared(length_scale=1.3, periodicity=1.0,
+                         length_scale_bounds=(1e-01, 1e+01),
+                         periodicity_bounds=(1e-02, 1e+02)))
+    # medium term irregularity
+    k3 = 0.66 ** 2 * RationalQuadratic(length_scale=1.2, alpha=0.78,
+                                       length_scale_bounds=(1e-01, 1e+01),
+                                       alpha_bounds=(1e-01, 1e+01))
+    # noise terms
+    k4 = 0.18 ** 2 * RBF(length_scale=0.134, length_scale_bounds=(1e-01, 1e+01)) + WhiteKernel(noise_level=0.19 ** 2)
+
+    k5 = RationalQuadratic(length_scale=1.2, alpha=0.78, length_scale_bounds=(1e-01, 1e+01),
+                           alpha_bounds=(1e-01, 1e+01)) * ExpSineSquared(length_scale=1.3, periodicity=1.0,
+                                                                         length_scale_bounds=(1e-01, 1e+01),
+                                                                         periodicity_bounds=(1e-01, 1e+01))
+
+    k6 = RationalQuadratic(length_scale=1.2, alpha=0.78, length_scale_bounds=(1e-01, 1e+01),
+                           alpha_bounds=(1e-01, 1e+01)) * RBF(length_scale=1.3, length_scale_bounds=(1e-01, 1e+01))
+
+    k7 = RBF(length_scale=1.3,
+             length_scale_bounds=(1e-01, 1e+01)) * ExpSineSquared(length_scale=1.3, periodicity=1.0,
+                                                                  length_scale_bounds=(1e-01, 1e+01),
+                                                                  periodicity_bounds=(1e-01, 1e+01))
+
+    k8 = WhiteKernel(noise_level=0.19 ** 2, noise_level_bounds=(1e-01, 1e+00))
+
+    # kernel = k1 + k2 + k3 + k4
+    kernel = k5 + k6 + k7 + k8
+
+    x_fit = np.arange(end_of_month_vector_cumsum[day], end_of_month_vector_cumsum[int(day + months)])
+    gp_forecast_days = np.arange(end_of_month_vector_cumsum[int(day + months)],
+                                 end_of_month_vector_cumsum[int(day + months + 1)])
+
+    forecast_range_imf = 100
+    for forecast_day in range(np.shape(forecasted_imfs)[0]):
+        full_estimate = gp_forecast(x_fit[-forecast_range_imf:],
+                                    x[forecast_day, :][-forecast_range_imf:] -
+                                    np.mean(x[forecast_day, :][-forecast_range_imf:]) +
+                                    np.random.normal(0, 0.1 *
+                                                     (np.max(x[forecast_day, :][-forecast_range_imf:] -
+                                                             np.min(x[forecast_day, :][-forecast_range_imf:]))),
+                                                     len(x[forecast_day, :][-forecast_range_imf:])),
+                                    x_forecast=np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+                                    kernel=kernel, confidence_level=0.95)
+        forecasted_imfs[forecast_day, :] = full_estimate[0][-np.shape(forecasted_imfs)[1]:] + \
+                                           np.mean(x[forecast_day, :][-forecast_range_imf:])
+
+        # debugging
+        # plt.title('IMF Forecast')
+        # plt.plot(x_fit[-forecast_range_imf:],
+        #          x[forecast_day, :][-forecast_range_imf:])
+        # plt.plot(x_fit[-forecast_range_imf:],
+        #          x[forecast_day, :][-forecast_range_imf:] -
+        #          np.random.normal(0, 0.1 *
+        #                           (np.max(x[forecast_day, :][-forecast_range_imf:] -
+        #                                   np.min(x[forecast_day, :][-forecast_range_imf:]))),
+        #                           len(x[forecast_day, :][-forecast_range_imf:]))
+        #          )
+        # plt.plot(np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+        #          full_estimate[0] + np.mean(x[forecast_day, :][-forecast_range_imf:]))
+        # plt.plot(np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+        #          full_estimate[2] + np.mean(x[forecast_day, :][-forecast_range_imf:]))
+        # plt.plot(np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+        #          full_estimate[3] + np.mean(x[forecast_day, :][-forecast_range_imf:]))
+        # plt.show()
+
+    # matrix to store forecasted IMFs
+    forecasted_ssa = np.zeros((np.shape(x_ssa)[0], end_of_month_vector[int(day + months + 1)]))
+
+    forecast_range_ssa = 100
+    for forecast_day in range(np.shape(x_ssa_trunc)[0]):
+        full_estimate_ssa = gp_forecast(x_fit[-forecast_range_ssa:],
+                                        x_ssa[forecast_day, :][-forecast_range_ssa:] -
+                                        np.mean(x_ssa[forecast_day, :][-forecast_range_ssa:]) +
+                                        np.random.normal(0, 0.1 *
+                                                         (np.max(x[forecast_day, :][-forecast_range_imf:] -
+                                                                 np.min(x[forecast_day, :][-forecast_range_imf:]))),
+                                                         len(x[forecast_day, :][-forecast_range_imf:])),
+                                        x_forecast=np.hstack((x_fit[-forecast_range_ssa:], gp_forecast_days)),
+                                        kernel=kernel, confidence_level=0.95)
+        forecasted_ssa[forecast_day, :] = full_estimate_ssa[0][-np.shape(forecasted_ssa)[1]:] + \
+                                          np.mean(x_ssa[forecast_day, :][-forecast_range_ssa:])
+
+        # debugging
+        # plt.title('SSA Forecast')
+        # plt.plot(x_fit[-forecast_range_imf:],
+        #          x[forecast_day, :][-forecast_range_imf:])
+        # plt.plot(x_fit[-forecast_range_imf:],
+        #          x[forecast_day, :][-forecast_range_imf:] -
+        #          np.random.normal(0, 0.1 *
+        #                           (np.max(x[forecast_day, :][-forecast_range_imf:] -
+        #                                   np.min(x[forecast_day, :][-forecast_range_imf:]))),
+        #                           len(x[forecast_day, :][-forecast_range_imf:]))
+        #          )
+        # plt.plot(np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+        #          full_estimate_ssa[0] + np.mean(x[forecast_day, :][-forecast_range_imf:]))
+        # plt.plot(np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+        #          full_estimate_ssa[2] + np.mean(x[forecast_day, :][-forecast_range_imf:]))
+        # plt.plot(np.hstack((x_fit[-forecast_range_imf:], gp_forecast_days)),
+        #          full_estimate_ssa[3] + np.mean(x[forecast_day, :][-forecast_range_imf:]))
+        # plt.show()
+
+    # Gaussian Process truncation of matrix
+    spline_basis_gp_trunc = spline_basis[:, :-1]
+
+    # # calculate truncated x - Gaussian Processes
+    x_gp_trunc = x[:, :int(end_of_month_vector_cumsum[int(day + months)] - end_of_month_vector_cumsum[day] - 1)]
+
+    # calculate y - Gaussian Processes
+    y_gp = sector_11_indices_array[
+           end_of_month_vector_cumsum[day]:int(end_of_month_vector_cumsum[int(day + months)] - 1), :]
+    y_gp = y_gp.T
+
+    # ssa gp
+
+    x_gp_trunc_ssa = x_ssa[:, :int(end_of_month_vector_cumsum[int(day + months)] - end_of_month_vector_cumsum[day] - 1)]
+    B_est_gp_ssa, Psi_est_gp_ssa = \
+        cov_reg_given_mean(A_est=A_est_ssa, basis=spline_basis_gp_trunc, x=x_gp_trunc_ssa, y=y_gp, iterations=100)
+
+    # ssa gp
+
+    # calculate B_est and Psi_est - Gaussian Processes
+    B_est_gp, Psi_est_gp = \
+        cov_reg_given_mean(A_est=A_est, basis=spline_basis_gp_trunc, x=x_gp_trunc, y=y_gp, iterations=100)
+
+    # imf days that will be used to forecast variance of returns - Gaussain Process
+    forecast_days_gp = np.arange(int(end_of_month_vector_cumsum[int(day + months)] - 1),
+                                 int(end_of_month_vector_cumsum[int(day + months + 1)] - 1))
+
+    days_in_month_forecast_gp = end_of_month_vector[int(day + months + 1)]
+
+    # empty forecasted variance storage matrix - Gaussian Process
+    variance_Model_forecast_gp = np.zeros((days_in_month_forecast_gp, np.shape(B_est_gp)[1], np.shape(B_est_gp)[1]))
+
+    # empty forecasted variance storage matrix - Gaussian Process ssa
+    variance_Model_forecast_gp_ssa = np.zeros((days_in_month_forecast_gp, np.shape(B_est_gp_ssa)[1], np.shape(B_est_gp_ssa)[1]))
+
+    # iteratively calculate variance
+    for forecasted_variance_index in range(len(forecast_days_gp)):
+
+        variance_Model_forecast_gp[forecasted_variance_index] = \
+            Psi_est_gp + np.matmul(np.matmul(B_est_gp.T,
+                                             forecasted_imfs[:, forecasted_variance_index]).astype(np.float64).reshape(-1, 1),
+                                   np.matmul(forecasted_imfs[:, forecasted_variance_index].T,
+                                             B_est_gp).astype(np.float64).reshape(1, -1)).astype(np.float64)
+
+        # ssa gp
+
+        variance_Model_forecast_gp_ssa[forecasted_variance_index] = \
+            Psi_est_gp_ssa + \
+            np.matmul(np.matmul(B_est_gp_ssa.T,
+                                forecasted_ssa[:, forecasted_variance_index]).astype(np.float64).reshape(-1, 1),
+                      np.matmul(forecasted_ssa[:, forecasted_variance_index].T,
+                                B_est_gp_ssa).astype(np.float64).reshape(1, -1)).astype(np.float64)
+
+        # ssa gp
+
+    # debugging
+    # plt.plot(np.mean(np.mean(np.abs(variance_Model_forecast_gp), axis=1), axis=1))
+    # plt.plot(np.mean(np.mean(np.abs(variance_Model_forecast_gp_ssa), axis=1), axis=1))
+    # plt.show()
+    variance_median_gp = np.median(variance_Model_forecast_gp, axis=0)
+    variance_median_gp_ssa = np.median(variance_Model_forecast_gp_ssa, axis=0)
+
+    ############################################################
+    # Gaussian Process forecast Covariance Regression - BOTTOM #
+    ############################################################
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long only
     weights_Model_forecast_direct_ssa = rb_p_weights(variance_median_direct_ssa).x

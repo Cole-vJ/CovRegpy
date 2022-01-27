@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from AdvEMDpy import emd_basis
 
 
-def covregpy_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
+def covregpy_dcc_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
 
     # flip matrix to be consistent
     if np.shape(returns_matrix)[0] < np.shape(returns_matrix)[1]:
@@ -218,5 +218,5 @@ if __name__ == "__main__":
 
     returns_minus_mean = returns_subset_forecast - mean_forecast
 
-    forecasted_covariance = covregpy_mgarch(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
+    forecasted_covariance = covregpy_dcc_mgarch(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
     print(forecasted_covariance)

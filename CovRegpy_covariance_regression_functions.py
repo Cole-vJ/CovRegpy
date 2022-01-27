@@ -8,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import linear_model
+from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import SGDRegressor, LassoLars, Lars
 
 np.random.seed(0)
@@ -55,7 +56,7 @@ def cubic_b_spline(knots, time):
 # calculate B and Psi (base variance)
 
 
-def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups):
+def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, test_lasso=False):
 
     # follows calculation at the bottom of page 10 and top of page 11
     x_tilda = np.vstack([m * x.T, (v ** (1 / 2)) * x.T])
@@ -64,9 +65,26 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups):
     if technique == 'direct':
         B_est = np.matmul(y_tilda.T, np.matmul(x_tilda, np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
     elif technique == 'lasso':
+
+        # test lasso
+        if test_lasso:
+            parameters = {'alpha': 10 ** (np.linspace(-12, 0, 121))}
+            reg_lasso = linear_model.Lasso()
+            clf = GridSearchCV(reg_lasso, parameters)
+            clf.fit(x_tilda, y_tilda)
+
+            # plt.title('Lasso Regression')
+            # plt.plot(np.log10(np.asarray(clf.cv_results_['param_alpha']).astype('float64')),
+            #          clf.cv_results_['mean_test_score'])
+            # plt.scatter(np.log10(np.asarray(clf.cv_results_['param_alpha'])[clf.best_index_]),
+            #             clf.cv_results_['mean_test_score'][clf.best_index_], c='r')
+            # plt.show()
+            alpha = np.asarray(clf.cv_results_['param_alpha'])[clf.best_index_]
+
         reg_lasso = linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False, max_iter=max_iter)
         reg_lasso.fit(x_tilda, y_tilda)
         B_est = reg_lasso.coef_
+
     elif technique == 'group-lasso':
         # need to fix and finalise - breaks correlation structure
         # https://group-lasso.readthedocs.io/en/latest/
@@ -136,7 +154,7 @@ def gamma_v_m_error(errors, x, Psi, B):
 
 
 def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', alpha=1, max_iter=10000,
-                       groups=np.arange(76), LARS=False, true_coefficients=np.zeros((5, 15))):
+                       groups=np.arange(76), LARS=False, true_coefficients=np.zeros((5, 15)), test_lasso=False):
 
     if LARS:
         # https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_lars.html#sphx-glr-auto-examples-linear-model-plot-lasso-lars-py
@@ -166,7 +184,7 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
         print(iter + 1)
 
         B_est, Psi_est = calc_B_Psi(m=m, v=v, x=x, y=y, basis=basis, A_est=A_est, technique=technique,
-                                    alpha=alpha, max_iter=max_iter, groups=groups)
+                                    alpha=alpha, max_iter=max_iter, groups=groups, test_lasso=test_lasso)
 
         m, v = gamma_v_m_error(errors=(y - mean), x=x, Psi=Psi_est, B=B_est.T)
         m = m.reshape(-1, 1)

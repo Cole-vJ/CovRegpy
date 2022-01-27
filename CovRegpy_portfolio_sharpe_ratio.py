@@ -35,6 +35,16 @@ def cons_short_limit_weight(x, k):
     return x + k  # some limit to shorting weight in portfolio
 
 
+# shorting summation constraint: > k
+def cons_short_limit_sum_weight(x, k):
+    return np.sum(x[x < 0]) + k  # some limit to shorting weight in portfolio
+
+
+# long summation constraint: > k
+def cons_long_limit_sum_weight(x, k):
+    return np.sum(x[x > 0]) - k  # some limit to shorting weight in portfolio
+
+
 # risk budgeting weighting
 def sharpe_weights_long(cov, returns, risk_free):
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
@@ -43,10 +53,20 @@ def sharpe_weights_long(cov, returns, risk_free):
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 # risk budgeting weighting
-def sharpe_weights_restriction(cov, returns, risk_free, short_limit=3):
+def sharpe_weights_individual_weight_restriction(cov, returns, risk_free, short_limit=3):
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
+    return minimize(sharpe_obj_fun_long, w0, args=(cov, returns, risk_free),
+                    method='SLSQP', constraints=cons, options={'ftol': 1e-9})
+
+
+# risk budgeting weighting
+def sharpe_weights_summation_weight_restriction(cov, returns, risk_free, short_limit=0.3, long_limit=1.3):
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [short_limit]},
+            {'type': 'ineq', 'fun': cons_long_limit_sum_weight, 'args': [long_limit]})
     return minimize(sharpe_obj_fun_long, w0, args=(cov, returns, risk_free),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 

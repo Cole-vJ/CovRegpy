@@ -123,30 +123,41 @@ def ssd(time_series, nmse_threshold=0.01, plot=False):
             plt.plot(np.asarray(time_series_resid))
             plt.show()
             s, f = mlab.psd(np.asarray(time_series_resid), Fs=1 / dt)
-            plt.title('Gaussian Initialisation')
-            plt.plot(f * dt, s, label='Power-Spectral Density')
-            plt.plot(f * dt, gaus_1, '--', label=textwrap.fill('Gaussian 1 initialisation', 15))
-            plt.plot(f * dt, gaus_2, '--', label=textwrap.fill('Gaussian 2 initialisation', 15))
-            plt.plot(f * dt, gaus_3, '--', label=textwrap.fill('Gaussian 3 initialisation', 15))
+            plt.title('Gaussian Function Initialisation')
+            plt.plot(f * dt, s, label='Power-spectral density')
+            plt.plot(f * dt, gaus_1, '--', label=r'$g_1(f) = A_1^{(0)}e^{\frac{(f-\mu_1)^2}{\sigma^{(0)2}_1}}$', Linewidth=2)
+            plt.plot(f * dt, gaus_2, '--', label=r'$g_2(f) = A_2^{(0)}e^{\frac{(f-\mu_2)^2}{\sigma^{(0)2}_2}}$', Linewidth=2)
+            plt.plot(f * dt, gaus_3, '--', label=r'$g_3(f) = A_3^{(0)}e^{\frac{(f-\mu_3)^2}{\sigma^{(0)2}_3}}$', Linewidth=2)
             plt.plot(f * dt, gaus_1 + gaus_2 + gaus_3, '--',
-                     label=textwrap.fill('Gaussian summation initialisation', 15))
+                     label=r'$\sum_{i=1}^{3}A_i^{(0)}e^{\frac{(f-\mu_i)^2}{\sigma^{(0)2}_i}}$', Linewidth=2)
+            plt.plot(mu_1 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_1$')
+            plt.plot(mu_2 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_2$')
+            plt.plot(mu_3 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_3$')
             plt.legend(loc='best')
+            plt.xlabel('Standardised Frequency')
+            plt.ylabel('Spectral Density')
+            plt.xlim(-0.005, 0.255)
+            plt.xticks([0, 0.05, 0.1, 0.15, 0.2, 0.25])
             plt.show()
-            plt.title('Gaussian Optimised')
-            plt.plot(f * dt, s, label='Power-Spectral Density')
-            plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]), '--',
-                     label=textwrap.fill('Gaussian 1 optimised', 15))
-            plt.plot(f * dt, gaussian(f * dt, thetas[1], mu_2, thetas[4]), '--',
-                     label=textwrap.fill('Gaussian 2 optimised', 15))
-            plt.plot(f * dt, gaussian(f * dt, thetas[2], mu_3, thetas[5]), '--',
-                     label=textwrap.fill('Gaussian 3 optimised', 15))
+            plt.title('Gaussian Function Optimised')
+            plt.plot(f * dt, s, label='Power-spectral density')
+            plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]),
+                     '--', label=r'$g^{opt}_1(f) = A_1^{opt}e^{\frac{(f-\mu_1)^2}{\sigma^{opt2}_1}}$', Linewidth=2)
+            plt.plot(f * dt, gaussian(f * dt, thetas[1], mu_2, thetas[4]),
+                     '--', label=r'$g^{opt}_2(f) = A_2^{opt}e^{\frac{(f-\mu_2)^2}{\sigma^{opt2}_2}}$', Linewidth=2)
+            plt.plot(f * dt, gaussian(f * dt, thetas[2], mu_3, thetas[5]),
+                     '--', label=r'$g^{opt}_3(f) = A_3^{opt}e^{\frac{(f-\mu_3)^2}{\sigma^{opt2}_3}}$', Linewidth=2)
             plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]) +
                      gaussian(f * dt, thetas[1], mu_2, thetas[4]) +
                      gaussian(f * dt, thetas[2], mu_3, thetas[5]), '--',
-                     label=textwrap.fill('Gaussian summation optimised', 15))
-            plt.plot(f_range[0] * np.ones(101), np.linspace(0, 2 * A_1, 101), 'k--')
-            plt.plot(f_range[1] * np.ones(101), np.linspace(0, 2 * A_1, 101), 'k--', label='Frequency bounds')
+                     label=r'$\sum_{i=1}^{3}A_i^{opt}e^{\frac{(f-\mu_i)^2}{\sigma^{opt2}_i}}$', Linewidth=2)
+            plt.plot(f_range[0] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--')
+            plt.plot(f_range[1] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--', label='Frequency bounds')
             plt.legend(loc='best')
+            plt.xlabel('Standardised Frequency')
+            plt.ylabel('Spectral Density')
+            plt.xlim(-0.005, 0.255)
+            plt.xticks([0, 0.05, 0.1, 0.15, 0.2, 0.25])
             plt.show()
         L = int(1.2 * (1 / dt) * (1 / f[np.max(s) == s]))
         fft_spectrum = sp.fft.fft(time_series_resid)
