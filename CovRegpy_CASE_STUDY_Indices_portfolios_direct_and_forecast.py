@@ -96,10 +96,10 @@ weight_matrix_direct_imf_covreg = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_ssa_covreg = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_imf_covreg_not_long = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_ssa_covreg_not_long = np.zeros_like(sector_11_indices_array)
-weight_matrix_direct_imf_covreg_forecast = np.zeros_like(sector_11_indices_array)
-weight_matrix_direct_ssa_covreg_forecast = np.zeros_like(sector_11_indices_array)
-weight_matrix_direct_imf_covreg_not_long_forecast = np.zeros_like(sector_11_indices_array)
-weight_matrix_direct_ssa_covreg_not_long_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_imf_covreg_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_ssa_covreg_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_imf_covreg_not_long_forecast = np.zeros_like(sector_11_indices_array)
+weight_matrix_ssa_covreg_not_long_forecast = np.zeros_like(sector_11_indices_array)
 weight_matrix_dcc = np.zeros_like(sector_11_indices_array)
 weight_matrix_realised = np.zeros_like(sector_11_indices_array)
 
@@ -566,6 +566,16 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     weight_matrix_realised[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
         weights_Model_forecast_realised
 
+    weight_matrix_imf_covreg_forecast[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)],
+    :] = rb_p_weights(variance_median_gp).x
+    weight_matrix_ssa_covreg_forecast[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)],
+    :] = rb_p_weights(variance_median_gp_ssa).x
+
+    weight_matrix_imf_covreg_not_long_forecast[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)],
+    :] = rb_p_weights_not_long(variance_median_gp, 1).x
+    weight_matrix_ssa_covreg_not_long_forecast[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)],
+    :] = rb_p_weights_not_long(variance_median_gp_ssa, 1).x
+
     # graph options
     plt.title(f'Actual Portfolio Returns versus Portfolio Variance for '
               f'1 {month_vector[int(day % 12)]} {year_vector[int((day + 12) // 12)]} to '
@@ -579,6 +589,9 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # plt.show()
 
     print(day)
+
+    if day == 6:
+        temp = 0
 
 # plot significant weights
 ax = plt.subplot(111)
@@ -632,6 +645,19 @@ cumulative_returns_covreg_realised = \
     cumulative_return(weight_matrix_realised[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 
+cumulative_returns_covreg_imf_forecast = \
+    cumulative_return(weight_matrix_imf_covreg_forecast[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+cumulative_returns_covreg_ssa_forecast = \
+    cumulative_return(weight_matrix_ssa_covreg_forecast[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+cumulative_returns_covreg_imf_not_long_forecast = \
+    cumulative_return(weight_matrix_imf_covreg_not_long_forecast[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+cumulative_returns_covreg_ssa_not_long_forecast = \
+    cumulative_return(weight_matrix_ssa_covreg_not_long_forecast[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Cumulative Returns', fontsize=12)
@@ -648,6 +674,11 @@ plt.plot(cumulative_returns_covreg_imf_direct_portfolio_not_long, label='IMF Cov
 plt.plot(cumulative_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
 plt.plot(cumulative_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
 plt.plot(cumulative_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy long')
+
+plt.plot(cumulative_returns_covreg_imf_forecast, label='IMF forecast')
+plt.plot(cumulative_returns_covreg_imf_not_long_forecast, label='IMF forecast long')
+plt.plot(cumulative_returns_covreg_ssa_forecast, label='SSA forecast')
+plt.plot(cumulative_returns_covreg_ssa_not_long_forecast, label='SSA forecast long')
 plt.yticks(fontsize=8)
 plt.ylabel('Cumulative Returns', fontsize=10)
 plt.xticks([0, 365, 730, 1096, 1461],

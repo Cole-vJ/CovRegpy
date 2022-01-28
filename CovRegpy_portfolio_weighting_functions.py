@@ -43,7 +43,7 @@ def rb_p_weights(cov):
 
 
 # risk budgeting weighting
-def rb_p_weights_not_long(cov, short_limit=3):
+def rb_p_weights_not_long(cov, short_limit=1):
     # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
