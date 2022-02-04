@@ -108,17 +108,25 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
 
     Parameters
     ----------
-    m :
+    m : real ndarray
+        Column vector of shape (n x 1) of means in random effects model with 'n' being number of observations.
 
-    v :
+    v : real ndarray
+        Column vector of shape (n x 1) of variances in random effects model with 'n' being number of observations.
 
-    x :
+    x : real ndarray
+        Matrix of shape (m x n) of covariates with 'm' being number of covariates
+        and 'n' being number of observations.
 
-    y :
+    y : real ndarray
+        Matrix of shape (p x n) of dependent variables with 'p' being number of dependent variables
+        and 'n' being number of observations.
 
-    basis :
+    basis : real ndarray
+        Basis matrix used to estimate local mean - (A_est^T * basis) approximates local mean of y matrix.
 
-    A_est :
+    A_est : real ndarray
+        Coefficient matrix used to estimate local mean - (A_est^T * basis) approximates local mean of y matrix.
 
     technique : string
         'direct' : Direct calculation method used in Hoff and Niu (2012).
@@ -139,13 +147,21 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
             l1_ratio = 1 equivalent to 'lasso'
             l1_ratio = 0 and alpha = 2 equivalent to 'ridge'
 
-    alpha :
+        'group-lasso' :
 
-    max_iter :
+        'sub-gradient' :
 
-    groups :
+    alpha : float
+        Constant used in chosen regression to multiply onto weights.
 
-    test_lasso :
+    max_iter : positive integer
+        Maximum number of iterations to perform in chosen regression.
+
+    groups : real ndarray
+        Groups to be used in 'group-lasso' regression.
+
+    test_lasso : bool
+        If True, then given 'alpha' value is disregarded at each iteration and an optimal 'alpha' is calculated.
 
     Returns
     -------
@@ -155,6 +171,8 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
 
     Notes
     -----
+    Group LASSO regression and Subgradient optimisation are experimental and need to be improved to stop breaking of
+    correlation structure.
 
     """
     x_tilda = np.vstack([m * x.T, (v ** (1 / 2)) * x.T])
@@ -185,15 +203,13 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
         B_est = reg_ridge.coef_
 
     elif technique == 'elastic-net':
-        # Minimize:
-        # 1 / (2 * n_samples) * ||y - Xw||^2_2 + alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
-        # l1_ratio = 0 --> l2 penalty only --> linear_model.Ridge(alpha=alpha, fit_intercept=False)
-        # l1_ratio = 1 --> l1 penalty only --> linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False)
+
         reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.1, max_iter=max_iter)
         reg_elas_net.fit(x_tilda, y_tilda)
         B_est = reg_elas_net.coef_
 
     elif technique == 'group-lasso':
+
         # need to fix and finalise - breaks correlation structure
         # https://group-lasso.readthedocs.io/en/latest/
         # https://group-lasso.readthedocs.io/en/latest/auto_examples/index.html
@@ -204,7 +220,9 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
             reg_group_lasso.fit(x_tilda, y_tilda[:, covariate].reshape(-1, 1))
             B_est[covariate, :] = reg_group_lasso.coef_[0]
             print(reg_group_lasso.coef_[:, 0])
+
     elif technique == 'sub-gradient':
+
         # need to fix and finalise - breaks correlation structure
         B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))
         for covariate in range(np.shape(y_tilda)[1]):
@@ -224,20 +242,17 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
     return B_est.astype(np.float64), Psi_est.astype(np.float64)
 
 
-# calculate variance and mean of gamma
-
-
 def gamma_v_m_error(errors, x, Psi, B):
 
     # follows calculation at the bottom of page 9 of paper
     try:
         const = np.matmul(np.linalg.solve(Psi.astype(np.float64), B.T.astype(np.float64)), x)
     except:
-        const = np.matmul(np.linalg.lstsq(Psi.astype(np.float64), B.T.astype(np.float64), rcond=None)[0], x)
-
-        # # pseudo-inverse solution approximation
-        # const = np.matmul(np.linalg.solve(Psi.astype(np.float64).dot(Psi.astype(np.float64).T),
-        #                                   Psi.astype(np.float64).dot(B.T.astype(np.float64))), x)
+        try:
+            const = np.matmul(np.linalg.lstsq(Psi.astype(np.float64), B.T.astype(np.float64), rcond=None)[0], x)
+        except:
+            const = np.matmul(np.linalg.lstsq(Psi.astype(np.float64).dot(Psi.astype(np.float64).T),
+                                              Psi.astype(np.float64).dot(B.T.astype(np.float64)), rcond=None)[0], x)
 
     v = (1 + (x * np.matmul(B, const)).sum(0)) ** (-1)
     m = v * sum(errors * const)
