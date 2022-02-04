@@ -7,12 +7,13 @@ import matplotlib.pyplot as plt
 
 from CovRegpy_finance_utils import efficient_frontier, global_minimum_forward_applied_information, \
     sharpe_forward_applied_information, pca_forward_applied_information, \
-    global_minimum_forward_applied_information_long, sharpe_forward_applied_information_restriction, \
+    global_minimum_forward_applied_information_long, \
     sharpe_forward_applied_information_summation_restriction
 
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean, cubic_b_spline
 
-from CovRegpy_portfolio_weighting_functions import rb_p_weights, rb_p_weights_not_long, global_obj_fun
+from CovRegpy_portfolio_weighting_functions import rb_p_weights, rb_p_weights_not_long, \
+    rb_p_weights_summation_restriction, global_obj_fun
 
 from CovRegpy_measures import cumulative_return, mean_return, variance_return, value_at_risk_return, \
     max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return
@@ -23,7 +24,8 @@ from CovRegpy_GARCH_model import covregpy_dcc_mgarch
 
 from AdvEMDpy import AdvEMDpy
 
-np.random.seed(2)
+np.random.seed(41)
+# np.random.seed(33, 41, 56, 61, 82, 88, 105, 114, 119, 168, 173, 183, 197, 208, 225, 227, 241)
 
 sns.set(style='darkgrid')
 
@@ -90,9 +92,11 @@ weight_matrix_maximum_sharpe_ratio = np.zeros_like(sector_11_indices_array)
 weight_matrix_maximum_sharpe_ratio_restriction = np.zeros_like(sector_11_indices_array)
 weight_matrix_pca = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_imf_covreg = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_imf_covreg_high = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_ssa_covreg = np.zeros_like(sector_11_indices_array)
-weight_matrix_direct_imf_covreg_not_long = np.zeros_like(sector_11_indices_array)
-weight_matrix_direct_ssa_covreg_not_long = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_imf_covreg_restriction = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_imf_covreg_high_restriction = np.zeros_like(sector_11_indices_array)
+weight_matrix_direct_ssa_covreg_restriction = np.zeros_like(sector_11_indices_array)
 weight_matrix_dcc = np.zeros_like(sector_11_indices_array)
 weight_matrix_realised = np.zeros_like(sector_11_indices_array)
 
@@ -136,12 +140,14 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # plt.scatter(gm_sd, gm_r, label='Global minimum variance portfolio', zorder=2)
 
     # calculate maximum sharpe ratio portfolio
-    ms_w, ms_sd, ms_r = sharpe_forward_applied_information(annual_covariance, monthly_covariance, monthly_returns,
+    ms_w, ms_sd, ms_r = sharpe_forward_applied_information(annual_covariance, annual_returns,
+                                                           monthly_covariance, monthly_returns,
                                                            risk_free, gm_w, gm_r)
     # plt.scatter(ms_sd, ms_r, label='Maximum Sharpe ratio portfolio', zorder=2)
 
     # calculate maximum sharpe ratio portfolio
     msr_w, msr_sd, msr_r = sharpe_forward_applied_information_summation_restriction(annual_covariance,
+                                                                                    annual_returns,
                                                                                     monthly_covariance,
                                                                                     monthly_returns, risk_free,
                                                                                     gm_w, gm_r, short_limit=0.3,
@@ -204,6 +210,10 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
             x = np.vstack((imfs, x))
         except:
             x = imfs.copy()
+        try:
+            x_high = np.vstack((imfs[:2, :], x_high))
+        except:
+            x_high = imfs[:2, :].copy()
 
     # ssa
     x_ssa_trunc = \
@@ -211,6 +221,8 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     x_trunc = \
         x[:, :int(end_of_month_vector_cumsum[int(day + months - 1)] - end_of_month_vector_cumsum[int(day)])]
+    x_high_trunc = \
+        x_high[:, :int(end_of_month_vector_cumsum[int(day + months - 1)] - end_of_month_vector_cumsum[int(day)])]
 
     # calculate y - same for both imf and ssa
     y = sector_11_indices_array[end_of_month_vector_cumsum[int(day + months - 11)]:end_of_month_vector_cumsum[
@@ -225,6 +237,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
             y = y[:, :np.shape(x_trunc)[1]]
         elif np.shape(y)[1] < np.shape(x_trunc)[1]:
             x_trunc = x_trunc[:, :np.shape(y)[1]]
+            x_high_trunc = x_high_trunc[:, :np.shape(y)[1]]
             spline_basis_direct_trunc = spline_basis_direct_trunc[:, :np.shape(y)[1]]
 
     # make 'x' and 'y' the same size - ssa
@@ -246,6 +259,9 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     B_est_direct, Psi_est_direct = \
         cov_reg_given_mean(A_est=A_est, basis=spline_basis_direct_trunc, x=x_trunc, y=y, iterations=100)
 
+    B_est_direct_high, Psi_est_direct_high = \
+        cov_reg_given_mean(A_est=A_est, basis=spline_basis_direct_trunc, x=x_high_trunc, y=y, iterations=100)
+
     # calculate forecasted variance
 
     # days in the month where forecasting is to be done
@@ -254,6 +270,10 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     # empty forecasted variance storage matrix - direct
     variance_Model_forecast_direct = np.zeros(
+        (days_in_month_forecast_direct, np.shape(B_est_direct)[1], np.shape(B_est_direct)[1]))
+
+    # empty forecasted variance storage matrix - direct high frequency
+    variance_Model_forecast_direct_high = np.zeros(
         (days_in_month_forecast_direct, np.shape(B_est_direct)[1], np.shape(B_est_direct)[1]))
 
     # empty forecasted variance storage matrix - ssa
@@ -293,6 +313,12 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
                                        np.matmul(x[:, extract_x_imf_values].T,
                                                  B_est_direct).astype(np.float64).reshape(1, -1)).astype(np.float64)
 
+        variance_Model_forecast_direct_high[forecasted_variance_index] = \
+            Psi_est_direct_high + np.matmul(np.matmul(B_est_direct_high.T,
+                                                 x_high[:, extract_x_imf_values]).astype(np.float64).reshape(-1, 1),
+                                       np.matmul(x_high[:, extract_x_imf_values].T,
+                                                 B_est_direct_high).astype(np.float64).reshape(1, -1)).astype(np.float64)
+
         variance_Model_forecast_ssa[forecasted_variance_index] = \
             Psi_est_direct_ssa + \
             np.matmul(np.matmul(B_est_direct_ssa.T, x_ssa[:, extract_x_imf_values]).astype(np.float64).reshape(-1, 1),
@@ -308,6 +334,10 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # debugging step
     # plt.plot(np.mean(np.mean(np.abs(variance_Model_forecast_direct), axis=1), axis=1))
     variance_median_direct = np.median(variance_Model_forecast_direct, axis=0)
+
+    # debugging step
+    # plt.plot(np.mean(np.mean(np.abs(variance_Model_forecast_direct), axis=1), axis=1))
+    variance_median_direct_high = np.median(variance_Model_forecast_direct_high, axis=0)
 
     # debugging step
     # plt.plot(np.mean(np.mean(np.abs(variance_Model_forecast_direct), axis=1), axis=1))
@@ -334,21 +364,33 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     model_returns_forecast_direct = sum(weights_Model_forecast_direct * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
 
+    # calculate weights, variance, and returns - direct application Covariance Regression - long only
+    weights_Model_forecast_direct_high = rb_p_weights(variance_median_direct_high).x
+    # model_variance_forecast_direct = global_obj_fun(weights_Model_forecast_direct, monthly_covariance)
+    # model_returns_forecast_direct = sum(weights_Model_forecast_direct * monthly_returns)
+    # plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
+
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long restraint removed
-    weights_Model_forecast_direct_ssa_long_short = rb_p_weights_not_long(variance_median_direct_ssa, short_limit=1).x
-    model_variance_forecast_direct_ssa_long_short = global_obj_fun(weights_Model_forecast_direct_ssa_long_short,
+    # weights_Model_forecast_direct_ssa_long_short = rb_p_weights_not_long(variance_median_direct_ssa, short_limit=1).x
+    weights_Model_forecast_direct_ssa_summation_restriction = rb_p_weights_summation_restriction(variance_median_direct_ssa).x
+
+    model_variance_forecast_direct_ssa_long_short = global_obj_fun(weights_Model_forecast_direct_ssa_summation_restriction,
                                                                    monthly_covariance)
-    model_returns_forecast_direct_ssa_long_short = sum(weights_Model_forecast_direct_ssa_long_short * monthly_returns)
+    model_returns_forecast_direct_ssa_long_short = sum(weights_Model_forecast_direct_ssa_summation_restriction * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct_ssa_long_short), model_returns_forecast_direct_ssa_long_short,
     #             label='CovReg Direct Model SSA')
 
     # calculate weights, variance, and returns - direct application Covariance Regression - long restraint removed
-    weights_Model_forecast_direct_long_short = rb_p_weights_not_long(variance_median_direct, short_limit=1).x
-    model_variance_forecast_direct_long_short = global_obj_fun(weights_Model_forecast_direct_long_short,
+    # weights_Model_forecast_direct_long_short = rb_p_weights_not_long(variance_median_direct, short_limit=1).x
+    weights_Model_forecast_direct_summation_restriction = rb_p_weights_summation_restriction(variance_median_direct).x
+
+    model_variance_forecast_direct_long_short = global_obj_fun(weights_Model_forecast_direct_summation_restriction,
                                                                monthly_covariance)
-    model_returns_forecast_direct_long_short = sum(weights_Model_forecast_direct_long_short * monthly_returns)
+    model_returns_forecast_direct_long_short = sum(weights_Model_forecast_direct_summation_restriction * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct_long_short), model_returns_forecast_direct_long_short,
     #             label='CovReg Direct Model')
+
+    weights_Model_forecast_direct_summation_restriction_high = rb_p_weights_summation_restriction(variance_median_direct_high).x
 
     weights_Model_forecast_dcc = rb_p_weights(variance_median_dcc).x
 
@@ -369,14 +411,19 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
         weights_Model_forecast_direct
     weight_matrix_direct_ssa_covreg[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
         weights_Model_forecast_direct_ssa
-    weight_matrix_direct_imf_covreg_not_long[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
-        weights_Model_forecast_direct_long_short
-    weight_matrix_direct_ssa_covreg_not_long[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
-        weights_Model_forecast_direct_ssa_long_short
+    weight_matrix_direct_imf_covreg_restriction[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
+        weights_Model_forecast_direct_summation_restriction
+    weight_matrix_direct_ssa_covreg_restriction[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
+        weights_Model_forecast_direct_ssa_summation_restriction
     weight_matrix_dcc[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
         weights_Model_forecast_dcc
     weight_matrix_realised[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
         weights_Model_forecast_realised
+
+    weight_matrix_direct_imf_covreg_high[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
+        weights_Model_forecast_direct_high
+    weight_matrix_direct_imf_covreg_high_restriction[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
+        weights_Model_forecast_direct_summation_restriction_high
 
     # graph options
     plt.title(f'Actual Portfolio Returns versus Portfolio Variance for '
@@ -397,7 +444,7 @@ ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('IMF CovRegpy Weights', fontsize=12)
 for i in range(11):
-    plt.plot(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48], i],
+    plt.plot(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48], i],
              label=sector_11_indices.columns[i])
 plt.yticks(fontsize=8)
 plt.ylabel('Weights', fontsize=10)
@@ -416,9 +463,9 @@ cumulative_returns_global_minimum_portfolio = \
 cumulative_returns_global_minimum_portfolio_long = \
     cumulative_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
-cumulative_returns_maximum_sharpe_ratio_portfolio = \
-    cumulative_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
-                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+# cumulative_returns_maximum_sharpe_ratio_portfolio = \
+#     cumulative_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+#                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 cumulative_returns_maximum_sharpe_ratio_portfolio_restriction = \
     cumulative_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
@@ -432,10 +479,10 @@ cumulative_returns_covreg_ssa_direct_portfolio = \
     cumulative_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 cumulative_returns_covreg_imf_direct_portfolio_not_long = \
-    cumulative_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    cumulative_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 cumulative_returns_covreg_ssa_direct_portfolio_not_long = \
-    cumulative_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    cumulative_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 cumulative_returns_covreg_dcc = \
     cumulative_return(weight_matrix_dcc[:end_of_month_vector_cumsum[48]].T,
@@ -444,29 +491,48 @@ cumulative_returns_covreg_realised = \
     cumulative_return(weight_matrix_realised[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 
+cumulative_returns_covreg_high = \
+    cumulative_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+cumulative_returns_covreg_high_restriction = \
+    cumulative_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
+
+print(f'Realised variance cumulative returns: {cumulative_returns_covreg_realised[-1]}')
+print(f'dcc cumulative returns: {cumulative_returns_covreg_dcc[-1]}')
+print(f'S&P 500 Proxy: {sp500_proxy[-1]}')
+print(f'global minimum variance {cumulative_returns_global_minimum_portfolio[-1]}')
+print(f'PCA {cumulative_returns_pca_portfolio[-1]}')
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Cumulative Returns', fontsize=12)
 plt.plot(cumulative_returns_covreg_realised, label='Realised covariance')
 plt.plot(cumulative_returns_covreg_dcc, label='DCC MGARCH')
 plt.plot(sp500_proxy, label='S&P 500 Proxy')
-plt.plot(cumulative_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(cumulative_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-plt.plot(cumulative_returns_pca_portfolio, label='PCA portfolio with 3 components')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio_restriction,
-#          label='Maximum Sharpe ratio portfolio (with short restriction)')
-plt.plot(cumulative_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(cumulative_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
-plt.plot(cumulative_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(cumulative_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy long')
+plt.plot(cumulative_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(cumulative_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(cumulative_returns_covreg_high,
+         label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(cumulative_returns_covreg_high_restriction,
+         label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(cumulative_returns_covreg_imf_direct_portfolio,
+         label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(cumulative_returns_covreg_imf_direct_portfolio_not_long,
+         label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(cumulative_returns_covreg_ssa_direct_portfolio,
+         label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(cumulative_returns_covreg_ssa_direct_portfolio_not_long,
+         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Cumulative Returns', fontsize=10)
 plt.xticks([0, 365, 730, 1096, 1461],
            ['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
 plt.show()
 
@@ -491,10 +557,10 @@ mean_returns_covreg_ssa_direct_portfolio = \
     mean_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 mean_returns_covreg_imf_direct_portfolio_not_long = \
-    mean_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    mean_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 mean_returns_covreg_ssa_direct_portfolio_not_long = \
-    mean_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    mean_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 mean_returns_realised_covariance = \
@@ -506,27 +572,37 @@ mean_returns_mgarch = \
 mean_returns_sp500 = \
     mean_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+mean_returns_covreg_imf_direct_high = \
+    mean_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+mean_returns_covreg_imf_direct_high_not_long = \
+    mean_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Mean Returns', fontsize=12)
 plt.plot(mean_returns_realised_covariance, label='Realised covariance')
 plt.plot(mean_returns_mgarch, label='DCC MGARCH')
 plt.plot(mean_returns_sp500, label='S&P 500 Proxy')
-plt.plot(mean_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(mean_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(mean_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(mean_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(mean_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy only')
-plt.plot(mean_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(mean_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy only')
+plt.plot(mean_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(mean_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(mean_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(mean_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(mean_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(mean_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(mean_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(mean_returns_covreg_ssa_direct_portfolio_not_long, label=textwrap.fill('Low frequency (summation restriction)', 19),
+         c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Mean Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
 plt.show()
 
@@ -551,10 +627,10 @@ variance_returns_covreg_ssa_direct_portfolio = \
     variance_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 variance_returns_covreg_imf_direct_portfolio_not_long = \
-    variance_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    variance_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 variance_returns_covreg_ssa_direct_portfolio_not_long = \
-    variance_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    variance_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 variance_returns_realised_covariance = \
@@ -566,27 +642,37 @@ variance_returns_mgarch = \
 variance_returns_sp500 = \
     variance_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+variance_returns_covreg_imf_direct_high = \
+    variance_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+variance_returns_covreg_imf_direct_high_not_long = \
+    variance_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Variance of Returns', fontsize=12)
 plt.plot(variance_returns_realised_covariance, label='Realised covariance')
 plt.plot(variance_returns_mgarch, label='DCC MGARCH')
 plt.plot(variance_returns_sp500, label='S&P 500 Proxy')
-plt.plot(variance_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(variance_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(variance_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(variance_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(variance_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
-plt.plot(variance_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(variance_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy long')
+plt.plot(variance_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(variance_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(variance_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(variance_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(variance_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(variance_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(variance_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(variance_returns_covreg_ssa_direct_portfolio_not_long, label=textwrap.fill('Low frequency (summation restriction)', 19),
+         c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Variance', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
 plt.show()
 
@@ -611,10 +697,10 @@ value_at_risk_returns_covreg_ssa_direct_portfolio = \
     value_at_risk_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 value_at_risk_returns_covreg_imf_direct_portfolio_not_long = \
-    value_at_risk_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    value_at_risk_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 value_at_risk_returns_covreg_ssa_direct_portfolio_not_long = \
-    value_at_risk_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    value_at_risk_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 value_at_risk_returns_realised_covariance = \
@@ -626,27 +712,37 @@ value_at_risk_returns_mgarch = \
 value_at_risk_returns_sp500 = \
     value_at_risk_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+value_at_risk_returns_covreg_imf_direct_high = \
+    value_at_risk_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+value_at_risk_returns_covreg_imf_direct_high_not_long = \
+    value_at_risk_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Value-at-Risk Returns', fontsize=12)
 plt.plot(value_at_risk_returns_realised_covariance, label='Realised covariance')
 plt.plot(value_at_risk_returns_mgarch, label='DCC MGARCH')
 plt.plot(value_at_risk_returns_sp500, label='S&P 500 Proxy')
-plt.plot(value_at_risk_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(value_at_risk_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(value_at_risk_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
-plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy long')
+plt.plot(value_at_risk_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(value_at_risk_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(value_at_risk_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(value_at_risk_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio_not_long,
+         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Mean Value-at-Risk', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
 plt.show()
 
@@ -671,10 +767,10 @@ max_draw_down_returns_covreg_ssa_direct_portfolio = \
     max_draw_down_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 max_draw_down_returns_covreg_imf_direct_portfolio_not_long = \
-    max_draw_down_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    max_draw_down_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 max_draw_down_returns_covreg_ssa_direct_portfolio_not_long = \
-    max_draw_down_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    max_draw_down_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 max_draw_down_returns_realised_covariance = \
@@ -686,27 +782,37 @@ max_draw_down_returns_mgarch = \
 max_draw_down_returns_sp500 = \
     max_draw_down_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+max_draw_down_returns_covreg_imf_direct_high = \
+    max_draw_down_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+max_draw_down_returns_covreg_imf_direct_high_not_long = \
+    max_draw_down_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Maximum Draw Down Returns', fontsize=12)
 plt.plot(max_draw_down_returns_realised_covariance, label='Realised Covariance')
 plt.plot(max_draw_down_returns_mgarch, label='DCC MGARCH')
 plt.plot(max_draw_down_returns_sp500, label='S&P 500 Proxy')
-plt.plot(max_draw_down_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(max_draw_down_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(max_draw_down_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
-plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy long')
+plt.plot(max_draw_down_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(max_draw_down_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(max_draw_down_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(max_draw_down_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio_not_long,
+         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Max Draw Down', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
 plt.show()
 
@@ -731,10 +837,10 @@ omega_ratio_returns_covreg_ssa_direct_portfolio = \
     omega_ratio_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 omega_ratio_returns_covreg_imf_direct_portfolio_not_long = \
-    omega_ratio_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    omega_ratio_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 omega_ratio_returns_covreg_ssa_direct_portfolio_not_long = \
-    omega_ratio_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    omega_ratio_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 omega_ratio_returns_realised_covariance = \
@@ -746,27 +852,37 @@ omega_ratio_returns_mgarch = \
 omega_ratio_returns_sp500 = \
     omega_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+omega_ratio_returns_covreg_imf_direct_high = \
+    omega_ratio_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+omega_ratio_returns_covreg_imf_direct_high_not_long = \
+    omega_ratio_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Omega Ratio Returns', fontsize=12)
 plt.plot(omega_ratio_returns_realised_covariance, label='Realised covariance')
 plt.plot(omega_ratio_returns_mgarch, label='DCC MGARCH')
 plt.plot(omega_ratio_returns_sp500, label='S&P 500 Proxy')
-plt.plot(omega_ratio_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(omega_ratio_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(omega_ratio_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy only')
-plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy only')
+plt.plot(omega_ratio_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(omega_ratio_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(omega_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(omega_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio_not_long,
+         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Omega Ratio', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
 plt.show()
 
@@ -791,10 +907,10 @@ sharpe_ratio_returns_covreg_ssa_direct_portfolio = \
     sharpe_ratio_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sharpe_ratio_returns_covreg_imf_direct_portfolio_not_long = \
-    sharpe_ratio_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    sharpe_ratio_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sharpe_ratio_returns_covreg_ssa_direct_portfolio_not_long = \
-    sharpe_ratio_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    sharpe_ratio_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 sharpe_ratio_returns_realised_covariance = \
@@ -806,27 +922,37 @@ sharpe_ratio_returns_mgarch = \
 sharpe_ratio_returns_sp500 = \
     sharpe_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+sharpe_ratio_returns_covreg_imf_direct_high = \
+    sharpe_ratio_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+sharpe_ratio_returns_covreg_imf_direct_high_not_long = \
+    sharpe_ratio_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Sharpe Ratio Returns', fontsize=12)
 plt.plot(sharpe_ratio_returns_realised_covariance, label='Realised covariance')
 plt.plot(sharpe_ratio_returns_mgarch, label='DCC MGARCH')
 plt.plot(sharpe_ratio_returns_sp500, label='S&P 500 Proxy')
-plt.plot(sharpe_ratio_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(sharpe_ratio_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(sharpe_ratio_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
-plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy only')
+plt.plot(sharpe_ratio_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(sharpe_ratio_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(sharpe_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(sharpe_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio_not_long,
+         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Sharpe Ratio', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
 plt.show()
 
@@ -851,10 +977,10 @@ sortino_ratio_returns_covreg_ssa_direct_portfolio = \
     sortino_ratio_return(weight_matrix_direct_ssa_covreg[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sortino_ratio_returns_covreg_imf_direct_portfolio_not_long = \
-    sortino_ratio_return(weight_matrix_direct_imf_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    sortino_ratio_return(weight_matrix_direct_imf_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sortino_ratio_returns_covreg_ssa_direct_portfolio_not_long = \
-    sortino_ratio_return(weight_matrix_direct_ssa_covreg_not_long[:end_of_month_vector_cumsum[48]].T,
+    sortino_ratio_return(weight_matrix_direct_ssa_covreg_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 sortino_ratio_returns_realised_covariance = \
@@ -866,27 +992,37 @@ sortino_ratio_returns_mgarch = \
 sortino_ratio_returns_sp500 = \
     sortino_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
 
+sortino_ratio_returns_covreg_imf_direct_high = \
+    sortino_ratio_return(weight_matrix_direct_imf_covreg_high[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+sortino_ratio_returns_covreg_imf_direct_high_not_long = \
+    sortino_ratio_return(weight_matrix_direct_imf_covreg_high_restriction[:end_of_month_vector_cumsum[48]].T,
+                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Sortino Ratio Returns', fontsize=12)
 plt.plot(sortino_ratio_returns_realised_covariance, label='Realised covariance')
 plt.plot(sortino_ratio_returns_mgarch, label='DCC MGARCH')
 plt.plot(sortino_ratio_returns_sp500, label='S&P 500 Proxy')
-plt.plot(sortino_ratio_returns_global_minimum_portfolio, label='Global minimum variance')
-plt.plot(sortino_ratio_returns_global_minimum_portfolio_long, label='Global minimum variance long')
-# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio, label='Maximum Sharpe ratio portfolio')
-plt.plot(sortino_ratio_returns_pca_portfolio, label='PCA portfolio with 3 components')
-plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio_not_long, label='IMF CovRegpy')
-plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio, label='IMF CovRegpy long')
-plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio_not_long, label='SSA CovRegpy')
-plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio, label='SSA CovRegpy long')
+plt.plot(sortino_ratio_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(sortino_ratio_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+plt.plot(sortino_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+plt.plot(sortino_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio_not_long,
+         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Sortino Ratio', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
-plt.legend(loc='best', fontsize=8)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns.png')
 plt.show()
 

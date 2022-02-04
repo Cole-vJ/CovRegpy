@@ -1,5 +1,9 @@
 
-# formatted
+# Document Strings Publication
+
+# Main reference: Hoff and Niu (2012)
+# Hoff, P. and Niu, X., A Covariance Regression Model.
+# Statistica Sinica, Institute of Statistical Science, 2012, 22(2), 729–753.
 
 import textwrap
 import numpy as np
@@ -15,14 +19,38 @@ np.random.seed(0)
 
 sns.set(style='darkgrid')
 
-# recursive basis construction
-
 
 def b(knots, time, degree):
+    """
+    Recursive method for building basis functions - concise and effective.
 
+    Parameters
+    ----------
+    knots : real ndarray
+        Entire knot vector or subset of knot vector depending on level of recursion.
+        Number of knots provided depends on degree of basis function i.e. degree = 3 -> len(knots) = 5
+
+    time : real ndarray
+        Time over which basis functions will be defined.
+
+    degree : int
+        Degree of basis spline to be constructed.
+
+    Returns
+    -------
+    output : real ndarray
+        Single basis spline of degree: "degree".
+
+    Notes
+    -----
+    Continually subsets knot vector by one increment until base case is reached.
+
+    """
     if degree == 0:
 
-        return ((knots[0] <= time) & (time < knots[1])) * 1.0
+        output = ((knots[0] <= time) & (time < knots[1])) * 1.0
+
+        return output
 
     else:
 
@@ -32,14 +60,35 @@ def b(knots, time, degree):
         c2 = (knots[-1] * np.ones_like(time) - time) / \
              (knots[-1] * np.ones_like(time) - knots[1] * np.ones_like(time)) * b(knots[1:], time, degree - 1)
 
-    return c1 + c2
+        output = c1 + c2
 
-
-# cubic basis splines as function of knots points
+    return output
 
 
 def cubic_b_spline(knots, time):
+    """
+    Returns a (len(knots) - 4) x len(time) array. Each row is an individual cubic basis.
+    Matrix is sparse. Each column contains at most 4 non-zero values (only four bases overlap at any point).
 
+    Parameters
+    ----------
+    knots : real ndarray
+        Knot points to be used (not necessarily evenly spaced).
+
+    time : real ndarray
+        Time over which basis matrix will be defined.
+
+    Returns
+    -------
+    matrix_c : real ndarray
+        Each row of matrix contains an individual cubic basis spline.
+
+    Notes
+    -----
+    A vector 'c' can be calculated such that with output of this function being array 'B' and a time series being 's'
+    the objective function ||(B^T)c - s||^2 is minimized to yield coefficient vector 'c'.
+
+    """
     num_c = len(knots) - 4  # cubic basis-spline -> 4 fewer coefficients than knots
 
     matrix_c = np.zeros((num_c, len(time)))  # each row is a single basis function
@@ -48,42 +97,101 @@ def cubic_b_spline(knots, time):
 
         temp_knots = knots[tau:(tau + 5)]  # select 5 knots applicable to current cubic spline
 
-        matrix_c[tau, :] = b(temp_knots, time, 3)
+        matrix_c[tau, :] = b(temp_knots, time, 3)  # calls func b above
 
     return matrix_c
 
 
-# calculate B and Psi (base variance)
-
-
 def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, test_lasso=False):
+    """
+    This follows the calculation at the bottom of page 10 and top of page 11 in Hoff and Niu (2012).
 
-    # follows calculation at the bottom of page 10 and top of page 11
+    Parameters
+    ----------
+    m :
+
+    v :
+
+    x :
+
+    y :
+
+    basis :
+
+    A_est :
+
+    technique : string
+        'direct' : Direct calculation method used in Hoff and Niu (2012).
+            beta = [(x_tild^T * x_tilda)^(-1)] * (x_tilda^T * y)
+
+        'lasso' : Least Absolute Shrinkage and Selection Operator (LASSO) Regression.
+            Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
+                      alpha * ||w||_1
+
+        'ridge' :
+            Minimize: ||y_tilda - x_tilda * beta||^2_2 + alpha * ||w||^2_2
+            Equivalent to: beta = [(x_tild^T * x_tilda + alpha * I)^(-1)] * (x_tilda^T * y)
+
+        'elastic-net' :
+            Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
+                      alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
+
+            l1_ratio = 1 equivalent to 'lasso'
+            l1_ratio = 0 and alpha = 2 equivalent to 'ridge'
+
+    alpha :
+
+    max_iter :
+
+    groups :
+
+    test_lasso :
+
+    Returns
+    -------
+    B_est :
+
+    Psi_est :
+
+    Notes
+    -----
+
+    """
     x_tilda = np.vstack([m * x.T, (v ** (1 / 2)) * x.T])
     y_tilda = np.vstack(((y.T - np.matmul(A_est.T, basis).T), np.zeros_like(y.T)))
 
     if technique == 'direct':
-        B_est = np.matmul(y_tilda.T, np.matmul(x_tilda, np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
+
+        B_est = \
+            np.matmul(y_tilda.T, np.matmul(x_tilda, np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
+
     elif technique == 'lasso':
 
-        # test lasso
         if test_lasso:
             parameters = {'alpha': 10 ** (np.linspace(-12, 0, 121))}
             reg_lasso = linear_model.Lasso()
             clf = GridSearchCV(reg_lasso, parameters)
             clf.fit(x_tilda, y_tilda)
-
-            # plt.title('Lasso Regression')
-            # plt.plot(np.log10(np.asarray(clf.cv_results_['param_alpha']).astype('float64')),
-            #          clf.cv_results_['mean_test_score'])
-            # plt.scatter(np.log10(np.asarray(clf.cv_results_['param_alpha'])[clf.best_index_]),
-            #             clf.cv_results_['mean_test_score'][clf.best_index_], c='r')
-            # plt.show()
             alpha = np.asarray(clf.cv_results_['param_alpha'])[clf.best_index_]
 
         reg_lasso = linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False, max_iter=max_iter)
         reg_lasso.fit(x_tilda, y_tilda)
         B_est = reg_lasso.coef_
+
+    elif technique == 'ridge':
+
+        reg_ridge = linear_model.Ridge(alpha=alpha, fit_intercept=False, max_iter=max_iter)
+        reg_ridge.fit(x_tilda, y_tilda)
+        B_est = reg_ridge.coef_
+
+    elif technique == 'elastic-net':
+        # Minimize:
+        # 1 / (2 * n_samples) * ||y - Xw||^2_2 + alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
+        # l1_ratio = 0 --> l2 penalty only --> linear_model.Ridge(alpha=alpha, fit_intercept=False)
+        # l1_ratio = 1 --> l1 penalty only --> linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False)
+        reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.1, max_iter=max_iter)
+        reg_elas_net.fit(x_tilda, y_tilda)
+        B_est = reg_elas_net.coef_
 
     elif technique == 'group-lasso':
         # need to fix and finalise - breaks correlation structure
@@ -96,19 +204,6 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
             reg_group_lasso.fit(x_tilda, y_tilda[:, covariate].reshape(-1, 1))
             B_est[covariate, :] = reg_group_lasso.coef_[0]
             print(reg_group_lasso.coef_[:, 0])
-    elif technique == 'ridge':
-        reg_ridge = linear_model.Ridge(alpha=alpha, fit_intercept=False, max_iter=max_iter)
-        reg_ridge.fit(x_tilda, y_tilda)
-        B_est = reg_ridge.coef_
-    elif technique == 'elastic-net':
-        # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html
-        # Minimize:
-        # 1 / (2 * n_samples) * ||y - Xw||^2_2 + alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
-        # l1_ratio = 0 --> l2 penalty only --> linear_model.Ridge(alpha=alpha, fit_intercept=False)
-        # l1_ratio = 1 --> l1 penalty only --> linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False)
-        reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.1, max_iter=max_iter)
-        reg_elas_net.fit(x_tilda, y_tilda)
-        B_est = reg_elas_net.coef_
     elif technique == 'sub-gradient':
         # need to fix and finalise - breaks correlation structure
         B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))

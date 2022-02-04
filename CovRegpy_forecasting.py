@@ -19,7 +19,7 @@ def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
     y = y_fit.ravel()
 
     # instantiate Gaussian Process
-    gaus_proc = GaussianProcessRegressor(kernel=kernel, alpha=1 ** 2, n_restarts_optimizer=10)
+    gaus_proc = GaussianProcessRegressor(kernel=kernel, alpha=1 ** 2, n_restarts_optimizer=0)
 
     # fit process to time and time series subset
     gaus_proc.fit(subset_x, y)

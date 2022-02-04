@@ -10,7 +10,7 @@ from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, R
 
 from CovRegpy_finance_utils import efficient_frontier, global_minimum_forward_applied_information, \
     sharpe_forward_applied_information, pca_forward_applied_information, \
-    global_minimum_forward_applied_information_long, sharpe_forward_applied_information_restriction, \
+    global_minimum_forward_applied_information_long, sharpe_forward_applied_information_individual_restriction, \
     sharpe_forward_applied_information_summation_restriction
 
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean, cubic_b_spline
@@ -26,7 +26,7 @@ from CovRegpy_GARCH_model import covregpy_dcc_mgarch
 
 from AdvEMDpy import AdvEMDpy
 
-np.random.seed(2)
+np.random.seed(3)
 
 sns.set(style='darkgrid')
 

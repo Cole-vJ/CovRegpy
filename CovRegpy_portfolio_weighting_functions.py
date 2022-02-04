@@ -52,6 +52,27 @@ def rb_p_weights_not_long(cov, short_limit=1):
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
+# shorting summation constraint: > k
+def cons_short_limit_sum_weight(x, k):
+    return np.sum(x[x < 0]) + k  # some limit to shorting weight in portfolio
+
+
+# long summation constraint: > k
+def cons_long_limit_sum_weight(x, k):
+    return np.sum(x[x > 0]) - k  # some limit to shorting weight in portfolio
+
+
+# risk budgeting weighting
+def rb_p_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3):
+    # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [short_limit]},
+            {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [long_limit]})
+    return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+                    method='SLSQP', constraints=cons, options={'ftol': 1e-9})
+
+
 # global minimum weights
 def global_weights(cov):
     try:
