@@ -26,16 +26,28 @@ def ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS
         Embedding dimension as in Hassani (2007).
 
     est : positive integer
-        Number of components to use in trend estimation. Necessarily true that est < L.
+        Number of components to use in trend estimation. Necessarily true that est <= L.
+
+    plot : boolean
+        Whether to plot time series and trend estimation.
+
+    KS_test : boolean
+        Whether to test for optimal L and est under Kolmogorov-Smirnov cumulative distribution conditions.
+
+    plot_KS_test : boolean
+        Whether to plot all intermediate Kolmogorov-Smirnov tests.
+
+    KS_scale_limit : float
+        Kolmogorov-Smirnov conditions optimised subject to a minimum standard deviation.
 
     Returns
     -------
-    output : real ndarray
-        Single basis spline of degree: "degree".
+    time_series_est : real ndarray
+        SSA trend estimation of time series using est number of components to estimate.
 
     Notes
     -----
-    Continually subsets knot vector by one increment until base case is reached.
+    Kolmogorov-Smirnov Singular Spectrum Analysis (KS-SSA) is experimental and effective.
 
     """
     KS_value = 1000
