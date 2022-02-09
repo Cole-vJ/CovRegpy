@@ -1,60 +1,265 @@
 
-# formatted
+# Document Strings Publication
 
-import textwrap
-import scipy as sp
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from matplotlib import mlab
-import matplotlib.pyplot as plt
-from scipy.optimize import minimize
-from CovRegpy_singular_spectrum_analysis import ssa
-from scipy.fft import fft
-
+# Main reference: Bonizzi, Karel, Meste, & Peeters (2014)
 # Bonizzi, P., Karel, J., Meste, O., & Peeters, R. (2014).
 # Singular Spectrum Decomposition: A New Method for Time Series Decomposition.
 # Advances in Adaptive Data Analysis, 6(04), 1450011 (1-34). World Scientific.
 
+import scipy as sp
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import seaborn as sns
+from matplotlib import mlab
+import matplotlib.pyplot as plt
+from scipy.optimize import minimize
+from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
+from scipy.fft import fft
+
+np.random.seed(0)
+
+sns.set(style='darkgrid')
+
 
 def gaussian(f, A, mu, sigma):
-    return A * np.exp(- (f - mu) ** 2 / (2 * sigma ** 2))
+    """
+    Gaussian distribution to be fitted to power-spectral density.
+
+    Parameters
+    ----------
+    f : real ndarray
+        Frequency over which distribution will be fitted.
+
+    A : float
+        Amplitude of Gaussian distribution.
+
+    mu : float
+        Mean of Gaussian distribution.
+
+    sigma : float
+        Standard deviation of Gaussian distribution.
+
+    Returns
+    -------
+    distribution : real ndarray
+        Gaussian distribution over domain 'f'.
+
+    Notes
+    -----
+    Used in calculation of downsampling range.
+
+    """
+    distribution = A * np.exp(- (f - mu) ** 2 / (2 * sigma ** 2))
+
+    return distribution
 
 
 def max_bool(time_series):
-    max_bool_order_1 = np.r_[False, time_series[1:] >= time_series[:-1]] & \
-                       np.r_[time_series[:-1] > time_series[1:], False]
-    return max_bool_order_1
+    """
+    Calculate maximum boolean of time series.
+
+    Parameters
+    ----------
+    time_series : real ndarray
+        Time series where maximums are to be calculated.
+
+    Returns
+    -------
+    max_bool : real ndarray
+        Boolean array with location of maximums.
+
+    Notes
+    -----
+    Used to calculate centres of each Gaussian distributions.
+
+    """
+    max_bool = np.r_[False, time_series[1:] >= time_series[:-1]] &np.r_[time_series[:-1] > time_series[1:], False]
+
+    return max_bool
 
 
-def obj_func(theta, f, mu_1, mu_2, mu_3, spectrum):
-    return sum(np.abs(theta[0] * np.exp(- (f - mu_1) ** 2 / (2 * theta[3] ** 2)) +
-                      theta[1] * np.exp(- (f - mu_2) ** 2 / (2 * theta[4] ** 2)) +
-                      theta[2] * np.exp(- (f - mu_3) ** 2 / (2 * theta[5] ** 2)) - spectrum))
+def spectral_obj_func(theta, f, mu_1, mu_2, mu_3, spectrum):
+    """
+    Calculate 3 Gaussian functions.
+
+    Parameters
+    ----------
+    theta : real ndarray
+        A vector of shape (6,) containing amplitudes and sigmas.
+
+    f : real ndarray
+        Frequency over which Gaussian distributions and frequency spectrum are fitted.
+
+    mu_1 : float
+        Mean of the highest frequency peak.
+
+    mu_2 : float
+         Mean of the second-highest frequency peak.
+
+    mu_3 : float
+        Mean of remaining spectra.
+
+    spectrum : real ndarray
+        Spectrum to be fitted to Gaussian distributions.
+
+    Returns
+    -------
+    objective_function : real ndarray
+        The L1 norm of difference between spectrum and Gaussian distributions.
+
+    Notes
+    -----
+    Should experiment with different norms.
+
+    """
+    objective_function = sum(np.abs(theta[0] * np.exp(- (f - mu_1) ** 2 / (2 * theta[3] ** 2)) +
+                                    theta[1] * np.exp(- (f - mu_2) ** 2 / (2 * theta[4] ** 2)) +
+                                    theta[2] * np.exp(- (f - mu_3) ** 2 / (2 * theta[5] ** 2)) - spectrum))
+
+    return objective_function
 
 
-def cons_long_only_weight(x):
+def constraint_positive(x):
+    """
+    Constraint on amplitudes and sigmas being positive.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Parameters to be constrained to be positive.
+
+    Returns
+    -------
+    x : real ndarray
+        Positive constrained parameters.
+
+    Notes
+    -----
+    Constraint function.
+
+    """
     return x
 
 
 def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum):
-    cons = ({'type': 'ineq', 'fun': cons_long_only_weight})
-    return minimize(obj_func, x0=w0, args=(f, mu_1, mu_2, mu_3, spectrum), method='nelder-mead', constraints=cons,
-                    bounds=[(0, None), (0, None), (0, None), (0, None), (0, None), (0, None)])
+    """
+    Function that calculates optimal amplitudes and sigmas.
+
+    Parameters
+    ----------
+    w0 : real ndarray
+        Vectors of starting parameters.
+
+    f : real ndarray
+        Frequency over which parameters are optimised.
+
+    mu_1 : float
+        Mean of the highest frequency peak.
+
+    mu_2 : float
+         Mean of the second-highest frequency peak.
+
+    mu_3 : float
+        Mean of remaining spectra.
+
+    spectrum : real ndarray
+        Spectrum to be fitted to Gaussian distributions.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Returns optimised objective function as well as parameters.
+
+    Notes
+    -----
+
+    """
+    cons = ({'type': 'ineq', 'fun': constraint_positive})
+    return minimize(spectral_obj_func, x0=w0,
+                    args=(f, mu_1, mu_2, mu_3, spectrum), method='nelder-mead',
+                    constraints=cons, bounds=[(0, None), (0, None), (0, None), (0, None), (0, None), (0, None)])
 
 
 def scaling_factor_obj_func(a, residual_time_series, trend_estimate):
-    return sum((residual_time_series - a * trend_estimate) ** 2)
+    """
+    Scaling factor calculation.
+
+    Parameters
+    ----------
+    a : float
+        Scaling factor to be optimised.
+
+    residual_time_series : real ndarray
+        Residual time series to which scaled trend estimate is fitted.
+
+    trend_estimate : real ndarray
+        Component estimate to be fitted with scaling factor.
+
+    Returns
+    -------
+    l2_error : float
+        L2 error of scaled result and residual time series.
+
+    Notes
+    -----
+
+    """
+    l2_error = sum((residual_time_series - a * trend_estimate) ** 2)
+
+    return l2_error
 
 
 def scaling_factor(residual_time_series, trend_estimate):
-    cons = ({'type': 'ineq', 'fun': cons_long_only_weight})
-    return minimize(scaling_factor_obj_func, x0=np.asarray(1), args=(residual_time_series, trend_estimate),
+    """
+    Scaling factor calculation.
+
+    Parameters
+    ----------
+    residual_time_series : real ndarray
+        Residual time series to which scaled trend estimate is fitted.
+
+    trend_estimate : real ndarray
+        Component estimate to be fitted with scaling factor.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised scale factor.
+
+    Notes
+    -----
+
+    """
+    cons = ({'type': 'ineq', 'fun': constraint_positive})
+    return minimize(scaling_factor_obj_func, x0=np.asarray(1),
+                    args=(residual_time_series, trend_estimate),
                     method='nelder-mead', constraints=cons)
 
 
-def ssd(time_series, nmse_threshold=0.01, plot=False):
+def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
+    """
+    Singular Spectrum Decomposition based on Bonizzi, Karel, Meste, & Peeters (2014).
 
+    Parameters
+    ----------
+    time_series : real ndarray
+        Time series to decompose.
+
+    nmse_threshold : float
+        Normalised Mean-Squared Error stopping criterion from Bonizzi, Karel, Meste, & Peeters (2014).
+        Should explore additional stopping criteria.
+
+    Returns
+    -------
+    time_series_est_mat : real ndarray
+        Matrix containing each successive trend estimate.
+
+    Notes
+    -----
+    Many expansions possible.
+
+    """
     # make duplicate of original time series
     time_series_orig = time_series.copy()
     time_series_resid = time_series.copy()
@@ -63,20 +268,28 @@ def ssd(time_series, nmse_threshold=0.01, plot=False):
     dt = (24 * 60 * 60)
     s, f = mlab.psd(np.asarray(time_series_resid), Fs=1 / dt)
     if plot:
+        plt.title('Power Spectral Density of Original Time Series')
         plt.plot(f * dt, s)
         plt.show()
 
-    if np.log10(s)[1] == np.max(np.log10(s)):
-        trend_est = ssa(time_series=np.asarray(time_series_resid), L=int(len(np.asarray(time_series_resid)) / 3), est=1)
+    # if power is concentrated at first or second frequency band i.e. if time series is transient in nature.
+    if np.log10(s)[1] == np.max(np.log10(s)) or np.log10(s)[0] == np.max(np.log10(s)):
+        trend_est = \
+            CovRegpy_ssa(time_series=np.asarray(time_series_resid),
+                         L=int(len(np.asarray(time_series_resid)) / 3), est=1)
         if plot:
-            plt.plot(np.asarray(time_series_resid))
-            plt.plot(trend_est, '--')
+            plt.title('Original Transient Time Series and Trend Estimate')
+            plt.plot(np.asarray(time_series_resid), label='Transient time series')
+            plt.plot(trend_est, '--', label='Trend estimate')
+            plt.legend(loc='best')
             plt.show()
         time_series_resid -= trend_est
         if plot:
+            plt.title('Residual Time Series after Initial Transient Trend Removed')
             plt.plot(np.asarray(time_series_resid))
             plt.show()
             s, f = mlab.psd(np.asarray(time_series_resid), Fs=1 / dt)
+            plt.title('Power Spectral Density after Initial Transient Trend Removed')
             plt.plot(f * dt, s)
             plt.show()
 
@@ -85,10 +298,12 @@ def ssd(time_series, nmse_threshold=0.01, plot=False):
     except:
         pass
 
+    # Ensure initial nmse value initialises while loop
     nmse = nmse_threshold + 0.01
 
     while nmse > nmse_threshold:
-        print(nmse)
+        if debug:
+            print(f'Normalised Mean-Squared Error: {nmse}')
 
         s, f = mlab.psd(np.asarray(time_series_resid), Fs=1 / dt)
 
@@ -246,6 +461,6 @@ if __name__ == "__main__":
     del date_index
 
     # singular spectrum decomposition
-    test = ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
+    test = CovRegpy_ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
     plt.plot(test.T)
     plt.show()

@@ -17,7 +17,7 @@ from CovRegpy_forecasting import gp_forecast
 
 from CovRegpy_measures import cumulative_return
 
-from CovRegpy_singular_spectrum_analysis import ssa
+from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
 
 from AdvEMDpy import AdvEMDpy
 

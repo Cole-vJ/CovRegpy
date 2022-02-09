@@ -1,19 +1,24 @@
 
 # Document Strings Publication
 
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from scipy.stats import norm
-import matplotlib.pyplot as plt
-
 # Main reference: Hassani (2007)
 # Hassani, H. (2007). Singular Spectrum Analysis: Methodology and Comparison.
 # Cardiff University and Central Bank of the Islamic Republic of Iran.
 # https://mpra.ub.uni-muenchen.de/4991/
 
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import seaborn as sns
+from scipy.stats import norm
+import matplotlib.pyplot as plt
 
-def ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1):
+np.random.seed(0)
+
+sns.set(style='darkgrid')
+
+
+def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1):
     """
     Singular Spectrum Analysis (SSA) as in Hassani (2007).
 
@@ -55,7 +60,7 @@ def ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS
     if KS_test:
         for L_test in np.arange(10, int(len(time_series) / 3), 10):
             for est_test in np.arange(L_test):
-                trend = ssa(time_series, L=L_test, est=est_test, KS_test=False)
+                trend = CovRegpy_ssa(time_series, L=L_test, est=est_test, KS_test=False)
 
                 errors = time_series - trend
                 std_of_errors = np.std(errors)
@@ -149,11 +154,11 @@ if __name__ == "__main__":
     # singular spectrum analysis
     plt.title('Singular Spectrum Analysis Example')
     for i in range(1, 11):
-        plt.plot(ssa(np.asarray(close_data['MSFT'][-100:]), L=10, est=i), '--', label=f'Components = {i}')
+        plt.plot(CovRegpy_ssa(np.asarray(close_data['MSFT'][-100:]), L=10, est=i), '--', label=f'Components = {i}')
     plt.legend(loc='best', fontsize=8)
     plt.show()
 
-    opt_trend = ssa(np.asarray(close_data['MSFT'][-100:]), L=10, est=5, KS_test=True)
+    opt_trend = CovRegpy_ssa(np.asarray(close_data['MSFT'][-100:]), L=10, est=5, KS_test=True, plot_KS_test=True)
     plt.plot(np.asarray(close_data['MSFT'][-100:]))
     plt.plot(opt_trend)
     plt.show()

@@ -16,7 +16,7 @@ from CovRegpy_portfolio_weighting_functions import rb_p_weights, rb_p_weights_no
 from CovRegpy_measures import cumulative_return, mean_return, variance_return, value_at_risk_return, \
     max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return
 
-from CovRegpy_singular_spectrum_analysis import ssa
+from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
 
 from CovRegpy_GARCH_model import covregpy_dcc_mgarch
 
@@ -173,7 +173,7 @@ for seed in np.arange(250):
                                                  matrix=True)
 
             # ssa
-            ssa_components = ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
+            ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
             try:
                 x_ssa = np.vstack((ssa_components, x_ssa))
             except:

@@ -17,7 +17,7 @@ from CovRegpy_forecasting import gp_forecast
 
 from CovRegpy_measures import cumulative_return
 
-from CovRegpy_singular_spectrum_analysis import ssa
+from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
 
 from AdvEMDpy import AdvEMDpy
 
@@ -178,7 +178,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
                                              matrix=True)
 
         # ssa
-        ssa_components = ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
+        ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
         try:
             x_ssa = np.vstack((ssa_components, x_ssa))
         except:
