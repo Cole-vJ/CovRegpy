@@ -11,7 +11,7 @@ from CovRegpy_finance_utils import global_minimum_information, sharpe_informatio
 
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean, cubic_b_spline
 
-from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun
+from CovRegpy_portfolio_weighting_functions import risk_parity_weights_long_restrict, global_obj_fun
 
 from CovRegpy_forecasting import gp_forecast
 

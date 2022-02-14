@@ -11,7 +11,7 @@ from AdvEMDpy import AdvEMDpy, emd_basis
 from CovRegpy_PCA_functions import pca_func
 from CovRegpy_portfolio_sharpe_ratio import sharpe_weights
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean
-from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun, global_weights
+from CovRegpy_portfolio_weighting_functions import risk_parity_weights_long_restrict, global_obj_fun, global_weights
 
 # seed random number generation
 np.random.seed(0)
@@ -134,7 +134,7 @@ for lag in range(forecast_days):
         variance_Model_forecast = \
             Psi_est_forecast + np.matmul(np.matmul(B_est_forecast.T, forecast_x).astype(np.float64).reshape(-1, 1),
                                          np.matmul(forecast_x.T, B_est_forecast).astype(np.float64).reshape(1, -1)).astype(np.float64)
-        weights_Model_forecast = rb_p_weights(variance_Model_forecast).x
+        weights_Model_forecast = risk_parity_weights_long_restrict(variance_Model_forecast).x
         model_variance_forecast = global_obj_fun(weights_Model_forecast, variance_Model_forecast)
         model_returns_forecast = sum(weights_Model_forecast * returns[int(model_days + lag + 29), :])
         plt.scatter(np.sqrt(model_variance_forecast), model_returns_forecast, label='Model forecast')

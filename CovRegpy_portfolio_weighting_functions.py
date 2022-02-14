@@ -1,5 +1,5 @@
 
-# formatted
+# Document Strings Publication
 
 import numpy as np
 import pandas as pd
@@ -8,72 +8,261 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
 
-# risk budgeting approach
-def obj_fun(x, p_cov, rb):
-    return np.sum((x * np.dot(p_cov, x) / np.dot(x.transpose(), np.dot(p_cov, x)) - rb) ** 2)
-
-
-# risk budgeting approach
-def global_obj_fun(x, p_cov):
-    return np.sum(x * np.dot(p_cov, x))
-
-
-# equality constraint: = 0
 def cons_sum_weight(x):
-   return np.sum(x) - 1
+    """
+    Constraint function - weights must sum to one.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    Returns
+    -------
+    weights_sum_zero : float
+        Weights summed and one subtracted from them - constraint must be zero.
+
+    Notes
+    -----
+    Equality constraint: = 0
+
+    """
+    weights_sum_zero = np.sum(x) - 1
+
+    return weights_sum_zero
 
 
-# inequality constraint: > 0
 def cons_long_only_weight(x):
-   return x
+    """
+    Constraint function - weights must all be non-negative.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    Returns
+    -------
+    x : real ndarray
+        Weights must all be non-negative.
+
+    Notes
+    -----
+    Inequality constraint: > 0
+
+    """
+    return x
 
 
-# shorting constraint: > k
-def cons_short_limit_weight(x, k):
-    return x + k  # some limit to shorting weight in portfolio
+def risk_parity_obj_fun(x, p_cov, rb):
+    """
+    Risk Parity or Risk Premia Parity objective function.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    p_cov : real ndarray
+        Covariance matrix of portfolio.
+
+    rb : real ndarray
+        The target weighting vector. i.e. if [1/n, ..., 1/n] then risk is equally allocated.
+
+    Returns
+    -------
+    risk_budget_obj : float
+        Risk budgeting objective function value.
+
+    Notes
+    -----
+
+    """
+    risk_budget_obj = np.sum((x * np.dot(p_cov, x) / np.dot(x.transpose(), np.dot(p_cov, x)) - rb) ** 2)
+
+    return risk_budget_obj
 
 
-# risk budgeting weighting
-def rb_p_weights(cov):
-    # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
+def risk_parity_weights_long_restrict(cov):
+    """
+    Risk Parity or Risk Premia Parity minimizer with long restriction.
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised weights.
+
+    Notes
+    -----
+    Risk Premia Parity weighting with long restriction.
+    Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
+
+    """
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
-    cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
-    return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_long_only_weight})
+    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
-# risk budgeting weighting
-def rb_p_weights_not_long(cov, short_limit=1):
-    # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
+def cons_short_limit_weight(x, k):
+    """
+    Constraint function - weights must all be individually greater than -k.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    k : positive float
+        Individual weights must each be greater than -k.
+
+    Returns
+    -------
+    y : real ndarray
+        Weights must all be greater than -k.
+
+    Notes
+    -----
+    Inequality constraint: > -k.
+    Require a summation restriction as with a large number of assets this can grow unreasonably large.
+
+    """
+    y = x + k
+
+    return y
+
+
+def risk_parity_weights_short_restriction(cov, short_limit=1):
+    """
+    Risk Parity or Risk Premia Parity minimizer with individual shorting restriction.
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    short_limit : positive float
+        Individual asset shorting restriction.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised weights.
+
+    Notes
+    -----
+    Risk Premia Parity weighting with individual shorting restriction.
+    Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
+
+    """
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
-    return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
-# shorting summation constraint: > k
 def cons_short_limit_sum_weight(x, k):
-    return np.sum(x[x < 0]) + k  # some limit to shorting weight in portfolio
+    """
+    Constraint function - combined shorting weights must be greater than -k.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    k : positive float
+        Summed negative weights must be greater than -k.
+
+    Returns
+    -------
+    y : real ndarray
+        Summed negative weights must be greater than -k.
+
+    Notes
+    -----
+    Inequality constraint: > -k.
+
+    """
+    y = np.sum(x[x < 0]) + k
+
+    return y
 
 
-# long summation constraint: > k
 def cons_long_limit_sum_weight(x, k):
-    return np.sum(x[x > 0]) - k  # some limit to shorting weight in portfolio
+    """
+    Constraint function - combined long weights must be less than k.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    k : positive float
+        Summed positive weights must be lesser than k.
+
+    Returns
+    -------
+    y : real ndarray
+        Summed positive weights must be less than k.
+
+    Notes
+    -----
+    Inequality constraint: < k.
+
+    """
+    y = np.sum(x[x > 0]) - k
+
+    return y
 
 
-# risk budgeting weighting
-def rb_p_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3):
-    # constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value
+def risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3):
+    """
+    Risk Parity or Risk Premia Parity minimizer with shorting summation restriction.
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    short_limit : positive float
+        Negative weights summation asset shorting restriction.
+
+    long_limit : positive float
+        Positive weights summation asset long restriction.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised weights.
+
+    Notes
+    -----
+    Risk Premia Parity weighting with long and short summation restriction.
+    Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
+
+    """
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [short_limit]},
             {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [long_limit]})
-    return minimize(obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
-# global minimum weights
+# The below functions are for the global minimum variance portfolios.
+
+
+def global_obj_fun(x, p_cov):
+    return np.sum(x * np.dot(p_cov, x))
+
+
 def global_weights(cov):
     try:
         return (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
@@ -85,11 +274,10 @@ def global_weights(cov):
                           np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
 
 
-# risk budgeting weighting
 def global_weights_long(cov):
-    # constrained optimisation - 'SLSQP' won't change if variance is too low - much change 'ftol' to smaller value
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
-    cons = ({'type': 'eq', 'fun': cons_sum_weight}, {'type': 'ineq', 'fun': cons_long_only_weight})
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_long_only_weight})
     return minimize(global_obj_fun, w0, args=(cov),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
@@ -100,7 +288,7 @@ if __name__ == "__main__":
     variance[0, 0] = 1  # 1
     variance[1, 1] = 16  # 1/4
     variance[0, 1] = variance[1, 0] = 0  # -1.8? -1.9?
-    weights = rb_p_weights(variance).x
+    weights = risk_parity_weights_long_restrict(variance).x
     # print(weights)
     volatility_contribution = \
         weights * np.dot(variance, weights) / np.dot(weights.transpose(), np.dot(variance, weights))
@@ -118,7 +306,7 @@ if __name__ == "__main__":
     variance[0, 1] = variance[1, 0] = 1  # -2? 2?
     variance[0, 2] = variance[2, 0] = 0
     variance[2, 1] = variance[1, 2] = 0
-    weights = rb_p_weights(variance).x
+    weights = risk_parity_weights_long_restrict(variance).x
     # print(weights)
     volatility_contribution = \
         weights * np.dot(variance, weights) / np.dot(weights.transpose(), np.dot(variance, weights))

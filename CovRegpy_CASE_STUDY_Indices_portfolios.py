@@ -11,7 +11,7 @@ from CovRegpy_finance_utils import global_minimum_information, sharpe_informatio
 
 from CovRegpy_covariance_regression_functions import cov_reg_given_mean, cubic_b_spline
 
-from CovRegpy_portfolio_weighting_functions import rb_p_weights, global_obj_fun
+from CovRegpy_portfolio_weighting_functions import risk_parity_weights_long_restrict, global_obj_fun
 
 from CovRegpy_forecasting import gp_forecast
 
@@ -410,7 +410,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     ############################################################
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression
-    weights_Model_forecast_direct_ssa = rb_p_weights(variance_median_direct_ssa).x
+    weights_Model_forecast_direct_ssa = risk_parity_weights_long_restrict(variance_median_direct_ssa).x
     model_variance_forecast_direct_ssa = global_obj_fun(weights_Model_forecast_direct_ssa, monthly_covariance)
     model_returns_forecast_direct_ssa = sum(weights_Model_forecast_direct_ssa * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct_ssa), model_returns_forecast_direct_ssa,
@@ -424,7 +424,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     #             label='CovReg GP Model SSA')
 
     # calculate weights, variance, and returns - direct application Covariance Regression
-    weights_Model_forecast_direct = rb_p_weights(variance_median_direct).x
+    weights_Model_forecast_direct = risk_parity_weights_long_restrict(variance_median_direct).x
     model_variance_forecast_direct = global_obj_fun(weights_Model_forecast_direct, monthly_covariance)
     model_returns_forecast_direct = sum(weights_Model_forecast_direct * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
