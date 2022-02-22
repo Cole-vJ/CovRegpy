@@ -6,6 +6,7 @@
 # Singular Spectrum Decomposition: A New Method for Time Series Decomposition.
 # Advances in Adaptive Data Analysis, 6(04), 1450011 (1-34). World Scientific.
 
+import textwrap
 import scipy as sp
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ import seaborn as sns
 from matplotlib import mlab
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
+from CovRegpy_SSA import CovRegpy_ssa
 from scipy.fft import fft
 
 np.random.seed(0)
@@ -79,7 +80,7 @@ def max_bool(time_series):
     return max_bool
 
 
-def spectral_obj_func(theta, f, mu_1, mu_2, mu_3, spectrum):
+def spectral_obj_func_l1(theta, f, mu_1, mu_2, mu_3, spectrum):
     """
     Calculate 3 Gaussian functions.
 
@@ -120,6 +121,47 @@ def spectral_obj_func(theta, f, mu_1, mu_2, mu_3, spectrum):
     return objective_function
 
 
+def spectral_obj_func_l2(theta, f, mu_1, mu_2, mu_3, spectrum):
+    """
+    Calculate 3 Gaussian functions.
+
+    Parameters
+    ----------
+    theta : real ndarray
+        A vector of shape (6,) containing amplitudes and sigmas.
+
+    f : real ndarray
+        Frequency over which Gaussian distributions and frequency spectrum are fitted.
+
+    mu_1 : float
+        Mean of the highest frequency peak.
+
+    mu_2 : float
+         Mean of the second-highest frequency peak.
+
+    mu_3 : float
+        Mean of remaining spectra.
+
+    spectrum : real ndarray
+        Spectrum to be fitted to Gaussian distributions.
+
+    Returns
+    -------
+    objective_function : real ndarray
+        The L1 norm of difference between spectrum and Gaussian distributions.
+
+    Notes
+    -----
+    Should experiment with different norms.
+
+    """
+    objective_function = sum((theta[0] * np.exp(- (f - mu_1) ** 2 / (2 * theta[3] ** 2)) +
+                              theta[1] * np.exp(- (f - mu_2) ** 2 / (2 * theta[4] ** 2)) +
+                              theta[2] * np.exp(- (f - mu_3) ** 2 / (2 * theta[5] ** 2)) - spectrum) ** 2)
+
+    return objective_function
+
+
 def constraint_positive(x):
     """
     Constraint on amplitudes and sigmas being positive.
@@ -142,7 +184,7 @@ def constraint_positive(x):
     return x
 
 
-def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum):
+def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum, method='l1'):
     """
     Function that calculates optimal amplitudes and sigmas.
 
@@ -166,6 +208,9 @@ def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum):
     spectrum : real ndarray
         Spectrum to be fitted to Gaussian distributions.
 
+    method : string
+        Whether to us l1 norm or l2 norm.
+
     Returns
     -------
     OptimizeResult : OptimizeResult
@@ -176,9 +221,14 @@ def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum):
 
     """
     cons = ({'type': 'ineq', 'fun': constraint_positive})
-    return minimize(spectral_obj_func, x0=w0,
-                    args=(f, mu_1, mu_2, mu_3, spectrum), method='nelder-mead',
-                    constraints=cons, bounds=[(0, None), (0, None), (0, None), (0, None), (0, None), (0, None)])
+    if method == 'l1':
+        return minimize(spectral_obj_func_l1, x0=w0,
+                        args=(f, mu_1, mu_2, mu_3, spectrum), method='nelder-mead',
+                        constraints=cons, bounds=[(0, None), (0, None), (0, None), (0, None), (0, None), (0, None)])
+    elif method == 'l2':
+        return minimize(spectral_obj_func_l2, x0=w0,
+                        args=(f, mu_1, mu_2, mu_3, spectrum), method='nelder-mead',
+                        constraints=cons, bounds=[(0, None), (0, None), (0, None), (0, None), (0, None), (0, None)])
 
 
 def scaling_factor_obj_func(a, residual_time_series, trend_estimate):
@@ -237,7 +287,7 @@ def scaling_factor(residual_time_series, trend_estimate):
                     method='nelder-mead', constraints=cons)
 
 
-def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
+def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=False, debug=False):
     """
     Singular Spectrum Decomposition based on Bonizzi, Karel, Meste, & Peeters (2014).
 
@@ -245,6 +295,10 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
     ----------
     time_series : real ndarray
         Time series to decompose.
+
+    initial_trend_ratio : positive integer
+        Recommended initial_trend_ratio=3 in Bonizzi, Karel, Meste, & Peeters (2014).
+        Not appropriate for some trends as demonstrated in example.
 
     nmse_threshold : float
         Normalised Mean-Squared Error stopping criterion from Bonizzi, Karel, Meste, & Peeters (2014).
@@ -276,7 +330,7 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
     if np.log10(s)[1] == np.max(np.log10(s)) or np.log10(s)[0] == np.max(np.log10(s)):
         trend_est = \
             CovRegpy_ssa(time_series=np.asarray(time_series_resid),
-                         L=int(len(np.asarray(time_series_resid)) / 3), est=1)
+                         L=int(len(np.asarray(time_series_resid)) / initial_trend_ratio), est=1)[0]
         if plot:
             plt.title('Original Transient Time Series and Trend Estimate')
             plt.plot(np.asarray(time_series_resid), label='Transient time series')
@@ -331,7 +385,7 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
         x0[4] = sigma_2
         x0[5] = sigma_3
 
-        thetas = gaus_param(x0, f * dt, mu_1, mu_2, mu_3, s).x
+        thetas = gaus_param(x0, f * dt, mu_1, mu_2, mu_3, s, method='l1').x
         f_range = [(mu_1 - 2.5 * thetas[3])[0], (mu_1 + 2.5 * thetas[3])[0]]
 
         if plot:
@@ -348,7 +402,7 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
             plt.plot(mu_1 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_1$')
             plt.plot(mu_2 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_2$')
             plt.plot(mu_3 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_3$')
-            plt.legend(loc='best')
+            plt.legend(loc='best', fontsize=8)
             plt.xlabel('Standardised Frequency')
             plt.ylabel('Spectral Density')
             plt.xlim(-0.005, 0.255)
@@ -368,7 +422,7 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
                      label=r'$\sum_{i=1}^{3}A_i^{opt}e^{\frac{(f-\mu_i)^2}{\sigma^{opt2}_i}}$', Linewidth=2)
             plt.plot(f_range[0] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--')
             plt.plot(f_range[1] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--', label='Frequency bounds')
-            plt.legend(loc='best')
+            plt.legend(loc='best', fontsize=8)
             plt.xlabel('Standardised Frequency')
             plt.ylabel('Spectral Density')
             plt.xlim(-0.005, 0.255)
@@ -434,7 +488,11 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
         time_series_resid -= trend_est
 
         try:
-            time_series_est_mat = np.vstack((time_series_est_mat, trend_est))
+            if sum(np.abs(trend_est)) == 0:
+                time_series_est_mat = np.vstack((time_series_est_mat, time_series_resid))
+                time_series_resid = np.zeros_like(time_series_resid)
+            else:
+                time_series_est_mat = np.vstack((time_series_est_mat, trend_est))
         except:
             time_series_est_mat = trend_est.reshape(1, -1)
 
@@ -447,20 +505,78 @@ def CovRegpy_ssd(time_series, nmse_threshold=0.01, plot=False, debug=False):
 
 if __name__ == "__main__":
 
-    # pull all close data
-    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
-    data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
-    close_data = data['Close']
-    del data, tickers_format
+    # # pull all close data
+    # tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
+    # data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
+    # close_data = data['Close']
+    # del data, tickers_format
+    #
+    # # create date range and interpolate
+    # date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
+    # close_data = close_data.reindex(date_index).interpolate()
+    # close_data = close_data[::-1].interpolate()
+    # close_data = close_data[::-1]
+    # del date_index
+    #
+    # # singular spectrum decomposition
+    # test = CovRegpy_ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
+    # plt.plot(test.T)
+    # plt.show()
 
-    # create date range and interpolate
-    date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
-    close_data = close_data.reindex(date_index).interpolate()
-    close_data = close_data[::-1].interpolate()
-    close_data = close_data[::-1]
-    del date_index
+    # figures for paper
 
-    # singular spectrum decomposition
-    test = CovRegpy_ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
-    plt.plot(test.T)
+    np.random.seed(0)
+
+    x11_time = np.linspace(0, 120, 121)
+    x11_trend_cycle = (1 / 100) * (x11_time - 10) * (x11_time - 60) * (x11_time - 110) + 1000
+    x11_seasonal = 100 * np.sin((2 * np.pi / 12) * x11_time)
+    x11_noise = 100 * np.random.normal(0, 1, 121)
+    x11_time_series = x11_trend_cycle + x11_seasonal + x11_noise
+
+    plt.plot(x11_time, x11_time_series)
+    plt.title('Additive X11 Example Time Series')
+    plt.xticks([0, 20, 40, 60, 80, 100, 120], fontsize=8)
+    plt.yticks([400, 600, 800, 1000, 1200, 1400, 1600], fontsize=8)
+    plt.show()
+
+    ssd_decomp = CovRegpy_ssd(x11_time_series, initial_trend_ratio=10, plot=True)
+
+    fig, axs = plt.subplots(3, 1)
+    plt.subplots_adjust(hspace=0.3)
+    fig.suptitle('Additive Decomposition SSA Demonstration')
+    axs[0].plot(x11_time, x11_trend_cycle, label='Component')
+    axs[0].plot(x11_time, ssd_decomp[0, :], 'r--', label='SSD component 1')
+    axs[0].set_xticks([0, 20, 40, 60, 80, 100, 120])
+    axs[0].set_xticklabels(['', '', '', '', '', '', ''], fontsize=8)
+    axs[0].set_yticks([500, 1000, 1500])
+    axs[0].set_yticklabels(['500', '1000', '1500'], fontsize=8)
+    axs[0].set_title('Trend-Cycle Component')
+    box_0 = axs[0].get_position()
+    axs[0].set_position([box_0.x0 - 0.05, box_0.y0, box_0.width * 0.84, box_0.height])
+    axs[0].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+    axs[1].plot(x11_time, x11_seasonal, label='Component')
+    axs[1].plot(x11_time, ssd_decomp[1, :], 'r--', label='SSD component 2')
+    axs[1].set_xticks([0, 20, 40, 60, 80, 100, 120])
+    axs[1].set_xticklabels(['', '', '', '', '', '', ''], fontsize=8)
+    axs[1].set_yticks([-100, 0, 100])
+    axs[1].set_yticklabels(['-100', '0', '100'], fontsize=8)
+    axs[1].set_ylim(-175, 175)
+    axs[1].set_title('Seasonal Component')
+    box_1 = axs[1].get_position()
+    axs[1].set_position([box_1.x0 - 0.05, box_1.y0, box_1.width * 0.84, box_1.height])
+    axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+    axs[2].plot(x11_time, x11_noise, label='Component')
+    axs[2].plot(x11_time, np.sum(ssd_decomp[2:, :], axis=0), 'r--',
+                label=textwrap.fill('SSD component 3 onwards summed', 15))
+    axs[2].set_xticks([0, 20, 40, 60, 80, 100, 120])
+    axs[2].set_xticklabels(['0', '20', '40', '60', '80', '100', '120'], fontsize=8)
+    axs[2].set_yticks([-200, 0, 200])
+    axs[2].set_yticklabels(['-200', '0', '200'], fontsize=8)
+    axs[2].set_ylim(-250, 250)
+    axs[2].set_title('Random Error')
+    box_2 = axs[2].get_position()
+    axs[2].set_position([box_2.x0 - 0.05, box_2.y0, box_2.width * 0.84, box_2.height])
+    axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+    axs[2].set_xlabel('Months')
+    plt.savefig('aas_figures/Example_ssd_decomposition')
     plt.show()

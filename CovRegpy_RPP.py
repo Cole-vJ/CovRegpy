@@ -1,6 +1,10 @@
 
 # Document Strings Publication
 
+# Main reference: Qian (2005)
+# E. Qian. 2005. Risk Parity Portfolios: Efficient Portfolios Through True Diversification.
+# White paper. Panagora Asset Management, Boston, Massachusetts, USA.
+
 import numpy as np
 import pandas as pd
 import yfinance as yf

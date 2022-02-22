@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from AdvEMDpy import emd_basis
-from CovRegpy_covariance_regression_functions import cov_reg_given_mean
+from CovRegpy_RCR import cov_reg_given_mean
 import matplotlib.pyplot as plt
 from scipy.linalg import cholesky
 from mpl_toolkits.mplot3d import Axes3D

@@ -4,9 +4,9 @@
 import numpy as np
 import pandas as pd
 from AdvEMDpy import AdvEMDpy, emd_basis
-from CovRegpy_covariance_regression_functions import cov_reg_given_mean
-from CovRegpy_portfolio_weighting_functions import risk_parity_weights_long_restrict, global_obj_fun, global_weights
-from CovRegpy_portfolio_sharpe_ratio import sharpe_weights_long, sharpe_weights
+from CovRegpy_RCR import cov_reg_given_mean
+from CovRegpy_RPP import risk_parity_weights_long_restrict, global_obj_fun, global_weights
+from CovRegpy_sharpe import sharpe_weights_long, sharpe_weights
 import yfinance as yf
 import matplotlib.pyplot as plt
 

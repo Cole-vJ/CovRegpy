@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
-from CovRegpy_PCA_functions import pca_func
-from CovRegpy_portfolio_sharpe_ratio import sharpe_weights, sharpe_weights_individual_weight_restriction, \
+from CovRegpy_PCA import pca_func
+from CovRegpy_sharpe import sharpe_weights, sharpe_weights_individual_weight_restriction, \
     sharpe_weights_summation_weight_restriction
-from CovRegpy_portfolio_weighting_functions import global_obj_fun, global_weights, global_weights_long
+from CovRegpy_RPP import global_obj_fun, global_weights, global_weights_long
 
 
 def efficient_frontier(global_minimum_weights, global_minimum_returns, global_minimum_sd,

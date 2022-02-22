@@ -1,16 +1,34 @@
 
-# formatted
+# Document Strings Publication
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
 from sklearn.decomposition import PCA
 
-# https://towardsdatascience.com/stock-market-analytics-with-pca-d1c2318e3f0e
-
 
 def pca_func(cov, n_components):
+    """
+    Calculate Principle portfolio weights.
 
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of returns.
+
+    n_components : positive integer
+        Necessarily less than number of assets.
+
+    Returns
+    -------
+    pca_weights : real ndarray
+        Weights of portfolio with relevant number of components.
+
+    Notes
+    -----
+    Classic principle portfolio construction.
+
+    """
     pca = PCA(n_components=n_components)
     pca.fit(np.asarray(cov))
     pca_components = pca.components_

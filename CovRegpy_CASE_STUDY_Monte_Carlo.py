@@ -3,22 +3,22 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from CovRegpy_finance_utils import efficient_frontier, global_minimum_forward_applied_information, \
+from CovRegpy_utilities import efficient_frontier, global_minimum_forward_applied_information, \
     sharpe_forward_applied_information, pca_forward_applied_information, \
     global_minimum_forward_applied_information_long, \
     sharpe_forward_applied_information_summation_restriction
 
-from CovRegpy_covariance_regression_functions import cov_reg_given_mean, cubic_b_spline
+from CovRegpy_RCR import cov_reg_given_mean, cubic_b_spline
 
-from CovRegpy_portfolio_weighting_functions import risk_parity_weights_long_restrict, risk_parity_weights_short_restriction, \
+from CovRegpy_RPP import risk_parity_weights_long_restrict, risk_parity_weights_short_restriction, \
     risk_parity_weights_summation_restriction, global_obj_fun
 
 from CovRegpy_measures import cumulative_return, mean_return, variance_return, value_at_risk_return, \
     max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return
 
-from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
+from CovRegpy_SSA import CovRegpy_ssa
 
-from CovRegpy_GARCH_model import covregpy_dcc_mgarch
+from CovRegpy_DCC import covregpy_dcc
 
 from AdvEMDpy import AdvEMDpy
 

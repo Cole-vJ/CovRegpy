@@ -6,18 +6,18 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, RationalQuadratic, Matern
 
-from CovRegpy_finance_utils import global_minimum_information, sharpe_information, efficient_frontier, pca_information, \
+from CovRegpy_utilities import global_minimum_information, sharpe_information, efficient_frontier, pca_information, \
     global_minimum_forward_applied_information, sharpe_forward_applied_information, pca_forward_applied_information
 
-from CovRegpy_covariance_regression_functions import cov_reg_given_mean, cubic_b_spline
+from CovRegpy_RCR import cov_reg_given_mean, cubic_b_spline
 
-from CovRegpy_portfolio_weighting_functions import risk_parity_weights_long_restrict, global_obj_fun
+from CovRegpy_RPP import risk_parity_weights_long_restrict, global_obj_fun
 
 from CovRegpy_forecasting import gp_forecast
 
 from CovRegpy_measures import cumulative_return
 
-from CovRegpy_singular_spectrum_analysis import CovRegpy_ssa
+from CovRegpy_SSA import CovRegpy_ssa
 
 from AdvEMDpy import AdvEMDpy
 

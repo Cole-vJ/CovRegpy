@@ -1,5 +1,5 @@
 
-# formatted
+# Document Strings Publication
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,27 @@ import matplotlib.pyplot as plt
 
 
 def portfolio_return(weights, all_returns):
+    """
+    Calculate daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    Returns
+    -------
+    portfolio_returns : real ndarray
+        Vector containing portfolio daily returns.
+
+    Notes
+    -----
+    Utility function used in other portfolio measures.
+
+    """
     if np.shape(weights)[0] > np.shape(weights)[1]:
         weights = weights.T
     if np.shape(all_returns)[0] > np.shape(all_returns)[1]:
@@ -19,7 +39,29 @@ def portfolio_return(weights, all_returns):
 
 
 def mean_return(weights, all_returns, window):
+    """
+    Calculate mean of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    Returns
+    -------
+    mean_returns : real ndarray
+        Vector containing mean of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     mean_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(mean_returns)):
@@ -29,7 +71,29 @@ def mean_return(weights, all_returns, window):
 
 
 def variance_return(weights, all_returns, window):
+    """
+    Calculate variance of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing variance of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     variance_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(variance_returns)):
@@ -39,7 +103,29 @@ def variance_return(weights, all_returns, window):
 
 
 def value_at_risk_return(weights, all_returns, window):
+    """
+    Calculate value-at-risk of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing value-at-risk of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     value_at_risk_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(value_at_risk_returns)):
@@ -49,7 +135,29 @@ def value_at_risk_return(weights, all_returns, window):
 
 
 def max_draw_down_return(weights, all_returns, window):
+    """
+    Calculate maximum drawdown of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing maximum drawdown of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     max_draw_down_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(max_draw_down_returns)):
@@ -61,7 +169,29 @@ def max_draw_down_return(weights, all_returns, window):
 
 
 def omega_ratio_return(weights, all_returns, window):
+    """
+    Calculate omega ratio of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing omega ratio of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     omega_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(omega_ratio_returns)):
@@ -74,7 +204,32 @@ def omega_ratio_return(weights, all_returns, window):
 
 
 def sortino_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
+    """
+    Calculate Sortino ratio of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    risk_free : float
+        Risk-free rate assumed to be 0.01. This is converted to a daily exponential rate.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing Sortino ratio of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     sortino_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(sortino_ratio_returns)):
@@ -86,7 +241,32 @@ def sortino_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
 
 
 def sharpe_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
+    """
+    Calculate Sharpe ratio of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    risk_free : float
+        Risk-free rate assumed to be 0.01. This is converted to a daily exponential rate.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing Sharpe ratio of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     sharpe_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
     for col in range(len(sharpe_ratio_returns)):
@@ -97,7 +277,26 @@ def sharpe_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
 
 
 def cumulative_return(weights, all_returns):
+    """
+    Calculate cumulative returns of daily returns of portfolio.
 
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing cumulative returns of portfolio daily returns.
+
+    Notes
+    -----
+
+    """
     portfolio_returns = portfolio_return(weights, all_returns)
     cumulative_returns = np.zeros(int(len(portfolio_returns) + 1))
     cumulative_returns[0] = 1
@@ -125,7 +324,7 @@ if __name__ == "__main__":
     # calculate returns and realised covariance
     returns = (np.log(np.asarray(close_data)[1:, :]) - np.log(np.asarray(close_data)[:-1, :]))
     realised_covariance = np.cov(returns.T)
-    risk_free = (0.02 / 365)
+    risk_free = (0.01 / 365)
 
     stock_weights = np.random.uniform(0, 1, (np.shape(returns)))
     stock_weights = stock_weights.T / np.sum(stock_weights, axis=1)

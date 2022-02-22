@@ -33,7 +33,7 @@ def b(knots, time, degree):
     time : real ndarray
         Time over which basis functions will be defined.
 
-    degree : int
+    degree : positive integer
         Degree of basis spline to be constructed.
 
     Returns
@@ -102,7 +102,8 @@ def cubic_b_spline(knots, time):
     return matrix_c
 
 
-def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, test_lasso=False):
+def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, group_reg, max_iter, groups,
+               test_lasso=False):
     """
     This follows the calculation at the bottom of page 10 and top of page 11 in Hoff and Niu (2012).
 
@@ -134,25 +135,37 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
 
         'lasso' : Least Absolute Shrinkage and Selection Operator (LASSO) Regression.
             Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
-                      alpha * ||w||_1
+                      alpha * ||beta||_1
 
         'ridge' :
-            Minimize: ||y_tilda - x_tilda * beta||^2_2 + alpha * ||w||^2_2
+            Minimize: ||y_tilda - x_tilda * beta||^2_2 + alpha * ||beta||^2_2
             Equivalent to: beta = [(x_tild^T * x_tilda + alpha * I)^(-1)] * (x_tilda^T * y)
 
         'elastic-net' :
             Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
-                      alpha * l1_ratio * ||w||_1 + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
+                      alpha * l1_ratio * ||beta||_1 + 0.5 * alpha * (1 - l1_ratio) * ||beta||^2_2
 
             l1_ratio = 1 equivalent to 'lasso'
             l1_ratio = 0 and alpha = 2 equivalent to 'ridge'
 
         'group-lasso' :
+            With G being the grouping of the covariates the objective function is given below.
+            Minimize: ||∑g∈G[X_g * beta_g] - y||^2_2 + alpha * ||w||_1 + lambda_group * ∑g∈G||beta_g||_2
 
         'sub-gradient' :
+            Minimize: ||beta||_1
+            subject to: x_tilda * beta^T = y
+            iterate by: B_{k+1} = B_k - alpha_k(I_p - X^T * (X * X^T)^{-1} * X * sign(B_k))
 
     alpha : float
         Constant used in chosen regression to multiply onto weights.
+
+    l1_ratio_or_reg : float
+        Least Absolute Shrinkage and Selection Operator (LASSO) ratio for elastic-net regression and
+        LASSO regulator for group LASSO regression.
+
+    group_reg : float
+        Group LASSO regulator for group LASSO regression.
 
     max_iter : positive integer
         Maximum number of iterations to perform in chosen regression.
@@ -165,14 +178,16 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
 
     Returns
     -------
-    B_est :
+    B_est : real ndarray
+        Coefficients for covariates explaining attributable covariance.
 
-    Psi_est :
+    Psi_est : real ndarray
+        Base unattributable covariance present in model.
 
     Notes
     -----
-    Group LASSO regression and Subgradient optimisation are experimental and need to be improved to stop breaking of
-    correlation structure.
+    Group LASSO regression and Subgradient optimisation are experimental and need to be improved to stop possible
+    breaking of correlation structure or nonsensical results.
 
     """
     x_tilda = np.vstack([m * x.T, (v ** (1 / 2)) * x.T])
@@ -198,38 +213,54 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
 
     elif technique == 'ridge':
 
-        reg_ridge = linear_model.Ridge(alpha=alpha, fit_intercept=False, max_iter=max_iter)
-        reg_ridge.fit(x_tilda, y_tilda)
-        B_est = reg_ridge.coef_
+        try:
+            B_est = \
+                np.matmul(np.matmul(y_tilda.T, x_tilda),
+                          np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64) +
+                                        alpha * np.identity(np.shape(x_tilda)[1])))
+        except:
+            reg_ridge = linear_model.Ridge(alpha=alpha, fit_intercept=False, max_iter=max_iter)
+            reg_ridge.fit(x_tilda, y_tilda)
+            B_est = reg_ridge.coef_
 
     elif technique == 'elastic-net':
 
-        reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=0.1, max_iter=max_iter)
+        reg_elas_net = linear_model.ElasticNet(alpha=alpha, fit_intercept=False, l1_ratio=l1_ratio_or_reg,
+                                               max_iter=max_iter)
         reg_elas_net.fit(x_tilda, y_tilda)
         B_est = reg_elas_net.coef_
 
     elif technique == 'group-lasso':
 
-        # need to fix and finalise - breaks correlation structure
+        ################################################################
+        # possibly breaks correlation structure when doing column-wise #
+        ################################################################
+
         # https://group-lasso.readthedocs.io/en/latest/
         # https://group-lasso.readthedocs.io/en/latest/auto_examples/index.html
         B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))
         for covariate in range(np.shape(y_tilda)[1]):
             reg_group_lasso = group_lasso.GroupLasso(groups=groups, old_regularisation=True, supress_warning=True,
-                                                     fit_intercept=False, group_reg=1e-06, l1_reg=1e-06)
+                                                     fit_intercept=False, group_reg=group_reg, l1_reg=l1_ratio_or_reg)
             reg_group_lasso.fit(x_tilda, y_tilda[:, covariate].reshape(-1, 1))
-            B_est[covariate, :] = reg_group_lasso.coef_[0]
-            print(reg_group_lasso.coef_[:, 0])
+            B_est[covariate, :] = reg_group_lasso.coef_[:, 0]
+            print(B_est[covariate, :])
 
     elif technique == 'sub-gradient':
 
-        # need to fix and finalise - breaks correlation structure
-        B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))
-        for covariate in range(np.shape(y_tilda)[1]):
-            reg_sgd = SGDRegressor()
-            reg_sgd.fit(x_tilda, y_tilda[:, covariate])
-            B_est[covariate, :] = reg_sgd.coef_
-        # B_est = subgrad_opt(x_tilda, y_tilda, alpha=alpha, max_iter=max_iter)
+        ################################################################
+        # possibly breaks correlation structure when doing column-wise #
+        ################################################################
+
+        # B_est = np.zeros((np.shape(y_tilda)[1], np.shape(x_tilda)[1]))
+        # for covariate in range(np.shape(y_tilda)[1]):
+        #     # https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/linear_model/_sgd_fast.pyx
+        #     reg_sgd = SGDRegressor()
+        #     reg_sgd.fit(x_tilda, y_tilda[:, covariate])
+        #     B_est[covariate, :] = reg_sgd.coef_
+        #     print(B_est[covariate, :])
+
+        B_est = subgrad_opt(x_tilda, y_tilda, alpha=alpha, max_iter=max_iter)
 
     C_est = np.vstack((A_est, B_est.T))
 
@@ -243,8 +274,36 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, max_iter, groups, tes
 
 
 def gamma_v_m_error(errors, x, Psi, B):
+    """
+    Function to calculate variance and mean for random error formulation which follows calculation
+    at the bottom of page 9 in Hoff and Niu (2012).
 
-    # follows calculation at the bottom of page 9 of paper
+    Parameters
+    ----------
+    errors : real ndarray
+        Errors (variance) about given mean of dependent variables matrix.
+
+    x : real ndarray
+        Independent variable matrix.
+
+    Psi : real ndarray
+        Base unattributable covariance present in model.
+
+    B : real ndarray
+        Coefficients for covariates explaining attributable covariance.
+
+    Returns
+    -------
+    m : real ndarray
+        Mean of random error formulation.
+
+    v : real ndarray
+        Variance of random error formulation.
+
+    Notes
+    -----
+
+    """
     try:
         const = np.matmul(np.linalg.solve(Psi.astype(np.float64), B.T.astype(np.float64)), x)
     except:
@@ -263,9 +322,88 @@ def gamma_v_m_error(errors, x, Psi, B):
 # define covariance regression function with mean given
 
 
-def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', alpha=1, max_iter=10000,
-                       groups=np.arange(76), LARS=False, true_coefficients=np.zeros((5, 15)), test_lasso=False):
+def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', alpha=1.0, l1_ratio_or_reg=0.1,
+                       group_reg=1e-6, max_iter=10000, groups=np.arange(76), test_lasso=False, LARS=False,
+                       true_coefficients=np.zeros((5, 15))):
+    """
+    Calculate Psi and B matrices of covariance regression as in Hoff and Niu (2012) except that A_est and basis
+    are now given as inputs allowing for customisable definition of "mean" or "trend".
 
+    Parameters
+    ----------
+    A_est : real ndarray
+        Matrix of coefficients corresponding to 'basis' to estimate mean of dependent variables.
+
+    basis : real ndarray
+        Matrix of basis functions corresponding to 'A_est' to estimate mean of dependent variables.
+
+    x : real ndarray
+        Matrix of independent variables.
+
+    y : real ndarray
+        Matrix of dependent variables.
+
+    iterations : positive integer
+        Number of iterations of the Covariance Regression algorithm.
+
+    technique : string
+        'direct' : Direct calculation method used in Hoff and Niu (2012).
+            beta = [(x_tild^T * x_tilda)^(-1)] * (x_tilda^T * y)
+
+        'lasso' : Least Absolute Shrinkage and Selection Operator (LASSO) Regression.
+            Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
+                      alpha * ||beta||_1
+
+        'ridge' :
+            Minimize: ||y_tilda - x_tilda * beta||^2_2 + alpha * ||beta||^2_2
+            Equivalent to: beta = [(x_tild^T * x_tilda + alpha * I)^(-1)] * (x_tilda^T * y)
+
+        'elastic-net' :
+            Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
+                      alpha * l1_ratio * ||beta||_1 + 0.5 * alpha * (1 - l1_ratio) * ||beta||^2_2
+
+            l1_ratio = 1 equivalent to 'lasso'
+            l1_ratio = 0 and alpha = 2 equivalent to 'ridge'
+
+        'group-lasso' :
+            With G being the grouping of the covariates the objective function is given below.
+            Minimize: ||∑g∈G[X_g * beta_g] - y||^2_2 + alpha * ||w||_1 + lambda_group * ∑g∈G||beta_g||_2
+
+        'sub-gradient' :
+            Minimize: ||beta||_1
+            subject to: x_tilda * beta^T = y
+            iterate by: B_{k+1} = B_k - alpha_k(I_p - X^T * (X * X^T)^{-1} * X * sign(B_k))
+
+    alpha : float
+        Lambda value used to weight coefficients.
+
+    l1_ratio_or_reg : float
+        Ratio of l1 normalisation in elastic-net regression.
+
+    group_reg : float
+        Lambda weighting for group lasso regression.
+
+    max_iter : positive integer
+        Maximum number of iterations in regularised regression.
+
+    groups : real ndarray (consisting of negative integers)
+        Vector of groups to be used in group LASSO regression.
+
+    test_lasso : boolean
+        Whether to optimise alpha value in LASSO regression.
+
+    Returns
+    -------
+    B_est : real ndarray
+        Coefficients for covariates explaining attributable covariance.
+
+    Psi_est : real ndarray
+        Base unattributable covariance present in model.
+
+    Notes
+    -----
+
+    """
     if LARS:
         # https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_lars.html#sphx-glr-auto-examples-linear-model-plot-lasso-lars-py
         reg = LassoLars(normalize=False, alpha=1e-06)
@@ -290,11 +428,12 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
 
     mean = np.matmul(A_est.T, basis)
 
-    for iter in range(iterations):  # loop i - Generalised Cross-Validation
+    for iter in range(iterations):
         print(iter + 1)
 
         B_est, Psi_est = calc_B_Psi(m=m, v=v, x=x, y=y, basis=basis, A_est=A_est, technique=technique,
-                                    alpha=alpha, max_iter=max_iter, groups=groups, test_lasso=test_lasso)
+                                    l1_ratio_or_reg=l1_ratio_or_reg, group_reg=group_reg, alpha=alpha,
+                                    max_iter=max_iter, groups=groups, test_lasso=test_lasso)
 
         m, v = gamma_v_m_error(errors=(y - mean), x=x, Psi=Psi_est, B=B_est.T)
         m = m.reshape(-1, 1)
@@ -308,16 +447,45 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
 # sub-gradient optimisation
 
 
-def subgrad_opt(x_tilda, y_tilda, alpha, max_iter):
+def subgrad_opt(x_tilda, y_tilda, max_iter, alpha=1e-12):
+    """
+    Subgradient optimisation of coefficients.
 
-    # will not converge otherwise
-    if np.shape(x_tilda)[0] > np.shape(x_tilda)[1]:
-        raise ValueError('Matrix cannot be skinny/thin.')
+    Parameters
+    ----------
+    x_tilda : real ndarray
+        Matrix of independent variables.
+
+    y_tilda : real ndarray
+        Matrix of dependent variables.
+
+    max_iter : positive integer
+        Maximum number of integers.
+
+    alpha : float
+        Scale to be used in square summable, but not summable Polyak step size.
+
+    Returns
+    -------
+    B_est : real ndarray
+        Coefficients for covariates explaining attributable covariance.
+
+    Notes
+    -----
+    Convergence results do not apply if applied to skinny matrices.
+    Starting point of algorithm can be changed and optimised.
+
+    """
+
+    # will not necessarily converge if not satisfied
+    # if np.shape(x_tilda)[0] > np.shape(x_tilda)[1]:
+    #     raise ValueError('Matrix cannot be skinny/thin.')
 
     # reg_ridge = linear_model.Ridge(alpha=alpha, fit_intercept=False)
     # reg_ridge.fit(x_tilda, y_tilda)
     # B_sol = reg_ridge.coef_.T
-    B_sol = np.matmul(y_tilda.T, np.matmul(x_tilda, np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64)))).T
+
+    B_sol = np.matmul(y_tilda.T, np.matmul(x_tilda, np.linalg.pinv(np.matmul(x_tilda.T, x_tilda).astype(np.float64)))).T
     B_k = B_sol.copy()
 
     f_star = sum(np.abs(B_sol))
@@ -327,9 +495,9 @@ def subgrad_opt(x_tilda, y_tilda, alpha, max_iter):
 
     while k < int(max_iter + 1):
 
-        B_k_1 = B_k - (1e-12 / k) * np.matmul((np.identity(np.shape(x_tilda)[1]) -
+        B_k_1 = B_k - (alpha / k) * np.matmul((np.identity(np.shape(x_tilda)[1]) -
                                              np.matmul(np.matmul(x_tilda.T,
-                                                                 np.linalg.inv(np.matmul(x_tilda, x_tilda.T))),
+                                                                 np.linalg.pinv(np.matmul(x_tilda, x_tilda.T))),
                                                        x_tilda)), np.sign(B_k))
         f_potential = sum(np.abs(B_k_1))
 
@@ -424,6 +592,7 @@ if __name__ == "__main__":
     axs[1].set_ylabel('height')
     axs[1].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
     axs[1].set_yticks([45, 50, 55, 60, 65, 70, 75])
+    plt.savefig('aas_figures/Hoff_Figure_5')
     plt.show()
 
     fig, axs = plt.subplots(1, 3, figsize=(8, 5))
@@ -458,6 +627,7 @@ if __name__ == "__main__":
     axs[2].set_ylabel('Cor(FEV,height)')
     axs[2].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
     axs[2].set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
+    plt.savefig('aas_figures/Hoff_Figure_6')
     plt.show()
 
     # additions - ridge, lasso
@@ -468,12 +638,13 @@ if __name__ == "__main__":
     B_est_lasso, Psi_est_lasso = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
                                                     iterations=100, technique='lasso', alpha=0.05)
     B_est_net, Psi_est_net = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
-                                                iterations=100, technique='elastic-net', alpha=0.01)
+                                                iterations=100, technique='elastic-net', alpha=0.01,
+                                                l1_ratio_or_reg=0.1)
     B_est_sub, Psi_est_sub = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
-                                                iterations=100, technique='sub-gradient', alpha=0.01)
+                                                iterations=10, technique='sub-gradient', alpha=0.01, max_iter=10)
     B_est_group, Psi_est_group = cov_reg_given_mean(A_est=A_est, basis=spline_basis_transform, x=x_cov, y=y,
-                                                    iterations=100, technique='group-lasso', alpha=0.01,
-                                                    groups=np.asarray([0, 1, 1]).reshape(-1, 1))
+                                                    iterations=100, technique='group-lasso', alpha=0.01, group_reg=1e-9,
+                                                    l1_ratio_or_reg=1e-6, groups=np.asarray([0, 1, 1]).reshape(-1, 1))
 
     # mean and covariance plots
 
@@ -548,6 +719,7 @@ if __name__ == "__main__":
     box_1 = axs[1].get_position()
     axs[1].set_position([box_1.x0 - 0.06, box_1.y0, box_1.width, box_1.height])
     axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+    plt.savefig('aas_figures/Hoff_Figure_5_RCR')
     plt.show()
 
     fig, axs = plt.subplots(1, 3, figsize=(8, 5))
@@ -620,4 +792,5 @@ if __name__ == "__main__":
     box_2 = axs[2].get_position()
     axs[2].set_position([box_2.x0 - 0.051, box_2.y0, box_2.width, box_2.height])
     axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+    plt.savefig('aas_figures/Hoff_Figure_6_RCR')
     plt.show()

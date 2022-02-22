@@ -1,5 +1,5 @@
 
-# formatted
+# Document Strings Publication
 
 # Reference work:
 
@@ -7,11 +7,15 @@
 # Multivariate GARCH Models: A Survey. Journal of Applied
 # Econometrics, 2006, 21, 79–109.
 
-# Log-likelihood reference work:
+# Log-likelihood reference work - equations referenced throughout:
 
 # Engle, R., Dynamic Conditional Correlation: A Simple Class of
 # Multivariate Generalized Autoregressive Conditional Heteroskedasticity Models.
 # Journal of Business & Economic Statistics, 2002, 20, 339–350.
+
+# This package created as the following Python package did not work for our purposes:
+
+# mgarch 0.2.0 - available at https://pypi.org/project/mgarch/
 
 import numpy as np
 import pandas as pd
@@ -23,8 +27,36 @@ import matplotlib.pyplot as plt
 from AdvEMDpy import emd_basis
 
 
-def covregpy_dcc_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=False):
+def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
+    """
+    Dynamic Conditional Correlation - Multivariate Generalized Autoregressive Conditional Heteroskedasticity model.
 
+    Parameters
+    ----------
+    returns_matrix : real ndarray
+        Matrix of asset returns.
+
+    p : positive integer
+        GARCH(p, q) model 'p' value used in calculation of uni-variate variance used in model.
+
+    q : positive integer
+        GARCH(p, q) model 'q' value used in calculation of uni-variate variance used in model.
+
+    days : positive integer
+        Number of days ahead to forecast covariance.
+
+    print_correlation : boolean
+        Debugging to gauge if correlation structure is reasonable.
+
+    Returns
+    -------
+    forecasted_covariance : real ndarray
+        Forecasted covariance.
+
+    Notes
+    -----
+
+    """
     # flip matrix to be consistent
     if np.shape(returns_matrix)[0] < np.shape(returns_matrix)[1]:
         returns_matrix = returns_matrix.T
@@ -39,7 +71,7 @@ def covregpy_dcc_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=Fal
         modelled_variance[:, stock] = model_fit.conditional_volatility
 
     # optimise alpha & beta parameters to be used in page 90 equation (40)
-    params = minimize(custom_loglike, (0.01, 0.94),
+    params = minimize(dcc_loglike, (0.01, 0.94),
                       args=(returns_matrix, modelled_variance),
                       bounds=((1e-6, 1), (1e-6, 1)),
                       method='Nelder-Mead')
@@ -52,11 +84,6 @@ def covregpy_dcc_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=Fal
 
     a = params.x[0]
     b = params.x[1]
-
-    # debugging
-    print(a)
-    print(b)
-    print(a + b)
 
     t = np.shape(returns_matrix)[0]  # time interval
     q_bar = np.cov(returns_matrix.T)  # base (unconditional) covariance
@@ -111,8 +138,30 @@ def covregpy_dcc_mgarch(returns_matrix, p=3, q=3, days=10, print_correlation=Fal
     return forecasted_covariance
 
 
-def custom_loglike(params, returns_matrix, modelled_variance):
+def dcc_loglike(params, returns_matrix, modelled_variance):
+    """
+    Dynamic Conditional Correlation loglikelihood function to optimise.
 
+    Parameters
+    ----------
+    params : real ndarray
+        Real array of shape (2, ) with two parameters to optimise.
+
+    returns_matrix : real ndarray
+        Matrix of asset returns.
+
+    modelled_variance : real ndarray
+        Uni-variate modelled variance to be used in optimisation.
+
+    Returns
+    -------
+    loglike : float
+        Loglikelihood function to be minimised.
+
+    Notes
+    -----
+
+    """
     t = np.shape(returns_matrix)[0]  # time interval
     q_bar = np.cov(returns_matrix.T)  # base (unconditional) covariance
 
@@ -203,10 +252,10 @@ if __name__ == "__main__":
     mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform).T
 
     # # plot returns and means
-    # for i in range(5):
-    #     plt.plot(returns_subset_forecast[:, i])
-    #     plt.plot(mean_forecast[:, i])
-    #     plt.show()
+    for i in range(5):
+        plt.plot(returns_subset_forecast[:, i])
+        plt.plot(mean_forecast[:, i])
+        plt.show()
 
     # # not necessary, but helps to follow process
     # rt = returns_subset_forecast
@@ -218,5 +267,5 @@ if __name__ == "__main__":
 
     returns_minus_mean = returns_subset_forecast - mean_forecast
 
-    forecasted_covariance = covregpy_dcc_mgarch(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
+    forecasted_covariance = covregpy_dcc(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
     print(forecasted_covariance)
