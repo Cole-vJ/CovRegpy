@@ -1,5 +1,5 @@
 
-# application
+# Case Study - study coefficient extraction using synthetic structures (sinusoids) and known B coefficients
 
 import numpy as np
 import pandas as pd
@@ -97,6 +97,57 @@ forecast_days = np.shape(close_data)[0] - model_days - 30
 spline_basis_transform = emd_basis.Basis(time_series=np.arange(model_days), time=np.arange(model_days))
 spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=np.linspace(0, model_days - 1, knots))
 
+# test direct estimation recovery of true B coefficients
+
+for lag in range(forecast_days):
+    print(lag)
+
+    if lag in [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]:  # 0 : 31-12-2020 # 365 : 31-12-2021
+
+        all_data = imfs_synth[:, lag:int(model_days + lag + 1)].T  # use actual underlying structures
+        groups = np.zeros((76, 1))  # LATER
+        returns_subset = returns[lag:int(model_days + lag), :]  # extract relevant returns
+
+        realised_covariance = np.cov(returns_subset.T)  # calculation of realised covariance
+
+        coef = np.linalg.lstsq(spline_basis_transform.T, returns_subset, rcond=None)[0]
+        mean = np.matmul(coef.T, spline_basis_transform)  # calculate mean
+
+        x = np.asarray(all_data).T
+
+        # calculate covariance regression matrices
+        B_est, Psi_est = cov_reg_given_mean(A_est=np.zeros_like(coef), basis=spline_basis_transform,
+                                            x=x[:, :-1], y=returns_subset.T,
+                                            iterations=10, technique='direct', max_iter=500,
+                                            groups=groups, LARS=False, true_coefficients=B)
+
+        fig, axs = plt.subplots(5, 1)
+        assets = ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E']
+        plt.suptitle('True Underlying Coefficients versus Estimated Coefficents')
+        for i in range(5):
+            if i == 0:
+                axs[i].set_title('Note sign is not important - signs must always be identically opposite')
+            axs[i].plot(np.arange(1, 16, 1), B[i, :],
+                        label=f'True coefficents underlying returns of asset {assets[i]}')
+            axs[i].plot(np.arange(1, 16, 1), (1 / risk_free) * B_est[:, i].T, '--',
+                        label=f'Estimate coefficents underlying returns of asset {assets[i]}')
+            axs[i].set_ylabel(f'{assets[i]}', rotation=90, fontsize=10)
+            axs[i].set_xticks((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))
+            if i == 4:
+                axs[i].set_xticklabels(('1', '2', '3', '4', '5',
+                                        '6', '7', '8', '9', '10',
+                                        '11', '12', '13', '14', '15'), fontsize=8)
+                axs[i].set_xlabel('Sinusoidal structures', fontsize=10)
+        plt.savefig('figures/Synthetic_case_study.png')
+        plt.show()
+
+        variance_Model = Psi_est + np.matmul(np.matmul(B_est.T,
+                                                       x[:, -1]).astype(np.float64).reshape(-1, 1),
+                                             np.matmul(x[:, -1].T,
+                                                       B_est).astype(np.float64).reshape(1, -1)).astype(np.float64)
+
+# test lasso estimation recovery of true B coefficients
+
 for lag in range(forecast_days):
     print(lag)
 
@@ -117,8 +168,7 @@ for lag in range(forecast_days):
         B_est, Psi_est = cov_reg_given_mean(A_est=np.zeros_like(coef), basis=spline_basis_transform,
                                             x=x[:, :-1], y=returns_subset.T,
                                             iterations=10, technique='lasso', max_iter=500,
-                                            groups=groups, LARS=False, true_coefficients=B, alpha=1e-08,
-                                            test_lasso=True)
+                                            groups=groups, LARS=False, true_coefficients=B, test_lasso=True, alpha=1e-8)
 
         fig, axs = plt.subplots(5, 1)
         assets = ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E']
@@ -135,7 +185,7 @@ for lag in range(forecast_days):
                                         '6', '7', '8', '9', '10',
                                         '11', '12', '13', '14', '15'), fontsize=8)
                 axs[i].set_xlabel('Sinusoidal structures', fontsize=10)
-        plt.savefig('figures/Synthetic_case_study.png')
+        plt.savefig('figures/Synthetic_case_study_lasso.png')
         plt.show()
 
         variance_Model = Psi_est + np.matmul(np.matmul(B_est.T,

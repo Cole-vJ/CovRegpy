@@ -1,4 +1,6 @@
 
+# Case Study - RPP using EMD and RCR - direct application (no forecasting) - performed 250 times for distribution
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -31,7 +33,6 @@ low_res_freq = np.zeros(250)
 
 for seed in np.arange(250):
     np.random.seed(seed)
-    # np.random.seed(2)
 
     sns.set(style='darkgrid')
 

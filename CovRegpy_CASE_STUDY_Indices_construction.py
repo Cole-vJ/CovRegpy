@@ -1,4 +1,6 @@
 
+# Case Study - construction of 11 sector indices
+
 import textwrap
 import numpy as np
 import pandas as pd

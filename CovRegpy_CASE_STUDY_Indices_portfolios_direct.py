@@ -1,4 +1,6 @@
 
+# Case Study - RPP using EMD and RCR - direct application (no forecasting)
+
 import textwrap
 import numpy as np
 import pandas as pd
@@ -25,7 +27,6 @@ from CovRegpy_DCC import covregpy_dcc
 from AdvEMDpy import AdvEMDpy
 
 np.random.seed(41)
-# np.random.seed(33, 41, 56, 61, 82, 88, 105, 114, 119, 168, 173, 183, 197, 208, 225, 227, 241)
 
 sns.set(style='darkgrid')
 
@@ -191,7 +192,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
                                              matrix=True)
 
         # ssa
-        ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
+        ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)[0]
         try:
             x_ssa = np.vstack((ssa_components, x_ssa))
         except:

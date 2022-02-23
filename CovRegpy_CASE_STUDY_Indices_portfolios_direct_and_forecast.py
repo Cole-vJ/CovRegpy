@@ -1,4 +1,6 @@
 
+# Case Study - RPP using EMD and RCR - direct application and experimental forecasting application
+
 import textwrap
 import numpy as np
 import pandas as pd
@@ -66,7 +68,7 @@ plt.xlabel('Days', fontsize=10)
 plt.ylabel('Cumulative Returns', fontsize=10)
 plt.yticks([0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5], ['0.5', '1.0', '1.5', '2.0', '2.5', '3.0', '3.5'], fontsize=8)
 del sector, col
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices.png')
 plt.show()
 
 # construct portfolios
@@ -143,12 +145,13 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # plt.scatter(gm_sd, gm_r, label='Global minimum variance portfolio', zorder=2)
 
     # calculate maximum sharpe ratio portfolio
-    ms_w, ms_sd, ms_r = sharpe_forward_applied_information(annual_covariance, monthly_covariance, monthly_returns,
-                                                           risk_free, gm_w, gm_r)
+    ms_w, ms_sd, ms_r = sharpe_forward_applied_information(annual_covariance, annual_returns, monthly_covariance,
+                                                           monthly_returns, risk_free, gm_w, gm_r)
     # plt.scatter(ms_sd, ms_r, label='Maximum Sharpe ratio portfolio', zorder=2)
 
     # calculate maximum sharpe ratio portfolio
     msr_w, msr_sd, msr_r = sharpe_forward_applied_information_summation_restriction(annual_covariance,
+                                                                                    annual_returns,
                                                                                     monthly_covariance,
                                                                                     monthly_returns, risk_free,
                                                                                     gm_w, gm_r, short_limit=0.3,
@@ -192,7 +195,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
                                              matrix=True)
 
         # ssa
-        ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
+        ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)[0]
         try:
             x_ssa = np.vstack((ssa_components, x_ssa))
         except:
@@ -607,7 +610,7 @@ plt.xticks([0, 365, 730, 1096, 1460],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=6)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_significant_weights.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_significant_weights.png')
 plt.show()
 
 # measure performances - cumulative returns
@@ -686,7 +689,7 @@ plt.xticks([0, 365, 730, 1096, 1461],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
 plt.show()
 
 # measure performances - mean returns
@@ -746,7 +749,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
 plt.show()
 
 # measure performances - variance returns
@@ -806,7 +809,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
 plt.show()
 
 # measure performances - value at risk returns
@@ -866,7 +869,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
 plt.show()
 
 # measure performances - Max draw down returns
@@ -926,7 +929,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
 plt.show()
 
 # measure performances - Omega ratio returns
@@ -986,7 +989,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
 plt.show()
 
 # measure performances - Sharpe ratio returns
@@ -1046,7 +1049,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
 plt.show()
 
 # measure performances - Sharpe ratio returns
@@ -1106,7 +1109,7 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns.png')
+# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns.png')
 plt.show()
 
 # relationship with short limit
