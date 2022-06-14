@@ -79,22 +79,22 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
                 test_value = np.max(np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector))
                 x_test_value = x[np.max(np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector)) ==
                                  np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector)]
-                # if plot_KS_test:
-                #     plt.title('Kolmogorov-Smirnoff Test')
-                #     plt.plot(x, norm.cdf(x, scale=std_of_errors), label='Cumulative distribution')
-                #     plt.plot(x, ks_vector, label='Test distribution')
-                #     plt.plot(x_test_value * np.ones(100),
-                #              np.linspace(norm.cdf(x_test_value, scale=std_of_errors),
-                #                          ks_vector[np.max(np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector)) ==
-                #                                    np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector)], 100),
-                #              'k', label='KS distance')
-                #     plt.legend(loc='best')
-                #     plt.text(x[0], 0.5, f'KS Test Statistic = {np.round(test_value, 5)}', fontsize=8)
-                #     plt.xticks(fontsize=8)
-                #     plt.xlabel('Errors', fontsize=10)
-                #     plt.yticks(fontsize=8)
-                #     plt.ylabel('Cumulative Distribution', fontsize=10)
-                #     plt.show()
+                if plot_KS_test:
+                    plt.title('Kolmogorov-Smirnoff Test')
+                    plt.plot(x, norm.cdf(x, scale=std_of_errors), label='Cumulative distribution')
+                    plt.plot(x, ks_vector, label='Test distribution')
+                    plt.plot(x_test_value * np.ones(100),
+                             np.linspace(norm.cdf(x_test_value, scale=std_of_errors),
+                                         ks_vector[np.max(np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector)) ==
+                                                   np.abs(norm.cdf(x, scale=std_of_errors) - ks_vector)], 100),
+                             'k', label='KS distance')
+                    plt.legend(loc='best')
+                    plt.text(x[0], 0.5, f'KS Test Statistic = {np.round(test_value, 5)}', fontsize=8)
+                    plt.xticks(fontsize=8)
+                    plt.xlabel('Errors', fontsize=10)
+                    plt.yticks(fontsize=8)
+                    plt.ylabel('Cumulative Distribution', fontsize=10)
+                    plt.show()
 
                 if figure_plot and fig_plot_count < 2:
                     if fig_plot_count == 0:
@@ -283,7 +283,7 @@ if __name__ == "__main__":
     plt.savefig('aas_figures/Example_ssa_decomposition')
     plt.show()
 
-    ssa_decomp = CovRegpy_ssa(x11_time_series, L=10, est=8, KS_test=True, plot_KS_test=True, figure_plot=True)
+    ssa_decomp = CovRegpy_ssa(x11_time_series, L=10, est=8, KS_test=True, plot_KS_test=False, figure_plot=True)
 
     plt.plot(x11_time, x11_trend_cycle, label='Component')
     plt.plot(x11_time, ssa_decomp[0], 'r--', label='KS-SSA trend')

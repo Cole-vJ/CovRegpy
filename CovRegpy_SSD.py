@@ -460,10 +460,13 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         trend_est_2 = np.real(trend_est_2)
 
         if plot:
-            plt.plot(time_series_resid)
-            plt.plot(trend_est_1, label='estimate 1')
-            plt.plot(trend_est_2, label='estimate 2')
-            plt.legend(loc='upper left')
+            plt.plot(time_series_resid, label='Detrended time series')
+            plt.title('Downsampled and Modified Embedding Estimates')
+            plt.plot(trend_est_1, '--', label='Downsampled estimate', LineWidth=2)
+            plt.plot(trend_est_2, '--', label='Modified embedding estimate', LineWidth=2)
+            plt.legend(loc='best')
+            plt.xlabel('Months')
+            # plt.ylim(-390, 390)
             plt.show()
 
         if sum(trend_est_2 * (time_series_resid - trend_est_2)) > 0:
@@ -476,10 +479,12 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         a_opt = scaling_factor(residual_time_series=time_series_resid, trend_estimate=trend_est).x
         if plot:
             plt.title('Optimisation of Scaling Factor')
-            plt.plot(np.asarray(time_series_resid), label='Residual time series')
-            plt.plot(trend_est, '--', label='Unscaled trend')
-            plt.plot(a_opt * trend_est, '--', label='Scaled trend')
+            plt.plot(np.asarray(time_series_resid), label=r'$v_i(t)$')
+            plt.plot(trend_est, '--', label=r'$g_i(t)$', LineWidth=2)
+            plt.plot(a_opt * trend_est, '--', label=r'$\tilde{g}_i(t)$', LineWidth=2)
             plt.legend(loc='best')
+            plt.xlabel('Months')
+            # plt.ylim(-390, 390)
             plt.show()
         trend_est *= a_opt
 
@@ -505,23 +510,23 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
 
 if __name__ == "__main__":
 
-    # # pull all close data
-    # tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
-    # data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
-    # close_data = data['Close']
-    # del data, tickers_format
-    #
-    # # create date range and interpolate
-    # date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
-    # close_data = close_data.reindex(date_index).interpolate()
-    # close_data = close_data[::-1].interpolate()
-    # close_data = close_data[::-1]
-    # del date_index
-    #
-    # # singular spectrum decomposition
-    # test = CovRegpy_ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
-    # plt.plot(test.T)
-    # plt.show()
+    # pull all close data
+    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
+    data = yf.download(tickers_format, start="2018-10-15", end="2021-10-16")
+    close_data = data['Close']
+    del data, tickers_format
+
+    # create date range and interpolate
+    date_index = pd.date_range(start='16/10/2018', end='16/10/2021')
+    close_data = close_data.reindex(date_index).interpolate()
+    close_data = close_data[::-1].interpolate()
+    close_data = close_data[::-1]
+    del date_index
+
+    # singular spectrum decomposition
+    test = CovRegpy_ssd(np.asarray(close_data['MSFT'][-100:]), nmse_threshold=0.05, plot=True)
+    plt.plot(test.T)
+    plt.show()
 
     # figures for paper
 

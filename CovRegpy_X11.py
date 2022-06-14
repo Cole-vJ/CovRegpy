@@ -156,7 +156,7 @@ def henderson_ma(time_series, order=13, method='kernel'):
     return henderson_filtered_time_series
 
 
-def seasonal_ma(time_series, factors='3x3', seasonality='monthly'):
+def seasonal_ma(time_series, factors='3x3', seasonality='annual'):
     """
     Seasonal moving-average filter.
 
@@ -169,7 +169,7 @@ def seasonal_ma(time_series, factors='3x3', seasonality='monthly'):
         Seasonal filter to be applied.
 
     seasonality : string
-        Seasonality to be used - either monthly or quarterly.
+        Seasonality to be used - either annual or quarterly.
 
     Returns
     -------
@@ -196,7 +196,7 @@ def seasonal_ma(time_series, factors='3x3', seasonality='monthly'):
         weighting = np.asarray((1 / 27, 2 / 27, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 2 / 27, 1 / 27))
         season_window_width = 11
 
-    if seasonality == 'monthly':
+    if seasonality == 'annual':
         for month in range(12):
 
             month_bool = (np.asarray(range(len(time_series))) % 12 - month == 0)
@@ -258,7 +258,7 @@ def seasonal_ma(time_series, factors='3x3', seasonality='monthly'):
     return seasonal_filtered_time_series
 
 
-def CovRegpy_X11(time, time_series, seasonality='monthly', seasonal_factor='3x3',
+def CovRegpy_X11(time, time_series, seasonality='annual', seasonal_factor='3x3',
                  trend_window_width_1=13, trend_window_width_2=13, trend_window_width_3=13):
     """
     Standard X11 decomposition method.
@@ -272,7 +272,7 @@ def CovRegpy_X11(time, time_series, seasonality='monthly', seasonal_factor='3x3'
         Time series to be filtered.
 
     seasonality : string
-        Seasonality to be used - either monthly or quarterly.
+        Seasonality to be used - either annual or quarterly.
 
     seasonal_factor : string
         Seasonal weights to be used.
@@ -336,7 +336,7 @@ def CovRegpy_X11(time, time_series, seasonality='monthly', seasonal_factor='3x3'
 
     # step 2
     # initial estimate of seasonality
-    # assume monthly for now
+    # assume annual for now
     first_estimate_season = seasonal_ma(no_trend_cycle, factors=seasonal_factor, seasonality=seasonality)
 
     # step 3

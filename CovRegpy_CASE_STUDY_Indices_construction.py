@@ -44,8 +44,8 @@ import matplotlib.pyplot as plt
 # close_data = data['Close']
 # date_index = pd.date_range(start='31/12/2016', end='01/01/2022')
 # close_data = close_data.reindex(date_index).interpolate()
-# close_data = close_data = close_data[::-1].interpolate()
-# close_data = close_data = close_data[::-1]
+# close_data = close_data[::-1].interpolate()
+# close_data = close_data[::-1]
 # close_data.to_csv('S&P500_Data/sp_500_close_5_year.csv')
 
 # # call RCl individually afterwards and fill

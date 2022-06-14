@@ -159,7 +159,8 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     # calculate efficient frontier
     ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, monthly_covariance)
-    # plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier', zorder=1)
+    plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier', zorder=1)
+    plt.show()
 
     # calculate pca portfolio
     pc_w, pc_sd, pc_r = pca_forward_applied_information(annual_covariance, monthly_covariance,
@@ -215,6 +216,31 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
             x_high = np.vstack((imfs[:2, :], x_high))
         except:
             x_high = imfs[:2, :].copy()
+
+    colors_1 = ['red', 'orange', 'gold', 'lawngreen', 'green', 'cyan', 'magenta', 'blue', 'darkviolet', 'pink',
+                'yellow']
+    colors_2 = ['red', 'red', 'orange', 'orange', 'gold', 'gold', 'lawngreen', 'lawngreen', 'green', 'green', 'cyan',
+                'cyan', 'magenta', 'magenta', 'blue', 'blue', 'darkviolet', 'darkviolet', 'pink', 'pink', 'yellow',
+                'yellow']
+
+    plt.title('High Frequency Structures used in Covariance Regression')
+    plt.gca().set_prop_cycle(color=colors_2)
+    for col, sector in enumerate(sector_11_indices.columns):
+        plt.plot(x_high[int(2 * col), :], label=sector)
+        plt.plot(x_high[int(2 * col + 1), :])
+    plt.plot(333 * np.ones(100), np.linspace(-0.15, 0.15, 100), 'k--', label='Fit & forecast boundary')
+    plt.xticks([0, 333, 364], ['01-01-2017', '30-11-2017', '31-12-2017'], fontsize=8, rotation=-30)
+    plt.legend(loc='best', fontsize=6)
+    plt.show()
+
+    plt.title('Low Frequency Structures used in Covariance Regression')
+    plt.gca().set_prop_cycle(color=colors_1)
+    for col, sector in enumerate(sector_11_indices.columns):
+        plt.plot(x_ssa[col, :], label=sector)
+    plt.plot(333 * np.ones(100), np.linspace(0.8, 1.4, 100), 'k--', label='Fit & forecast boundary')
+    plt.xticks([0, 333, 364], ['01-01-2017', '30-11-2017', '31-12-2017'], fontsize=8, rotation=-30)
+    plt.legend(loc='best', fontsize=6)
+    plt.show()
 
     # ssa
     x_ssa_trunc = \

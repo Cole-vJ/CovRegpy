@@ -22,8 +22,8 @@ for row in range(15):
 del row
 
 # plot of synthetic underlying structures
-# plt.plot(imfs_synth.T)
-# plt.show()
+plt.plot(imfs_synth.T)
+plt.show()
 
 # daily risk free rate
 risk_free = (0.01 / 365)
@@ -50,7 +50,7 @@ y = np.arange(5)
 x, y = np.meshgrid(x, y)
 
 fig = plt.figure()
-fig.set_size_inches(8, 10)
+fig.set_size_inches(8, 6)
 ax = plt.axes(projection='3d')
 ax.view_init(30, -70)
 ax.set_title('Base Covariance for Five Synthetic Assets')
@@ -103,7 +103,7 @@ for day in range(np.shape(covariance_structure)[2]):
 del day
 
 fig = plt.figure()
-fig.set_size_inches(8, 10)
+fig.set_size_inches(8, 6)
 ax = plt.subplot(111)
 ax.set_title('Covariance for Five Synthetic Assets', fontsize=16)
 plt.plot(np.arange(1097), covariance_structure[0, 0, :] * np.ones(1097), label='Asset A')
@@ -132,7 +132,7 @@ close_data = pd.DataFrame(columns=tickers, index=date_index)
 close_data.iloc[:] = cumulative_returns
 
 fig = plt.figure()
-fig.set_size_inches(8, 10)
+fig.set_size_inches(8, 6)
 ax = plt.subplot(111)
 ax.set_title('Cumulative Returns for Five Synthetic Assets', fontsize=16)
 plt.plot(np.arange(1098), cumulative_returns[:, 0], label='Asset A')
@@ -181,8 +181,7 @@ for lag in range(forecast_days):
         # calculate covariance regression matrices
         B_est, Psi_est = cov_reg_given_mean(A_est=np.zeros_like(coef), basis=spline_basis_transform,
                                             x=x[:, :-1], y=returns_subset.T,
-                                            iterations=10, technique='direct', max_iter=500,
-                                            groups=groups, LARS=False, true_coefficients=B)
+                                            iterations=10, technique='direct')
 
         fig, axs = plt.subplots(5, 1)
         assets = ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E']
@@ -240,7 +239,7 @@ for lag in range(forecast_days):
 
         if lag == 0 or lag == 31:
             fig = plt.figure()
-            fig.set_size_inches(8, 10)
+            fig.set_size_inches(8, 6)
             ax = plt.axes(projection='3d')
             ax.view_init(30, -70)
             ax.set_title('Base Covariance Lasso Estimate for Five Synthetic Assets')
