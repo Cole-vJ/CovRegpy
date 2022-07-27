@@ -51,6 +51,29 @@ ax.set_xlim(-0.25 * np.pi, 6.25 * np.pi)
 plt.savefig('aas_figures/forecasting_time_series.png')
 plt.show()
 
+np.random.seed(3)
+
+edge = 304
+
+time_asset = np.arange(edge)
+time_extended_asset = np.arange(int(edge - 1), 395)[1:]
+returns = np.random.normal(0.0001, 0.001, edge)
+returns[0] = 0
+time_series_asset = (np.cumprod([np.exp(returns)]) - 1) * (0.03 / 0.04) + 1
+
+ax = plt.subplot(111)
+plt.title(textwrap.fill('Forecasting Financial Instruments', 40), fontsize=16)
+plt.plot(time_asset, time_series_asset)
+plt.plot(int(edge - 1) * np.ones(101), np.linspace(1.02, 1.04, 101), 'k--')
+plt.plot(395 * np.ones(101), np.linspace(1.02, 1.04, 101), 'k--')
+plt.fill(np.append(np.linspace(int(edge - 1), 395, 101), np.linspace(395, int(edge - 1), 101)),
+         np.append(1.02 * np.ones(101), 1.04 * np.ones(101)), c='lightcyan')
+plt.text(339, 1.028, '?', fontsize=32)
+plt.ylabel('Cumulative Returns')
+plt.xlabel('Days')
+plt.savefig('aas_figures/forecasting_asset.png')
+plt.show()
+
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.15)
 for i in range(14):
