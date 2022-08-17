@@ -174,7 +174,7 @@ for seed in np.arange(250):
                                                  matrix=True)
 
             # ssa
-            ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)
+            ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)[0]
             try:
                 x_ssa = np.vstack((ssa_components, x_ssa))
             except:
