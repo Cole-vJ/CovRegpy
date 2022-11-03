@@ -20,7 +20,7 @@ sns.set(style='darkgrid')
 
 
 def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1,
-                 figure_plot=False):
+                 figure_plot=False, max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10):
     """
     Singular Spectrum Analysis (SSA) as in Hassani (2007).
 
@@ -62,8 +62,13 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
     fig_plot_count = 0
 
     if KS_test:
-        for L_test in np.arange(10, int(len(time_series) / 3), 10):
+        for L_test in np.arange(KS_start, int(min(len(time_series) / 3, KS_end)), KS_interval):
             for est_test in np.arange(L_test):
+
+                prev_test_value = 1.0
+                if est_test > 0:
+                    prev_test_value = test_value.copy()
+
                 trend = CovRegpy_ssa(time_series, L=L_test, est=est_test, KS_test=False)[0]
 
                 errors = time_series - trend
@@ -142,6 +147,9 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
                     KS_value = test_value
                     L_opt = L_test
                     est_opt = est_test
+                if test_value == prev_test_value:
+                    break
+                prev_test_value = test_value.copy()
 
         print(L_opt)
         print(est_opt)
@@ -155,18 +163,80 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
         X[:, col] = time_series[col:int(L + col)]
 
     # decomposition - singular value decomposition
-    eigen_values, eigen_vectors = np.linalg.eig(np.matmul(X, X.T))
+    eigen_values, eigen_vectors = np.linalg.eig(np.matmul(X.T, X))
+    eigen_values = np.real(eigen_values)
+    # fig, axs = plt.subplots(1, 2)
+    # plt.subplots_adjust(hspace=0.5)
+    # axs[0].set_title('Eigenvalues')
+    # axs[1].set_title('Significant eigenvalues')
+    # axs[0].plot(eigen_values)
+    # axs[0].plot(np.linspace(-5, 130), 82500 * np.ones(50), 'k--')
+    # axs[0].plot(np.linspace(-5, 130), -2500 * np.ones(50), 'k--')
+    # axs[0].plot(-5 * np.ones(50), np.linspace(-2500, 82500), 'k--')
+    # axs[0].plot(130 * np.ones(50), np.linspace(-2500, 82500), 'k--')
+    # axs[1].plot(eigen_values)
+    # axs[1].text(50, 0.9 * max(eigen_values), r'$\lambda_K$$_S = 0.9$: sig eig = {}'.format(sum(eigen_values > 0.9 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.9 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[1].text(50, 0.8 * max(eigen_values), r'$\lambda_K$$_S = 0.8$: sig eig = {}'.format(sum(eigen_values > 0.8 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.8 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[1].text(50, 0.7 * max(eigen_values), r'$\lambda_K$$_S = 0.7$: sig eig = {}'.format(sum(eigen_values > 0.7 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.7 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[1].text(50, 0.6 * max(eigen_values), r'$\lambda_K$$_S = 0.6$: sig eig = {}'.format(sum(eigen_values > 0.6 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.6 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[1].text(50, 0.5 * max(eigen_values), r'$\lambda_K$$_S = 0.5$: sig eig = {}'.format(sum(eigen_values > 0.5 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.5 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[1].text(50, 0.4 * max(eigen_values), r'$\lambda_K$$_S = 0.4$: sig eig = {}'.format(sum(eigen_values > 0.4 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.4 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[1].text(50, 0.3 * max(eigen_values),
+    #             r'$\lambda_K$$_S = 0.3$: sig eig = {}'.format(sum(eigen_values > 0.3 * max(eigen_values))), fontsize=8)
+    # axs[1].plot(np.linspace(-2.5, 42.5), 0.3 * max(eigen_values) * np.ones(50), '--', c='darkgrey')
+    # axs[0].set_ylim(-5000, 85000)
+    # axs[1].set_ylim(-2500, 82500)
+    # axs[1].set_xlim(-5.0, 130)
+    # x_points = [0, 500, 1000, 1500, 2000, 2500]
+    # y_points = [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+    # x_zoomed_points = [0, 20, 40, 60, 80, 100, 120]
+    # x_names = [0, 500, 1000, 1500, 2000, 2500]
+    # y_names = [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+    # y_names_empty = ['', '', '', '', '', '', '', '', '']
+    # x_zoomed_names = [0, 20, 40, 60, 80, 100, 120]
+    #
+    # axis = 0
+    # for ax in axs.flat:
+    #     if axis == 0:
+    #         ax.set_xticks(x_points)
+    #         ax.set_yticks(y_points)
+    #         ax.set_xticklabels(x_names, fontsize=8)
+    #         ax.set_yticklabels(y_names, fontsize=8)
+    #         ax.set(ylabel=r'$\lambda_k$')
+    #         ax.set(xlabel='k')
+    #     else:
+    #         ax.set_xticks(x_zoomed_points)
+    #         ax.set_yticks(y_points)
+    #         ax.set_yticklabels(y_names, fontsize=8)
+    #         ax.set_xticklabels(x_zoomed_names, fontsize=8)
+    #         ax.set(xlabel='k')
+    #     axis += 1
+    #
+    # box_0 = axs[0].get_position()
+    # box_1 = axs[1].get_position()
+    # axs[0].set_position([box_0.x0 + 0.01, box_0.y0, box_0.width * 0.95, box_0.height])
+    # axs[1].set_position([box_1.x0 + 0.01, box_1.y0, box_1.width * 0.95, box_1.height])
+    # # axs[0].legend(loc='center left', bbox_to_anchor=(1, -0.3), fontsize=9)
+    # plt.show()
+
+    eigen_vectors = np.real(eigen_vectors)
     # eigen-vectors in columns
     V_storage = {}
     X_storage = {}
-    for i in range(sum(eigen_values > 0)):
-        V_storage[i] = np.matmul(X.T, eigen_vectors[:, i].reshape(-1, 1)) / np.sqrt(eigen_values[i])
+    for i in range(sum(eigen_values > max_eig_ratio * np.max(eigen_values))):
+        V_storage[i] = np.matmul(X, eigen_vectors[:, i].reshape(-1, 1)) / np.sqrt(eigen_values[i])
         X_storage[i] = np.sqrt(eigen_values[i]) * np.matmul(eigen_vectors[:, i].reshape(-1, 1), V_storage[i].T)
 
     # reconstruction - grouping
     X_estimate = np.zeros_like(X)
-    for j in range(est):
-        X_estimate += X_storage[j]
+    for j in range(min(len(X_storage), est)):
+        X_estimate += X_storage[j].T
 
     # reconstruction - averaging
     time_series_est = np.zeros_like(time_series)
@@ -181,10 +251,10 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
     # Decomposing Singular Spectrum Analysis (D-SSA)
     time_series_decomp = np.zeros((est, len(time_series_est)))
 
-    for comp in range(est):
+    for comp in range(min(len(X_storage), est)):
         comp_est = np.zeros_like(time_series)
         for col in range(len(time_series) - L + 1):
-            comp_est[col:int(L + col)] += X_storage[comp][:, col]
+            comp_est[col:int(L + col)] += X_storage[comp][col, :]
         time_series_decomp[comp, :] = comp_est / averaging_vector
 
     if plot:

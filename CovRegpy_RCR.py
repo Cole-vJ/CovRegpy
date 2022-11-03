@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from sklearn import linear_model
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import SGDRegressor, LassoLars, Lars
+from mpl_toolkits.mplot3d import Axes3D
 
 np.random.seed(0)
 
@@ -429,7 +430,7 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
     mean = np.matmul(A_est.T, basis)
 
     for iter in range(iterations):
-        print(iter + 1)
+        # print(iter + 1)
 
         B_est, Psi_est = calc_B_Psi(m=m, v=v, x=x, y=y, basis=basis, A_est=A_est, technique=technique,
                                     l1_ratio_or_reg=l1_ratio_or_reg, group_reg=group_reg, alpha=alpha,
@@ -515,6 +516,56 @@ def subgrad_opt(x_tilda, y_tilda, max_iter, alpha=1e-12):
 
 
 if __name__ == "__main__":
+
+    dt = 0.025
+    x = np.linspace(0, 10, 401)
+    y = np.linspace(0, 10, 401)
+    Z, Y = np.meshgrid(x, y)
+    X = (10 * np.ones(np.shape(Z)) - (Z / 2) + (Z / 2) * np.cos((1 / 2) * Z / (5 / (2 * np.pi)))
+         - (Y / 2) + (Y / 2) * np.cos((1 / 2) * Y / (5 / (2 * np.pi))) + np.random.normal(0, 0.1, np.shape(Z)) + 5) / 1.5
+    X_new = X.copy()
+    X_new[np.asarray(np.sqrt((Z - 10) ** 2 + Y ** 2) <= 7)] = np.nan
+
+    fig = plt.figure()
+    fig.set_size_inches(8, 6)
+    ax = plt.axes(projection='3d')
+    ax.view_init(30, -70)
+    ax.set_title(r'L$_2$ Norm Wells')
+    # require vmin and vmax as np.nan causes error of colour bar
+    cov_plot_1 = ax.plot_surface(Z, Y, X_new, rstride=1, cstride=1, cmap='gist_rainbow', edgecolor='none',
+                                 antialiased=False, shade=True, alpha=1, zorder=2, vmin=2.8, vmax=10)
+
+    for i in np.arange(3, 8, 1):
+        Z_radius = Z * np.asarray(np.sqrt(Z ** 2 + (Y - 10) ** 2) <= (i + dt)) * np.asarray(np.sqrt(Z ** 2 + (Y - 10) ** 2) >= (i - dt))
+        Z_radius[Z_radius == 0] = np.nan
+        Y_radius = Y * np.asarray(np.sqrt(Z ** 2 + (Y - 10) ** 2) <= (i + dt)) * np.asarray(np.sqrt(Z ** 2 + (Y - 10) ** 2) >= (i - dt))
+        Y_radius[Y_radius == 0] = np.nan
+        X_radius = 0.1 + X * np.asarray(np.sqrt(Z ** 2 + (Y - 10) ** 2) <= (i + dt)) * np.asarray(np.sqrt(Z ** 2 + (Y - 10) ** 2) >= (i - dt))
+        X_radius[X_radius == 0] = np.nan
+        cov_plot_2 = ax.plot_surface(Z_radius, Y_radius, X_radius, rstride=1, cstride=1,
+                                     edgecolor='black', antialiased=False, shade=True, alpha=1, zorder=1)
+    plt.plot(x, y, -10 * np.ones_like(y), 'k-', label='Ridge regressions')
+    ax.scatter(0.2, 7, 7.2, s=100, label='ridge minimum', zorder=10, c='grey')
+    ax.scatter(2.6, 7, 6.2, s=100, zorder=10, c='grey')
+    ax.scatter(3.6, 7, 4.6, s=100, zorder=10, c='grey')
+    ax.scatter(4.5, 7, 3.2, s=100, zorder=10, c='grey')
+    ax.scatter(5.0, 7, 2.2, s=100, zorder=10, c='grey')
+    ax.set_xticks(ticks=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    ax.set_xticklabels(labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], fontsize=8, ha="left", rotation_mode="anchor")
+    ax.set_xlabel(r'$|\beta_1|^2$', fontsize=8)
+    ax.set_yticks(ticks=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    ax.set_yticklabels(labels=[10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], rotation=0, fontsize=8)
+    ax.set_ylabel(r'$|\beta_2|^2$', fontsize=8)
+    ax.set_zticks(ticks=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    ax.set_zticklabels([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], fontsize=8)
+    ax.set_zlabel(r'$||f(\beta_1, \beta_2; t) - g(t)||^2_2$', fontsize=8)
+    cbar = plt.colorbar(cov_plot_1)
+    box_0 = ax.get_position()
+    ax.set_zlim(0, 10)
+    ax.set_position([box_0.x0 - 0.05, box_0.y0, box_0.width, box_0.height])
+    ax.legend(loc='best', fontsize=8)
+    plt.savefig('aas_figures/norm_well_example.png')
+    plt.show()
 
     # load raw data
     raw_data = pd.read_csv('Peter_Hoff_Data/peter_hoff_data', header=0)

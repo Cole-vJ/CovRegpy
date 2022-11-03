@@ -367,19 +367,15 @@ def CovRegpy_X11(time, time_series, seasonality='annual', seasonal_factor='3x3',
 if __name__ == "__main__":
 
     time = np.linspace(0, 120, 121)
-    time_series = time + (1 / 1000) * (time * (time - 60) * (time - 110)) + \
-                  10 * np.sin(((2 * np.pi) / 12) * time) + np.random.normal(0, 5, 121)
-    plt.plot(time, time_series)
-    plt.title('Example X11 Time Series')
-    plt.show()
+    time_series = \
+        time + (1 / 1000) * (time * (time - 60) * (time - 110)) + 10 * np.sin(((2 * np.pi) / 12) * time) + \
+        np.random.normal(0, 5, 121)
 
     # Henderson symmetric filter calculation from first principles - reproduces values exactly
     # Closed form solution to problem exists
 
     henderson_13 = henderson_weights(13)
-
     index = np.asarray((-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6))
-
     vx = cvx.Variable(19)
     objective = cvx.Minimize(cvx.norm(vx[3:] - 3 * vx[2:-1] + 3 * vx[1:-2] - vx[:-3]))
     constraints = []
@@ -395,14 +391,6 @@ if __name__ == "__main__":
     prob = cvx.Problem(objective, constraints)
     result = prob.solve(verbose=True, solver=cvx.ECOS)
     filtered_signal = np.array(vx.value)
-    # print(henderson_13)
-    # print(sum(henderson_13))
-    # print(sum(henderson_13 * index))
-    # print(sum(henderson_13 * index ** 2))
-    # print(filtered_signal[3:-3])
-    # print(sum(filtered_signal[3:-3]))
-    # print(sum(filtered_signal[3:-3] * index))
-    # print(sum(filtered_signal[3:-3] * index ** 2))
     plt.plot(henderson_13, label='Henderson function test')
     plt.plot(filtered_signal[3:-3], '--', label='Direct calculation test')
     plt.legend(loc='best')
@@ -410,11 +398,6 @@ if __name__ == "__main__":
     plt.show()
 
     filtered_time_series = CovRegpy_X11(time, time_series, trend_window_width_3=23)
-    plt.plot(time, time_series, label='Time series')
-    plt.plot(time, filtered_time_series[0], label='Trend estimate')
-    plt.legend(loc='best')
-    plt.title('Example X11 Time Series and Trend Estimate')
-    plt.show()
 
     plt.plot(time, time_series, label='Time series')
     plt.plot(time, filtered_time_series[0], label='Trend estimate')
@@ -422,15 +405,6 @@ if __name__ == "__main__":
     plt.plot(time, filtered_time_series[2], label='Error estimate')
     plt.legend(loc='best')
     plt.title(textwrap.fill('Example X11 Time Series, Trend Estimate, Seasonal Estimate, and Error Estimate', 40))
-    plt.show()
-
-    time = np.linspace(-4, 4, 100)
-    henderson_13 = time * (time - 2) * (time + 2)
-
-    plt.title('Cubic Function and Henderson Filtered Cubic Function')
-    plt.plot(time, henderson_13, label='Cubic function')
-    plt.plot(time, henderson_ma(henderson_13), '--', label='Henderson filtered function')
-    plt.legend(loc='best')
     plt.show()
 
     # figures for paper
@@ -444,9 +418,11 @@ if __name__ == "__main__":
     x11_time_series = x11_trend_cycle + x11_seasonal + x11_noise
 
     plt.plot(x11_time, x11_time_series)
-    plt.title('Additive X11 Example Time Series')
+    plt.title('Additive Synthetic Time Series')
     plt.xticks([0, 20, 40, 60, 80, 100, 120], fontsize=8)
     plt.yticks([400, 600, 800, 1000, 1200, 1400, 1600], fontsize=8)
+    plt.ylabel('Numeraire')
+    plt.xlabel('t')
     plt.savefig('aas_figures/Example_time_series')
     plt.show()
 

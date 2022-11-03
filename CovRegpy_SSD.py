@@ -287,7 +287,7 @@ def scaling_factor(residual_time_series, trend_estimate):
                     method='nelder-mead', constraints=cons)
 
 
-def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=False, debug=False):
+def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=False, debug=False, method='l1'):
     """
     Singular Spectrum Decomposition based on Bonizzi, Karel, Meste, & Peeters (2014).
 
@@ -366,11 +366,15 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         sigma_1 = (2 / 3) * f[((2 / 3) * s[s == max(s)] - s) == min((2 / 3) * s[s == max(s)] - s)] * dt
         gaus_1 = gaussian(f * dt, A_1, mu_1, sigma_1)
 
-        mu_2 = f[s == np.sort(s[max_bool(s)])[-2]] * dt
-        A_2 = (1 / 2) * s[s == np.sort(s[max_bool(s)])[-2]]
-        sigma_2 = (2 / 3) * f[((2 / 3) * s[s == np.sort(s[max_bool(s)])[-2]] - s)
-                              == min((2 / 3) * s[s == np.sort(s[max_bool(s)])[-2]] - s)] * dt
-        gaus_2 = gaussian(f * dt, A_2, mu_2, sigma_2)
+        try:
+            mu_2 = f[s == np.sort(s[max_bool(s)])[-2]] * dt
+            A_2 = (1 / 2) * s[s == np.sort(s[max_bool(s)])[-2]]
+            sigma_2 = (2 / 3) * f[((2 / 3) * s[s == np.sort(s[max_bool(s)])[-2]] - s)
+                                  == min((2 / 3) * s[s == np.sort(s[max_bool(s)])[-2]] - s)] * dt
+            gaus_2 = gaussian(f * dt, A_2, mu_2, sigma_2)
+        except:
+            gaus_2 = gaussian(f * dt, A_1, mu_1, sigma_1)
+
 
         mu_3 = (mu_1 + mu_2) / 2
         A_3 = (1 / 4) * s[np.abs(f * dt - mu_3) == min(np.abs(f * dt - mu_3))][0]
@@ -385,7 +389,7 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         x0[4] = sigma_2
         x0[5] = sigma_3
 
-        thetas = gaus_param(x0, f * dt, mu_1, mu_2, mu_3, s, method='l1').x
+        thetas = gaus_param(x0, f * dt, mu_1, mu_2, mu_3, s, method=method).x
         f_range = [(mu_1 - 2.5 * thetas[3])[0], (mu_1 + 2.5 * thetas[3])[0]]
 
         if plot:
@@ -469,7 +473,8 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
             # plt.ylim(-390, 390)
             plt.show()
 
-        if sum(trend_est_2 * (time_series_resid - trend_est_2)) > 0:
+        # if sum(trend_est_2 * (time_series_resid - trend_est_2)) > 0:
+        if sum((time_series_resid - trend_est_2) ** 2) < sum((time_series_resid - trend_est_1) ** 2):
             trend_est = trend_est_2
         else:
             trend_est = trend_est_1
@@ -509,6 +514,18 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
 
 
 if __name__ == "__main__":
+
+    begin = 0
+    end = 1
+    points = int(7.5 * 512)
+    x = np.linspace(begin, end, points)
+
+    signal_1 = np.sin(250 * np.pi * x ** 2)
+    signal_2 = np.sin(80 * np.pi * x ** 2)
+
+    signal = signal_1 + signal_2
+
+    decomposition = CovRegpy_ssd(signal, plot=True, debug=True)
 
     # pull all close data
     tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
