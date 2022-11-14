@@ -269,7 +269,10 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
     y_tilda_extend = np.vstack((y.T, np.zeros_like(y.T)))
 
     const = (y_tilda_extend - np.matmul(x_tilda_extend, C_est))
-    Psi_est = np.matmul(const.T, const) / np.shape(x)[1]
+    try:
+        Psi_est = np.matmul(const.T, const) / np.shape(x)[1]
+    except:
+        Psi_est = np.matmul(const.T, const) / len(x)
 
     return B_est.astype(np.float64), Psi_est.astype(np.float64)
 
