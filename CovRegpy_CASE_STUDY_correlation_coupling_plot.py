@@ -23,9 +23,9 @@ risk_free = (0.01 / 365)  # daily risk free rate
 # sector numpy array
 sector_11_indices_array = np.vstack((np.zeros((1, 11)), np.asarray(sector_11_indices)))
 
+plt.figure(figsize=(12, 6))
 for col, sector in enumerate(sector_11_indices.columns):
     plt.plot(np.asarray(np.cumprod(np.exp(sector_11_indices_array[:, col]))), label=sector)
-ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title(textwrap.fill('Cumulative Returns of Eleven Market Cap Weighted Sector Indices of S&P 500 from 1 January 2017 to 31 December 2021', 60),
           fontsize=10)
@@ -330,3 +330,5 @@ cbar = plt.colorbar(cov_plot)
 cbar.set_label("Covariance")
 plt.savefig('figures/covariance_example.png')
 plt.show()
+
+temp = 0
