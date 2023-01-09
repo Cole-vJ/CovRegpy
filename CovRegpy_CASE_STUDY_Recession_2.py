@@ -1,5 +1,9 @@
 
-# median breaks correlation structure
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 import textwrap
 import numpy as np
@@ -608,81 +612,4 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.show()
-
-fig, axs = plt.subplots(1, 3)
-plt.suptitle('Correlation Structure Relative to Energy Sector')
-
-for col, sector in enumerate(sector_11_indices.columns):
-    if col != 3:
-        if col == 0 or col == 1 or col == 2 or col == 7:
-            axs[0].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=textwrap.fill(sector, 14))
-            axs[1].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=textwrap.fill(sector, 14))
-            axs[2].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=textwrap.fill(sector, 14))
-        else:
-            axs[0].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=sector)
-            axs[1].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=sector)
-            axs[2].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=sector)
-    else:
-        pass
-
-axs[0].set_xticks([0, 364, 729, 1094, 1460, 1825])
-axs[0].set_xticklabels(['01-01-2017', '31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
-                       fontsize=8, rotation=-30)
-gap = 20
-axs[0].set_title(textwrap.fill('Full Correlation Structure', 11))
-axs[1].set_title(textwrap.fill('Market Down-Turn 2018', 9))
-axs[1].set_xticks([639, 721])
-axs[1].set_xticklabels(['02-10-2018', '23-12-2018'], fontsize=8, rotation=-30)
-axs[1].set_xlim(639 - gap, 721 + gap)
-axs[2].set_title(textwrap.fill('SARS-CoV-2 Pandemic 2020', 10))
-axs[2].set_xticks([1143, 1176])
-axs[2].set_xticklabels(['28-02-2020', '01-04-2020'], fontsize=8, rotation=-30)
-axs[2].set_xlim(1143 - gap, 1176 + gap)
-
-axs[0].set_yticks([-0.5, 0.0, 0.5, 1.0])
-axs[0].set_yticklabels(['-0.5', '0.0', '0.5', '1.0'], fontsize=8)
-axs[1].set_yticks([-0.5, 0.0, 0.5, 1.0])
-axs[1].set_yticklabels(['', '', '', ''], fontsize=8)
-axs[2].set_yticks([-0.5, 0.0, 0.5, 1.0])
-axs[2].set_yticklabels(['', '', '', ''], fontsize=8)
-axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            label=textwrap.fill('Final quarter 2018 bear market', 14))
-axs[0].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-axs[0].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-axs[1].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-axs[1].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            label=textwrap.fill('Final quarter 2018 bear market', 14))
-axs[1].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-axs[1].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-axs[2].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-axs[2].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            label=textwrap.fill('Final quarter 2018 bear market', 14))
-axs[2].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-axs[2].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-axs[0].set_xlabel('Days', fontsize=10)
-axs[1].set_xlabel('Days', fontsize=10)
-axs[2].set_xlabel('Days', fontsize=10)
-axs[0].set_ylabel('Correlation', fontsize=10)
-plt.subplots_adjust(wspace=0.1, top=0.8, bottom=0.16, left=0.08)
-box_0 = axs[0].get_position()
-axs[0].set_position([box_0.x0, box_0.y0, box_0.width * 0.9, box_0.height * 1.0])
-box_1 = axs[1].get_position()
-axs[1].set_position([box_1.x0 - 0.045, box_1.y0, box_1.width * 0.9, box_1.height * 1.0])
-box_2 = axs[2].get_position()
-axs[2].set_position([box_2.x0 - 0.09, box_2.y0, box_2.width * 0.9, box_2.height * 1.0])
-axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.show()

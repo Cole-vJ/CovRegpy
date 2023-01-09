@@ -1,5 +1,9 @@
 
-# Document Strings Publication
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 import numpy as np
 import pandas as pd

@@ -1,9 +1,17 @@
 
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
 import textwrap
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+sns.set(style='darkgrid')
 
 fig = plt.figure()
 # fig.set_size_inches(8, 10)
@@ -19,7 +27,8 @@ x = np.linspace(0, 2, 21)
 y = np.linspace(0, 2, 21)
 X, Y = np.meshgrid(x, y)
 Z = np.sqrt(X*Y)
-ax.set_title(textwrap.fill('Three-Dimensional Cone formed by Positive Semi-Definite Two-Dimensional Matrices', 45))
+ax.set_title(textwrap.fill('Three-Dimensional Cone formed by Positive Semi-Definite Two-Dimensional Matrices', 45),
+             pad=10)
 cov_plot = ax.plot_surface(X, Z, Y, rstride=1, cstride=1, cmap='gist_rainbow', edgecolor='black', antialiased=False,
                            shade=True, alpha=0.5, vmin=0, vmax=2)
 cov_plot = ax.plot_surface(X, -Z, Y, rstride=1, cstride=1, cmap='gist_rainbow', edgecolor='black', antialiased=False,

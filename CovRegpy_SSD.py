@@ -1,5 +1,9 @@
 
-# Document Strings Publication
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 # Main reference: Bonizzi, Karel, Meste, & Peeters (2014)
 # Bonizzi, P., Karel, J., Meste, O., & Peeters, R. (2014).
@@ -75,7 +79,7 @@ def max_bool(time_series):
     Used to calculate centres of each Gaussian distributions.
 
     """
-    max_bool = np.r_[False, time_series[1:] >= time_series[:-1]] &np.r_[time_series[:-1] > time_series[1:], False]
+    max_bool = np.r_[False, time_series[1:] >= time_series[:-1]] & np.r_[time_series[:-1] > time_series[1:], False]
 
     return max_bool
 
@@ -107,7 +111,7 @@ def spectral_obj_func_l1(theta, f, mu_1, mu_2, mu_3, spectrum):
     Returns
     -------
     objective_function : real ndarray
-        The L1 norm of difference between spectrum and Gaussian distributions.
+        The l1 norm of difference between spectrum and Gaussian distributions.
 
     Notes
     -----
@@ -148,7 +152,7 @@ def spectral_obj_func_l2(theta, f, mu_1, mu_2, mu_3, spectrum):
     Returns
     -------
     objective_function : real ndarray
-        The L1 norm of difference between spectrum and Gaussian distributions.
+        The l2 norm of difference between spectrum and Gaussian distributions.
 
     Notes
     -----
@@ -287,7 +291,7 @@ def scaling_factor(residual_time_series, trend_estimate):
                     method='nelder-mead', constraints=cons)
 
 
-def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=False, debug=False, method='l1'):
+def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=False, debug=False, method='l2'):
     """
     Singular Spectrum Decomposition based on Bonizzi, Karel, Meste, & Peeters (2014).
 
@@ -304,14 +308,23 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         Normalised Mean-Squared Error stopping criterion from Bonizzi, Karel, Meste, & Peeters (2014).
         Should explore additional stopping criteria.
 
+    plot : boolean
+        Plot all intermediate stages as part of debugging.
+
+    debug : boolean
+        Print incremental residual nmse value - while loop continues until drops below threshold of nmse_threshold.
+
+    method : string
+        Whether to use l1 or l2 optimisation in gaus_param() function.
+
     Returns
     -------
     time_series_est_mat : real ndarray
-        Matrix containing each successive trend estimate.
+        Matrix containing decomposition of time series - iterates until nmse_threshold is met.
 
     Notes
     -----
-    Many expansions possible.
+    Many expansions possible. We explore some of these in attempt to make more robust.
 
     """
     # make duplicate of original time series

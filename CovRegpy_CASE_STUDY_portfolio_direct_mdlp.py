@@ -1,5 +1,9 @@
 
-# Case Study - MDLP compare
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 import textwrap
 import numpy as np
@@ -18,7 +22,7 @@ from CovRegpy_utilities import efficient_frontier, global_minimum_forward_applie
 from CovRegpy_measures import cumulative_return, mean_return, variance_return, value_at_risk_return, \
     max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return
 
-from CovRegpy_RPP import risk_parity_weights_summation_restriction, global_obj_fun
+from CovRegpy_RPP import equal_risk_parity_weights_summation_restriction, global_obj_fun
 
 from CovRegpy_DCC import covregpy_dcc
 
@@ -122,8 +126,8 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     pc_w, pc_sd, pc_r = pca_forward_applied_information(annual_covariance, monthly_covariance,
                                                         monthly_returns, factors=3)
     # calculate realised portfolio
-    weights_realised = risk_parity_weights_summation_restriction(annual_covariance, short_limit=0.3,
-                                                                 long_limit=1.3).x
+    weights_realised = equal_risk_parity_weights_summation_restriction(annual_covariance, short_limit=0.3,
+                                                                       long_limit=1.3).x
     # # calculate DCC weights - commented out for speed
     # weights_dcc = risk_parity_weights_summation_restriction(covregpy_dcc(sector_11_indices_array[
     #                       end_of_month_vector_cumsum[int(day)]:end_of_month_vector_cumsum[
@@ -568,18 +572,18 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # direct application Covariance Regression - BOTTOM #
     #####################################################
 
-    weights_forecast_high = risk_parity_weights_summation_restriction(variance_median_high,
-                                                                      short_limit=0.3, long_limit=1.3).x
+    weights_forecast_high = equal_risk_parity_weights_summation_restriction(variance_median_high,
+                                                                            short_limit=0.3, long_limit=1.3).x
     print('High frequency weight = {}'.format(weights_forecast_high))
     variance_forecast_high = global_obj_fun(weights_forecast_high, monthly_covariance)
     returns_forecast_high = sum(weights_forecast_high * monthly_returns)
-    weights_forecast_mid = risk_parity_weights_summation_restriction(variance_median_mid,
-                                                                     short_limit=0.3, long_limit=1.3).x
+    weights_forecast_mid = equal_risk_parity_weights_summation_restriction(variance_median_mid,
+                                                                           short_limit=0.3, long_limit=1.3).x
     print('Mid frequency weight = {}'.format(weights_forecast_mid))
     variance_forecast_mid = global_obj_fun(weights_forecast_mid, monthly_covariance)
     returns_forecast_mid = sum(weights_forecast_mid * monthly_returns)
-    weights_forecast_trend = risk_parity_weights_summation_restriction(variance_median_trend,
-                                                                       short_limit=0.3, long_limit=1.3).x
+    weights_forecast_trend = equal_risk_parity_weights_summation_restriction(variance_median_trend,
+                                                                             short_limit=0.3, long_limit=1.3).x
     print('Trend frequency weight = {}'.format(weights_forecast_trend))
     variance_forecast_trend = global_obj_fun(weights_forecast_trend, monthly_covariance)
     returns_forecast_trend = sum(weights_forecast_trend * monthly_returns)
@@ -603,9 +607,9 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # plt.show()
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long restraint removed
-    weights_Model_forecast_direct_ssa_long_short = risk_parity_weights_summation_restriction(variance_median_direct_ssa,
-                                                                                             short_limit=0.3).x
-    weights_Model_forecast_direct_ssa_summation_restriction = risk_parity_weights_summation_restriction(
+    weights_Model_forecast_direct_ssa_long_short = equal_risk_parity_weights_summation_restriction(variance_median_direct_ssa,
+                                                                                                   short_limit=0.3).x
+    weights_Model_forecast_direct_ssa_summation_restriction = equal_risk_parity_weights_summation_restriction(
         variance_median_direct_ssa).x
 
     # fill extended model storage matrices

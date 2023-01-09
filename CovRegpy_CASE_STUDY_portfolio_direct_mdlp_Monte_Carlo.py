@@ -1,12 +1,18 @@
 
-# Case Study - RPP using EMD and RCR - direct application (no forecasting) - performed 250 times for distribution
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
+# RPP using EMD and RCR - direct application (no forecasting) - performed 250 times for distribution
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
 from CovRegpy_RCR import cov_reg_given_mean, cubic_b_spline
-from CovRegpy_RPP import risk_parity_weights_summation_restriction
+from CovRegpy_RPP import equal_risk_parity_weights_summation_restriction
 from AdvEMDpy import AdvEMDpy
 
 for seed in np.arange(250):
@@ -198,9 +204,9 @@ for seed in np.arange(250):
         variance_median_direct_low = np.median(variance_Model_forecast_direct_low, axis=0)
 
         # calculate weights, variance, and returns - direct application Covariance Regression - long only
-        weights_Model_forecast_direct_high = risk_parity_weights_summation_restriction(variance_median_direct_high).x
-        weights_Model_forecast_direct_mid = risk_parity_weights_summation_restriction(variance_median_direct_mid).x
-        weights_Model_forecast_direct_low = risk_parity_weights_summation_restriction(variance_median_direct_low).x
+        weights_Model_forecast_direct_high = equal_risk_parity_weights_summation_restriction(variance_median_direct_high).x
+        weights_Model_forecast_direct_mid = equal_risk_parity_weights_summation_restriction(variance_median_direct_mid).x
+        weights_Model_forecast_direct_low = equal_risk_parity_weights_summation_restriction(variance_median_direct_low).x
         print(day)
 
         weight_matrix_high[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \

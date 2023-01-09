@@ -1,5 +1,9 @@
 
-# median breaks correlation structure
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 import textwrap
 import numpy as np
@@ -89,7 +93,7 @@ for i in np.arange(-82, 1, 82):
                            time=np.arange(0, d1, 1))
         imfs, _, _, _, _, _, _ = \
             emd.empirical_mode_decomposition(knot_envelope=np.linspace(-12, d1 + 12, knots),
-                                             matrix=True)
+                                             matrix=True, verbose=False)
         ssd_comps = CovRegpy_ssd(np.asarray(price_signal[int(639 + i):int(721 + i), signal]),
                                  initial_trend_ratio=10, nmse_threshold=0.01, plot=False, debug=False, method='l2')
         ssd_vectors[signal] = np.shape(ssd_comps)[0]
@@ -140,185 +144,185 @@ for i in np.arange(-82, 1, 82):
 
             x_mesh, y_mesh = np.meshgrid(np.arange(11), np.arange(11))
 
-            B_est_20 = pd.read_csv('B and Psi Estimates/B_est_[20].csv', header=0)
-            B_est_20 = np.asarray(B_est_20.set_index('Unnamed: 0'))
-            Psi_est_20 = pd.read_csv('B and Psi Estimates/Psi_est_[20].csv', header=0)
-            Psi_est_20 = np.asarray(Psi_est_20.set_index('Unnamed: 0'))
-
-            B_est_1213 = pd.read_csv('B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
-            B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
-            Psi_est_1213 = pd.read_csv('B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
-            Psi_est_1213 = np.asarray(Psi_est_1213.set_index('Unnamed: 0'))
-
-            for var_day in range(d1):
-                variance_forecast_1[var_day] = \
-                    Psi_est_20 + np.matmul(B_est_20.T * x[20, var_day],
-                                           x[20, var_day] * B_est_20).astype(np.float64)
-
-            fig, axs = plt.subplots(1, 2)
-            plt.suptitle('Correlation Structure Relative to Energy Sector')
-
-            for col, sector in enumerate(sector_11_indices.columns):
-                if col != 3:
-                    if col == 0 or col == 1 or col == 2 or col == 7:
-                        for ax in range(2):
-                            axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
-                                          np.sqrt(variance_forecast_1[:, 3, 3] *
-                                                  variance_forecast_1[:, col, col])), label=textwrap.fill(sector, 14))
-                    else:
-                        for ax in range(2):
-                            axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
-                                          np.sqrt(variance_forecast_1[:, 3, 3] *
-                                                  variance_forecast_1[:, col, col])), label=sector)
-                    for day in np.arange(-10, 82):
-                        real_cov = np.cov(price_signal[int(day + 619):int(day + 639), :].T)
-                        axs[0].scatter(day + 639, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col])
-                    if col == 0 or col == 1 or col == 2 or col == 7:
-                        axs[1].scatter(day + 639, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col], label=textwrap.fill('{}'.format(sector), 14))
-                    else:
-                        axs[1].scatter(day + 639, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col], label='{}'.format(sector))
-                    for day in np.arange(-10, 82):
-                        real_cov = np.cov(price_signal[int(day + 619):int(day + 639), :].T)
-                        if col == 2:
-                            median_consumer_staples.append(
-                                real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]))
-                        elif col == 9:
-                            median_real_estate.append(
-                                real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]))
-                        elif col == 10:
-                            median_utilities.append(
-                                real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]))
-                else:
-                    pass
-
-            axs[0].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), 'k--',
-                        label='Consumer staples median')
-            axs[0].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), 'k:',
-                        label='Real Estate median')
-            axs[0].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), 'k-.',
-                        label='Utilities median')
-            axs[1].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), 'k--',
-                        label=textwrap.fill('Consumer staples median', 10))
-            axs[1].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), 'k:',
-                        label=textwrap.fill('Real Estate median', 11))
-            axs[1].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), 'k-.',
-                        label=textwrap.fill('Utilities median', 10))
-
-            axs[0].set_title(textwrap.fill('Market Down-Turn 2018', 9))
-            axs[0].set_xticks([639, 721])
-            axs[0].set_xticklabels(['02-10-2018', '23-12-2018'], fontsize=8, rotation=-30)
-            axs[0].set_xlim(639 - 15, 721 + 5)
-            axs[1].set_title(textwrap.fill('SARS-CoV-2 Pandemic 2020', 10))
-            axs[1].set_xticks([1143, 1176])
-            axs[1].set_xticklabels(['28-02-2020', '01-04-2020'], fontsize=8, rotation=-30)
-            axs[1].set_xlim(1143 - 12, 1176 + 2)
-
-            axs[0].set_yticklabels(['-0.5', '0.0', '0.5', '1.0'], fontsize=8)
-            axs[0].set_yticks([-0.5, 0.0, 0.5, 1.0])
-            axs[1].set_yticks([-0.5, 0.0, 0.5, 1.0])
-            axs[1].set_yticklabels(['', '', '', ''], fontsize=8)
-            # axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-            # axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            #             label=textwrap.fill('Final quarter 2018 bear market', 14))
-            # axs[0].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-            # axs[0].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-            # axs[1].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-            # axs[1].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            #             label=textwrap.fill('Final quarter 2018 bear market', 14))
-            # axs[1].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-            # axs[1].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-            axs[0].set_xlabel('Days', fontsize=10)
-            axs[1].set_xlabel('Days', fontsize=10)
-            plt.subplots_adjust(wspace=0.1, top=0.8, bottom=0.16, left=0.08)
-            box_0 = axs[0].get_position()
-            axs[0].set_position([box_0.x0, box_0.y0, box_0.width * 0.92, box_0.height * 1.0])
-            box_1 = axs[1].get_position()
-            axs[1].set_position([box_1.x0 - 0.045, box_1.y0, box_1.width * 0.92, box_1.height * 1.0])
-            axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.55), fontsize=6)
-
-            # temporary for plot #
-
-            variance_forecast_1 = np.zeros((33, 11, 11))
-
-            for i in np.arange(-30, 1, 30):
-                del x, x_ssa
-                for signal in range(np.shape(price_signal)[1]):
-                    emd = AdvEMDpy.EMD(time_series=np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
-                                       time=np.arange(0, 33, 1))
-                    imfs, _, _, _, _, _, _ = \
-                        emd.empirical_mode_decomposition(knot_envelope=np.linspace(-12, 33 + 12, knots),
-                                                         matrix=True, mean_threshold=1e-3, initial_smoothing=False)
-                    ssd_comps = CovRegpy_ssd(np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
-                                             initial_trend_ratio=10, nmse_threshold=0.01, plot=False, debug=False,
-                                             method='l2')
-                    ssd_vectors[signal] = np.shape(ssd_comps)[0]
-                    # deal with constant last IMF and insert IMFs in dataframe
-                    # deal with different frequency structures here
-                    try:
-                        imfs = imfs[1:, :]
-                        if np.isclose(imfs[-1, 0], imfs[-1, -1]):
-                            imfs[-2, :] += imfs[-1, :]
-                            imfs = imfs[:-1, :]
-                    except:
-                        pass
-                    try:
-                        x = np.vstack((imfs, x))
-                    except:
-                        x = imfs.copy()
-                    if ssd_comps[-1, 0] == ssd_comps[-1, -1]:
-                        ssd_comps = ssd_comps[-2, :].reshape(1, -1)
-                    else:
-                        ssd_comps = ssd_comps[-1, :].reshape(1, -1)
-                    try:
-                        x_ssa = np.vstack((ssd_comps, x_ssa))
-                    except:
-                        x_ssa = ssd_comps.copy()
-
-            B_est_1213 = pd.read_csv('B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
-            B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
-            Psi_est_1213 = pd.read_csv('B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
-            Psi_est_1213 = np.asarray(Psi_est_1213.set_index('Unnamed: 0'))
-
-            for var_day in range(33):
-                variance_forecast_1[var_day] = \
-                    Psi_est_1213 + np.matmul(np.matmul(B_est_1213.T, x[12:14, var_day].T),
-                                             np.matmul(x[12:14, var_day], B_est_1213)).astype(np.float64)
-
-            for col, sector in enumerate(sector_11_indices.columns):
-                if col != 3:
-                    if col == 0 or col == 1 or col == 2 or col == 7:
-                        for ax in range(2):
-                            axs[ax].plot(np.arange(33) + 1143, (variance_forecast_1[:, col, 3] /
-                                          np.sqrt(variance_forecast_1[:, 3, 3] *
-                                                  variance_forecast_1[:, col, col])), label=textwrap.fill(sector, 14))
-                    else:
-                        for ax in range(2):
-                            axs[ax].plot(np.arange(33) + 1143, (variance_forecast_1[:, col, 3] /
-                                          np.sqrt(variance_forecast_1[:, 3, 3] *
-                                                  variance_forecast_1[:, col, col])), label=sector)
-                    for day in np.arange(-10, 33):
-                        real_cov = np.cov(price_signal[int(day + 1123):int(day + 1143), :].T)
-                        axs[ax].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                        c=colours[col])
-                    if col == 0 or col == 1 or col == 2 or col == 7:
-                        axs[1].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col], label=textwrap.fill('{}'.format(sector), 14))
-                        axs[0].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col], label=textwrap.fill('{}'.format(sector), 14))
-                    else:
-                        axs[1].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col], label='{}'.format(sector))
-                        axs[0].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
-                                       c=colours[col], label='{}'.format(sector))
-                else:
-                    pass
-
-            # temporary for plot #
-
-            plt.show()
+            # B_est_20 = pd.read_csv('B and Psi Estimates/B_est_[20].csv', header=0)
+            # B_est_20 = np.asarray(B_est_20.set_index('Unnamed: 0'))
+            # Psi_est_20 = pd.read_csv('B and Psi Estimates/Psi_est_[20].csv', header=0)
+            # Psi_est_20 = np.asarray(Psi_est_20.set_index('Unnamed: 0'))
+            #
+            # B_est_1213 = pd.read_csv('B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
+            # B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
+            # Psi_est_1213 = pd.read_csv('B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
+            # Psi_est_1213 = np.asarray(Psi_est_1213.set_index('Unnamed: 0'))
+            #
+            # for var_day in range(d1):
+            #     variance_forecast_1[var_day] = \
+            #         Psi_est_20 + np.matmul(B_est_20.T * x[20, var_day],
+            #                                x[20, var_day] * B_est_20).astype(np.float64)
+            #
+            # fig, axs = plt.subplots(1, 2)
+            # plt.suptitle('Correlation Structure Relative to Energy Sector')
+            #
+            # for col, sector in enumerate(sector_11_indices.columns):
+            #     if col != 3:
+            #         if col == 0 or col == 1 or col == 2 or col == 7:
+            #             for ax in range(2):
+            #                 axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
+            #                               np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                       variance_forecast_1[:, col, col])), label=textwrap.fill(sector, 14))
+            #         else:
+            #             for ax in range(2):
+            #                 axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
+            #                               np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                       variance_forecast_1[:, col, col])), label=sector)
+            #         for day in np.arange(-10, 82):
+            #             real_cov = np.cov(price_signal[int(day + 619):int(day + 639), :].T)
+            #             axs[0].scatter(day + 639, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col])
+            #         if col == 0 or col == 1 or col == 2 or col == 7:
+            #             axs[1].scatter(day + 639, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col], label=textwrap.fill('{}'.format(sector), 14))
+            #         else:
+            #             axs[1].scatter(day + 639, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col], label='{}'.format(sector))
+            #         for day in np.arange(-10, 82):
+            #             real_cov = np.cov(price_signal[int(day + 619):int(day + 639), :].T)
+            #             if col == 2:
+            #                 median_consumer_staples.append(
+            #                     real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]))
+            #             elif col == 9:
+            #                 median_real_estate.append(
+            #                     real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]))
+            #             elif col == 10:
+            #                 median_utilities.append(
+            #                     real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]))
+            #     else:
+            #         pass
+            #
+            # axs[0].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), 'k--',
+            #             label='Consumer staples median')
+            # axs[0].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), 'k:',
+            #             label='Real Estate median')
+            # axs[0].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), 'k-.',
+            #             label='Utilities median')
+            # axs[1].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), 'k--',
+            #             label=textwrap.fill('Consumer staples median', 10))
+            # axs[1].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), 'k:',
+            #             label=textwrap.fill('Real Estate median', 11))
+            # axs[1].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), 'k-.',
+            #             label=textwrap.fill('Utilities median', 10))
+            #
+            # axs[0].set_title(textwrap.fill('Market Down-Turn 2018', 9))
+            # axs[0].set_xticks([639, 721])
+            # axs[0].set_xticklabels(['02-10-2018', '23-12-2018'], fontsize=8, rotation=-30)
+            # axs[0].set_xlim(639 - 15, 721 + 5)
+            # axs[1].set_title(textwrap.fill('SARS-CoV-2 Pandemic 2020', 10))
+            # axs[1].set_xticks([1143, 1176])
+            # axs[1].set_xticklabels(['28-02-2020', '01-04-2020'], fontsize=8, rotation=-30)
+            # axs[1].set_xlim(1143 - 12, 1176 + 2)
+            #
+            # axs[0].set_yticklabels(['-0.5', '0.0', '0.5', '1.0'], fontsize=8)
+            # axs[0].set_yticks([-0.5, 0.0, 0.5, 1.0])
+            # axs[1].set_yticks([-0.5, 0.0, 0.5, 1.0])
+            # axs[1].set_yticklabels(['', '', '', ''], fontsize=8)
+            # # axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
+            # # axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
+            # #             label=textwrap.fill('Final quarter 2018 bear market', 14))
+            # # axs[0].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
+            # # axs[0].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
+            # # axs[1].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
+            # # axs[1].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
+            # #             label=textwrap.fill('Final quarter 2018 bear market', 14))
+            # # axs[1].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
+            # # axs[1].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
+            # axs[0].set_xlabel('Days', fontsize=10)
+            # axs[1].set_xlabel('Days', fontsize=10)
+            # plt.subplots_adjust(wspace=0.1, top=0.8, bottom=0.16, left=0.08)
+            # box_0 = axs[0].get_position()
+            # axs[0].set_position([box_0.x0, box_0.y0, box_0.width * 0.92, box_0.height * 1.0])
+            # box_1 = axs[1].get_position()
+            # axs[1].set_position([box_1.x0 - 0.045, box_1.y0, box_1.width * 0.92, box_1.height * 1.0])
+            # axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.55), fontsize=6)
+            #
+            # # temporary for plot #
+            #
+            # variance_forecast_1 = np.zeros((33, 11, 11))
+            #
+            # for i in np.arange(-30, 1, 30):
+            #     del x, x_ssa
+            #     for signal in range(np.shape(price_signal)[1]):
+            #         emd = AdvEMDpy.EMD(time_series=np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
+            #                            time=np.arange(0, 33, 1))
+            #         imfs, _, _, _, _, _, _ = \
+            #             emd.empirical_mode_decomposition(knot_envelope=np.linspace(-12, 33 + 12, knots),
+            #                                              matrix=True, mean_threshold=1e-3, initial_smoothing=False)
+            #         ssd_comps = CovRegpy_ssd(np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
+            #                                  initial_trend_ratio=10, nmse_threshold=0.01, plot=False, debug=False,
+            #                                  method='l2')
+            #         ssd_vectors[signal] = np.shape(ssd_comps)[0]
+            #         # deal with constant last IMF and insert IMFs in dataframe
+            #         # deal with different frequency structures here
+            #         try:
+            #             imfs = imfs[1:, :]
+            #             if np.isclose(imfs[-1, 0], imfs[-1, -1]):
+            #                 imfs[-2, :] += imfs[-1, :]
+            #                 imfs = imfs[:-1, :]
+            #         except:
+            #             pass
+            #         try:
+            #             x = np.vstack((imfs, x))
+            #         except:
+            #             x = imfs.copy()
+            #         if ssd_comps[-1, 0] == ssd_comps[-1, -1]:
+            #             ssd_comps = ssd_comps[-2, :].reshape(1, -1)
+            #         else:
+            #             ssd_comps = ssd_comps[-1, :].reshape(1, -1)
+            #         try:
+            #             x_ssa = np.vstack((ssd_comps, x_ssa))
+            #         except:
+            #             x_ssa = ssd_comps.copy()
+            #
+            # B_est_1213 = pd.read_csv('B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
+            # B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
+            # Psi_est_1213 = pd.read_csv('B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
+            # Psi_est_1213 = np.asarray(Psi_est_1213.set_index('Unnamed: 0'))
+            #
+            # for var_day in range(33):
+            #     variance_forecast_1[var_day] = \
+            #         Psi_est_1213 + np.matmul(np.matmul(B_est_1213.T, x[12:14, var_day].T),
+            #                                  np.matmul(x[12:14, var_day], B_est_1213)).astype(np.float64)
+            #
+            # for col, sector in enumerate(sector_11_indices.columns):
+            #     if col != 3:
+            #         if col == 0 or col == 1 or col == 2 or col == 7:
+            #             for ax in range(2):
+            #                 axs[ax].plot(np.arange(33) + 1143, (variance_forecast_1[:, col, 3] /
+            #                               np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                       variance_forecast_1[:, col, col])), label=textwrap.fill(sector, 14))
+            #         else:
+            #             for ax in range(2):
+            #                 axs[ax].plot(np.arange(33) + 1143, (variance_forecast_1[:, col, 3] /
+            #                               np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                       variance_forecast_1[:, col, col])), label=sector)
+            #         for day in np.arange(-10, 33):
+            #             real_cov = np.cov(price_signal[int(day + 1123):int(day + 1143), :].T)
+            #             axs[ax].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                             c=colours[col])
+            #         if col == 0 or col == 1 or col == 2 or col == 7:
+            #             axs[1].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col], label=textwrap.fill('{}'.format(sector), 14))
+            #             axs[0].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col], label=textwrap.fill('{}'.format(sector), 14))
+            #         else:
+            #             axs[1].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col], label='{}'.format(sector))
+            #             axs[0].scatter(day + 1143, real_cov[3, col] / np.sqrt(real_cov[3, 3] * real_cov[col, col]),
+            #                            c=colours[col], label='{}'.format(sector))
+            #     else:
+            #         pass
+            #
+            # # temporary for plot #
+            #
+            # plt.show()
 
             A = variance_forecast_1[-1, :, :]
             B = np.cov(price_signal[int(721 - d1):721, :].T)
@@ -632,81 +636,4 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.show()
-
-fig, axs = plt.subplots(1, 3)
-plt.suptitle('Correlation Structure Relative to Energy Sector')
-
-for col, sector in enumerate(sector_11_indices.columns):
-    if col != 3:
-        if col == 0 or col == 1 or col == 2 or col == 7:
-            axs[0].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=textwrap.fill(sector, 14))
-            axs[1].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=textwrap.fill(sector, 14))
-            axs[2].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=textwrap.fill(sector, 14))
-        else:
-            axs[0].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=sector)
-            axs[1].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=sector)
-            axs[2].plot((variance_Model_forecast_direct[:, col, 3] /
-                         np.sqrt(variance_Model_forecast_direct[:, 3, 3] *
-                                 variance_Model_forecast_direct[:, col, col])), label=sector)
-    else:
-        pass
-
-axs[0].set_xticks([0, 364, 729, 1094, 1460, 1825])
-axs[0].set_xticklabels(['01-01-2017', '31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
-                       fontsize=8, rotation=-30)
-gap = 20
-axs[0].set_title(textwrap.fill('Full Correlation Structure', 11))
-axs[1].set_title(textwrap.fill('Market Down-Turn 2018', 9))
-axs[1].set_xticks([639, 721])
-axs[1].set_xticklabels(['02-10-2018', '23-12-2018'], fontsize=8, rotation=-30)
-axs[1].set_xlim(639 - gap, 721 + gap)
-axs[2].set_title(textwrap.fill('SARS-CoV-2 Pandemic 2020', 10))
-axs[2].set_xticks([1143, 1176])
-axs[2].set_xticklabels(['28-02-2020', '01-04-2020'], fontsize=8, rotation=-30)
-axs[2].set_xlim(1143 - gap, 1176 + gap)
-
-axs[0].set_yticks([-0.5, 0.0, 0.5, 1.0])
-axs[0].set_yticklabels(['-0.5', '0.0', '0.5', '1.0'], fontsize=8)
-axs[1].set_yticks([-0.5, 0.0, 0.5, 1.0])
-axs[1].set_yticklabels(['', '', '', ''], fontsize=8)
-axs[2].set_yticks([-0.5, 0.0, 0.5, 1.0])
-axs[2].set_yticklabels(['', '', '', ''], fontsize=8)
-axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            label=textwrap.fill('Final quarter 2018 bear market', 14))
-axs[0].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-axs[0].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-axs[1].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-axs[1].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            label=textwrap.fill('Final quarter 2018 bear market', 14))
-axs[1].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-axs[1].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-axs[2].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-axs[2].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
-            label=textwrap.fill('Final quarter 2018 bear market', 14))
-axs[2].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
-axs[2].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-axs[0].set_xlabel('Days', fontsize=10)
-axs[1].set_xlabel('Days', fontsize=10)
-axs[2].set_xlabel('Days', fontsize=10)
-axs[0].set_ylabel('Correlation', fontsize=10)
-plt.subplots_adjust(wspace=0.1, top=0.8, bottom=0.16, left=0.08)
-box_0 = axs[0].get_position()
-axs[0].set_position([box_0.x0, box_0.y0, box_0.width * 0.9, box_0.height * 1.0])
-box_1 = axs[1].get_position()
-axs[1].set_position([box_1.x0 - 0.045, box_1.y0, box_1.width * 0.9, box_1.height * 1.0])
-box_2 = axs[2].get_position()
-axs[2].set_position([box_2.x0 - 0.09, box_2.y0, box_2.width * 0.9, box_2.height * 1.0])
-axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.show()

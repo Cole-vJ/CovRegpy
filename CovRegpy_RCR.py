@@ -1,5 +1,9 @@
 
-# Document Strings Publication
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 # Main reference: Hoff and Niu (2012)
 # Hoff, P. and Niu, X., A Covariance Regression Model.
@@ -132,7 +136,7 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
 
     technique : string
         'direct' : Direct calculation method used in Hoff and Niu (2012).
-            beta = [(x_tild^T * x_tilda)^(-1)] * (x_tilda^T * y)
+            beta = [(x_tilda^T * x_tilda)^(-1)] * (x_tilda^T * y)
 
         'lasso' : Least Absolute Shrinkage and Selection Operator (LASSO) Regression.
             Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
@@ -140,7 +144,7 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
 
         'ridge' :
             Minimize: ||y_tilda - x_tilda * beta||^2_2 + alpha * ||beta||^2_2
-            Equivalent to: beta = [(x_tild^T * x_tilda + alpha * I)^(-1)] * (x_tilda^T * y)
+            Equivalent to: beta = [(x_tilda^T * x_tilda + alpha * I)^(-1)] * (x_tilda^T * y)
 
         'elastic-net' :
             Minimize: (1 / (2 * n)) * ||y_tilda - x_tilda * beta||^2_2 +
@@ -171,7 +175,7 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
     max_iter : positive integer
         Maximum number of iterations to perform in chosen regression.
 
-    groups : real ndarray
+    groups : real ndarray (integer ndarray)
         Groups to be used in 'group-lasso' regression.
 
     test_lasso : bool
@@ -433,7 +437,6 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
     mean = np.matmul(A_est.T, basis)
 
     for iter in range(iterations):
-        # print(iter + 1)
 
         B_est, Psi_est = calc_B_Psi(m=m, v=v, x=x, y=y, basis=basis, A_est=A_est, technique=technique,
                                     l1_ratio_or_reg=l1_ratio_or_reg, group_reg=group_reg, alpha=alpha,

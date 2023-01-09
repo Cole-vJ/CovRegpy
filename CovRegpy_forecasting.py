@@ -1,5 +1,9 @@
 
-# formatted
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 import numpy as np
 import pandas as pd
@@ -12,7 +16,49 @@ from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, R
 
 
 def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
+    """
+    Gaussian Process forecasting.
 
+    Parameters
+    ----------
+    x_fit : real ndarray
+        Independent variable for fitting.
+
+    y_fit : real ndarray
+        Dependent variable for fitting.
+
+    x_forecast : real ndarray
+        Independent variable for forecasting i.e. x_fit and y_fit are used to fit the model and
+        x_forecast is then used to approximate the corresponding "y_forecast".
+
+    kernel : sklearn.gaussian_process.kernels object
+        Kernel to be used in Gaussian Process model - these must be imported from sklearn.gaussian_process.kernels.
+
+    confidence_level : real
+        Confidence level must be such that 0.00 < confidence_level < 1.00 -
+        confidence interval is fitted about mean where model is confidence_level x 100% value will be within boundary.
+
+    plot : boolean
+        Debugging through plotting.
+
+    Returns
+    -------
+    y_forecast : real ndarray
+        Forecasted dependent variable vector.
+
+    sigma : real ndarray
+        Forecasted sigma variable vector.
+
+    y_forecast_upper : real ndarray
+        Forecasted upper boundary such that = y_forecast + norm.ppf(1 - (1 - confidence_level) / 2) * sigma
+
+    y_forecast_lower : real ndarray
+        Forecasted lower boundary such that = y_forecast - norm.ppf(1 - (1 - confidence_level) / 2) * sigma
+
+    Notes
+    -----
+
+    """
     # reshape variables
     subset_x = np.atleast_2d(x_fit).T
     x = np.atleast_2d(x_forecast).T

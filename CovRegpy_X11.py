@@ -1,5 +1,9 @@
 
-# Document Strings Publication
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 # Main reference: Shiskin, Young, and Musgrave (1967)
 # J. Shiskin, A. Young, and J. Musgrave. 1967.

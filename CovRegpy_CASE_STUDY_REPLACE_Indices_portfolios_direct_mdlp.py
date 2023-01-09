@@ -1,5 +1,11 @@
 
-# Case Study - RPP using EMD, RCR, and MDLP - direct application (no forecasting)
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
+# RPP using EMD, RCR, and MDLP - direct application (no forecasting)
 
 import textwrap
 import numpy as np
@@ -17,7 +23,7 @@ from CovRegpy_utilities import efficient_frontier, global_minimum_forward_applie
 
 from CovRegpy_RCR import cov_reg_given_mean, cubic_b_spline
 
-from CovRegpy_RPP import risk_parity_weights_long_restrict, risk_parity_weights_summation_restriction, global_obj_fun
+from CovRegpy_RPP import equal_risk_parity_weights_long_restriction, equal_risk_parity_weights_summation_restriction, global_obj_fun
 
 from CovRegpy_measures import cumulative_return, mean_return, variance_return, value_at_risk_return, \
     max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return
@@ -810,18 +816,18 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # direct application Covariance Regression - BOTTOM #
     #####################################################
 
-    weights_forecast_high = risk_parity_weights_summation_restriction(variance_median_high,
-                                                                       short_limit=0.3, long_limit=1.3).x
+    weights_forecast_high = equal_risk_parity_weights_summation_restriction(variance_median_high,
+                                                                            short_limit=0.3, long_limit=1.3).x
     print('High frequency weight = {}'.format(weights_forecast_high))
     variance_forecast_high = global_obj_fun(weights_forecast_high, monthly_covariance)
     returns_forecast_high = sum(weights_forecast_high * monthly_returns)
-    weights_forecast_mid = risk_parity_weights_summation_restriction(variance_median_mid,
-                                                                       short_limit=0.3, long_limit=1.3).x
+    weights_forecast_mid = equal_risk_parity_weights_summation_restriction(variance_median_mid,
+                                                                           short_limit=0.3, long_limit=1.3).x
     print('Mid frequency weight = {}'.format(weights_forecast_mid))
     variance_forecast_mid = global_obj_fun(weights_forecast_mid, monthly_covariance)
     returns_forecast_mid = sum(weights_forecast_mid * monthly_returns)
-    weights_forecast_trend = risk_parity_weights_summation_restriction(variance_median_trend,
-                                                                       short_limit=0.3, long_limit=1.3).x
+    weights_forecast_trend = equal_risk_parity_weights_summation_restriction(variance_median_trend,
+                                                                             short_limit=0.3, long_limit=1.3).x
     print('Trend frequency weight = {}'.format(weights_forecast_trend))
     variance_forecast_trend = global_obj_fun(weights_forecast_trend, monthly_covariance)
     returns_forecast_trend = sum(weights_forecast_trend * monthly_returns)
@@ -845,27 +851,27 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     plt.show()
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long only
-    weights_Model_forecast_direct_ssa = risk_parity_weights_long_restrict(variance_median_direct_ssa).x
+    weights_Model_forecast_direct_ssa = equal_risk_parity_weights_long_restriction(variance_median_direct_ssa).x
     model_variance_forecast_direct_ssa = global_obj_fun(weights_Model_forecast_direct_ssa, monthly_covariance)
     model_returns_forecast_direct_ssa = sum(weights_Model_forecast_direct_ssa * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct_ssa), model_returns_forecast_direct_ssa,
     #             label='CovReg Direct Model SSA')
 
     # calculate weights, variance, and returns - direct application Covariance Regression - long only
-    weights_Model_forecast_direct = risk_parity_weights_long_restrict(variance_median_direct).x
+    weights_Model_forecast_direct = equal_risk_parity_weights_long_restriction(variance_median_direct).x
     model_variance_forecast_direct = global_obj_fun(weights_Model_forecast_direct, monthly_covariance)
     model_returns_forecast_direct = sum(weights_Model_forecast_direct * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
 
     # calculate weights, variance, and returns - direct application Covariance Regression - long only
-    weights_Model_forecast_direct_high = risk_parity_weights_long_restrict(variance_median_direct_high).x
+    weights_Model_forecast_direct_high = equal_risk_parity_weights_long_restriction(variance_median_direct_high).x
     model_variance_forecast_direct = global_obj_fun(weights_Model_forecast_direct, monthly_covariance)
     model_returns_forecast_direct = sum(weights_Model_forecast_direct * monthly_returns)
     # plt.scatter(np.sqrt(model_variance_forecast_direct), model_returns_forecast_direct, label='CovReg Direct Model')
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long restraint removed
-    weights_Model_forecast_direct_ssa_long_short = risk_parity_weights_summation_restriction(variance_median_direct_ssa, short_limit=0.3).x
-    weights_Model_forecast_direct_ssa_summation_restriction = risk_parity_weights_summation_restriction(variance_median_direct_ssa).x
+    weights_Model_forecast_direct_ssa_long_short = equal_risk_parity_weights_summation_restriction(variance_median_direct_ssa, short_limit=0.3).x
+    weights_Model_forecast_direct_ssa_summation_restriction = equal_risk_parity_weights_summation_restriction(variance_median_direct_ssa).x
 
     model_variance_forecast_direct_ssa_long_short = global_obj_fun(weights_Model_forecast_direct_ssa_summation_restriction,
                                                                    monthly_covariance)
@@ -874,8 +880,8 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     #             label='CovReg Direct Model SSA')
 
     # calculate weights, variance, and returns - direct application Covariance Regression - long restraint removed
-    weights_Model_forecast_direct_long_short = risk_parity_weights_summation_restriction(variance_median_direct, short_limit=0.3).x
-    weights_Model_forecast_direct_summation_restriction = risk_parity_weights_summation_restriction(variance_median_direct).x
+    weights_Model_forecast_direct_long_short = equal_risk_parity_weights_summation_restriction(variance_median_direct, short_limit=0.3).x
+    weights_Model_forecast_direct_summation_restriction = equal_risk_parity_weights_summation_restriction(variance_median_direct).x
 
     model_variance_forecast_direct_long_short = global_obj_fun(weights_Model_forecast_direct_summation_restriction,
                                                                monthly_covariance)
@@ -883,11 +889,11 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # plt.scatter(np.sqrt(model_variance_forecast_direct_long_short), model_returns_forecast_direct_long_short,
     #             label='CovReg Direct Model')
 
-    weights_Model_forecast_direct_summation_restriction_high = risk_parity_weights_summation_restriction(variance_median_direct_high).x
+    weights_Model_forecast_direct_summation_restriction_high = equal_risk_parity_weights_summation_restriction(variance_median_direct_high).x
 
-    weights_Model_forecast_dcc = risk_parity_weights_long_restrict(variance_median_dcc).x
+    weights_Model_forecast_dcc = equal_risk_parity_weights_long_restriction(variance_median_dcc).x
 
-    weights_Model_forecast_realised = risk_parity_weights_long_restrict(variance_median_realised).x
+    weights_Model_forecast_realised = equal_risk_parity_weights_long_restriction(variance_median_realised).x
 
     # fill extended model storage matrices
     weight_matrix_high[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = weights_forecast_high

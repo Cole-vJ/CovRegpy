@@ -1,5 +1,9 @@
 
-# Document Strings Publication
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
 
 # Main reference: Qian (2005)
 # E. Qian. 2005. Risk Parity Portfolios: Efficient Portfolios Through True Diversification.
@@ -87,7 +91,7 @@ def risk_parity_obj_fun(x, p_cov, rb):
     return risk_budget_obj
 
 
-def risk_parity_weights_long_restrict(cov):
+def equal_risk_parity_weights_long_restriction(cov):
     """
     Risk Parity or Risk Premia Parity minimizer with long restriction.
 
@@ -142,7 +146,7 @@ def cons_short_limit_weight(x, k):
     return y
 
 
-def risk_parity_weights_short_restriction(cov, short_limit=1):
+def equal_risk_parity_weights_short_restriction(cov, short_limit=1):
     """
     Risk Parity or Risk Premia Parity minimizer with individual shorting restriction.
 
@@ -226,7 +230,7 @@ def cons_long_limit_sum_weight(x, k):
     return y
 
 
-def risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3):
+def equal_risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3):
     """
     Risk Parity or Risk Premia Parity minimizer with shorting summation restriction.
 
@@ -264,21 +268,83 @@ def risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1
 
 
 def global_obj_fun(x, p_cov):
-    return np.sum(x * np.dot(p_cov, x))
+    """
+    Global minimum variance objective function.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    p_cov : real ndarray
+        Covariance matrix of portfolio.
+
+    Returns
+    -------
+    obj : float
+        Global minimum variance objective function value.
+
+    Notes
+    -----
+
+    """
+    obj = np.sum(x * np.dot(p_cov, x))
+
+    return obj
 
 
 def global_weights(cov):
+    """
+    Global minimum variance weights direct calculation.
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    Returns
+    -------
+    weights : real ndarray
+        Global minimum variance weights.
+
+    Notes
+    -----
+
+    """
     try:
-        return (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
-                np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
-                          np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
+        weights = (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
+                   np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
+                             np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
+
+        return weights
     except:
-        return (np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
-                np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
-                          np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
+        weights = (np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
+                   np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
+                             np.matmul(np.linalg.pinv(cov), np.ones(np.shape(cov)[1]).flatten())))[:, 0]
+
+        return weights
 
 
 def global_weights_long(cov):
+    """
+    Global minimum variance weights constrained calculation.
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised weights.
+
+    Notes
+    -----
+    Global minimum variance portfolio weighting with long restriction.
+    Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
+
+    """
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_only_weight})
@@ -292,7 +358,7 @@ if __name__ == "__main__":
     variance[0, 0] = 1  # 1
     variance[1, 1] = 16  # 1/4
     variance[0, 1] = variance[1, 0] = 0  # -1.8? -1.9?
-    weights = risk_parity_weights_long_restrict(variance).x
+    weights = equal_risk_parity_weights_long_restriction(variance).x
     # print(weights)
     volatility_contribution = \
         weights * np.dot(variance, weights) / np.dot(weights.transpose(), np.dot(variance, weights))
@@ -310,7 +376,7 @@ if __name__ == "__main__":
     variance[0, 1] = variance[1, 0] = 1  # -2? 2?
     variance[0, 2] = variance[2, 0] = 0
     variance[2, 1] = variance[1, 2] = 0
-    weights = risk_parity_weights_long_restrict(variance).x
+    weights = equal_risk_parity_weights_long_restriction(variance).x
     # print(weights)
     volatility_contribution = \
         weights * np.dot(variance, weights) / np.dot(weights.transpose(), np.dot(variance, weights))

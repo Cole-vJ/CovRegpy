@@ -1,4 +1,10 @@
 
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
 import textwrap
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +15,42 @@ from AdvEMDpy.emd_hilbert import hilbert_spectrum
 
 
 def CovRegpy_fit(time, time_series, time_forecast, time_series_forecast, alpha=0.1, debug=True):
+    """
+    Function created to force fit function owing to uncertainty
+    in phase once translated from frequency domain to time domain.
 
+    Parameters
+    ----------
+    time : real ndarray
+        Time used in fitting model.
+
+    time_series : real ndarray
+        Time series used in fitting model.
+
+    time_forecast : real ndarray
+        Independent variable used in forecasting.
+
+    time_series_forecast : real ndarray
+        Forecasted time series.
+
+    alpha : real
+        Limit for fitting time series and forecasted time series using curvature difference.
+
+    debug : boolean
+        Debugging printing successive curvature values.
+
+    Returns
+    -------
+    time_forecast_fit : real ndarray
+        Truncated and fitted time.
+
+    time_series_forecast_fit : real ndarray
+        Truncated and fitted time series.
+
+    Notes
+    -----
+
+    """
     time_series_forecast_fit = time_series_forecast - (time_series_forecast[0] - time_series[-1])
     time_forecast_fit = time_forecast
 
@@ -57,7 +98,57 @@ def CovRegpy_fit(time, time_series, time_forecast, time_series_forecast, alpha=0
 
 def CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l1', alpha=0.1,
                      components=2, fit_window=200, forecast_window=50, force_fit=False, debug=True):
+    """
+    Function created to forecast time series (assumed, but not necessary, to be an IMF) by translating time series
+    into frequency domain, forecasting sparse information in frequency domain, then translating back into temporal
+    domain.
 
+    Parameters
+    ----------
+    time : real ndarray
+        Time to be used in fitting model.
+
+    time_series : real ndarray
+        Time series to be used in fitting model.
+
+    type : string
+        Type of forecasting to be used in frequency domain.
+        Only 'linear' available for now, but can be greatly expanded.
+
+    optimisation : string
+        Type of regularisation to be used in fitting model.
+        Only 'l1' and 'l2' available for now.
+
+    alpha : real
+        Limit for fitting time series and forecasted time series using curvature difference.
+
+    components : positive integer
+        Number of components to estimate/isolate and to use in forecasting.
+
+    fit_window : positive integer
+        Number of points to use when fitting model.
+
+    forecast_window : positive integer
+        Number of points to forecast.
+
+    force_fit : boolean
+        If true then use CovRegpy_fit() function to fit time series and forecasted time series using curvatures.
+
+    debug : boolean
+        Plot intermediate result.
+
+    Returns
+    -------
+    forecast_time : real ndarray
+        Forecasted time - simply extended time.
+
+    imf_forecast : real ndarray
+        Forecasted time series.
+
+    Notes
+    -----
+
+    """
     advemdpy = AdvEMDpy.EMD(time=time, time_series=time_series)
     emd = advemdpy.empirical_mode_decomposition()
 
@@ -222,10 +313,7 @@ if __name__ == "__main__":
     plt.show()
 
     plt.plot(time, time_series)
-    # plt.plot(emd_utils.time_extension(time)[int(2 * len(time) - 1):int(int(2 * len(time) - 1) + 35)],
-    #          temp[0])
-    plt.plot(emd_utils.time_extension(time)[int(2 * len(time) - 1):int(int(2 * len(time) - 1) + window)],
-             temp[0])
+    plt.plot(emd_utils.time_extension(time)[int(2 * len(time) - 1):int(int(2 * len(time) - 1) + window)], temp[0])
     plt.show()
 
     advemdpy = AdvEMDpy.EMD(time=time, time_series=time_series)
@@ -250,6 +338,3 @@ if __name__ == "__main__":
     plt.plot(low_freq_amplitude)
     plt.plot(low_freq_if)
     plt.show()
-
-
-

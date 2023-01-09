@@ -1,4 +1,10 @@
 
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
 import numpy as np
 import textwrap
 import matplotlib.pyplot as plt

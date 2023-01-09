@@ -1,5 +1,11 @@
 
-# Case Study - MDLP compare
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
+# MDLP compare
 
 import csv
 import textwrap
@@ -17,7 +23,7 @@ from CovRegpy_utilities import efficient_frontier, global_minimum_forward_applie
 from CovRegpy_measures import cumulative_return, mean_return, variance_return, value_at_risk_return, \
     max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return
 
-from CovRegpy_RPP import risk_parity_weights_summation_restriction
+from CovRegpy_RPP import equal_risk_parity_weights_summation_restriction
 
 from CovRegpy_DCC import covregpy_dcc
 

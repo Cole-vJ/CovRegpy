@@ -1,5 +1,11 @@
 
-# Case Study - study coefficient extraction using synthetic structures (sinusoids) and known B coefficients
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
+# study coefficient extraction using synthetic structures (sinusoids) and known B coefficients
 
 import numpy as np
 import pandas as pd

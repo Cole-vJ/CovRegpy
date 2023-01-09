@@ -1,4 +1,10 @@
 
+#     ________
+#            /
+#      \    /
+#       \  /
+#        \/
+
 # Document Strings Publication
 
 # Reference work:
@@ -14,7 +20,6 @@
 # Journal of Business & Economic Statistics, 2002, 20, 339–350.
 
 # This package created as the following Python package did not work for our purposes:
-
 # mgarch 0.2.0 - available at https://pypi.org/project/mgarch/
 
 import numpy as np
