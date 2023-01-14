@@ -71,7 +71,7 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
 
     # iteratively calculate modelled variance using univariate GARCH model
     for stock in range(np.shape(returns_matrix)[1]):
-        model = arch_model(returns_matrix[:, stock], mean='Zero', vol='GARCH', p=p, q=q)
+        model = arch_model(returns_matrix[:, stock], mean='Zero', vol='GARCH', p=p, q=q, rescale=False)
         model_fit = model.fit(disp="off")
         modelled_variance[:, stock] = model_fit.conditional_volatility
 
@@ -110,7 +110,10 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
         # page 88 - Equation (32)
         dts[var] = np.diag(modelled_variance[int(var - 1), :])  # modelled variance - page 89 - Equation (34)
         # page 89 - defined between Equation (37) and (38)
-        dts_inv[var] = np.linalg.inv(dts[var])
+        try:
+            dts_inv[var] = np.linalg.inv(dts[var])
+        except:
+            dts_inv[var] = np.linalg.pinv(dts[var])
         u_t[:, var] = np.matmul(dts_inv[var], returns_matrix[var, :].reshape(-1, 1))[:, 0]
 
     for var in range(1, t):
@@ -121,7 +124,10 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
                    b * q_t[int(var - 1)]
 
         # page 90 - defined within Equation (39)
-        qts[var] = np.linalg.inv(np.sqrt(np.diag(np.diag(q_t[var]))))
+        try:
+            qts[var] = np.linalg.inv(np.sqrt(np.diag(np.diag(q_t[var]))))
+        except:
+            qts[var] = np.linalg.pinv(np.sqrt(np.diag(np.diag(q_t[var]))))
 
         # page 90 - Equation (39)
         r_t[var] = np.matmul(qts[var], np.matmul(q_t[var], qts[var]))
@@ -187,7 +193,10 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
         # page 88 - Equation (32)
         dts[var] = np.diag(modelled_variance[int(var - 1), :])  # modelled variance - page 89 - Equation (34)
         # page 89 - defined between Equation (37) and (38)
-        dts_inv[var] = np.linalg.inv(dts[var])
+        try:
+            dts_inv[var] = np.linalg.inv(dts[var])
+        except:
+            dts_inv[var] = np.linalg.pinv(dts[var])
         u_t[:, var] = np.matmul(dts_inv[var], returns_matrix[var, :].reshape(-1, 1))[:, 0]
 
     # initialise log-likehood value
@@ -201,7 +210,10 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
                    params[1] * q_t[int(var - 1)]
 
         # page 90 - defined within Equation (39)
-        qts[var] = np.linalg.inv(np.sqrt(np.diag(np.diag(q_t[var]))))
+        try:
+            qts[var] = np.linalg.inv(np.sqrt(np.diag(np.diag(q_t[var]))))
+        except:
+            qts[var] = np.linalg.pinv(np.sqrt(np.diag(np.diag(q_t[var]))))
 
         # page 90 - Equation (39)
         r_t[var] = np.matmul(qts[var], np.matmul(q_t[var], qts[var]))
@@ -210,11 +222,18 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
         h_t[var] = np.matmul(dts[var], np.matmul(r_t[var], dts[var]))
 
         # likelihood function from reference work page 11 - Equation 26
-        loglike -= (np.shape(q_bar)[0] * np.log(2 * np.pi) +
-                    2 * np.log(np.linalg.det(dts[var])) + np.log(np.linalg.det(r_t[var])) +
-                    np.matmul(u_t[:, var].reshape(1, -1),
-                              np.matmul(np.linalg.inv(r_t[var]),
-                                        u_t[:, var].reshape(-1, 1)))[0][0])
+        try:
+            loglike -= (np.shape(q_bar)[0] * np.log(2 * np.pi) +
+                        2 * np.log(np.linalg.det(dts[var])) + np.log(np.linalg.det(r_t[var])) +
+                        np.matmul(u_t[:, var].reshape(1, -1),
+                                  np.matmul(np.linalg.inv(r_t[var]),
+                                            u_t[:, var].reshape(-1, 1)))[0][0])
+        except:
+            loglike -= (np.shape(q_bar)[0] * np.log(2 * np.pi) +
+                        2 * np.log(np.linalg.det(dts[var])) + np.log(np.linalg.det(r_t[var])) +
+                        np.matmul(u_t[:, var].reshape(1, -1),
+                                  np.matmul(np.linalg.pinv(r_t[var]),
+                                            u_t[:, var].reshape(-1, 1)))[0][0])
 
     return loglike
 

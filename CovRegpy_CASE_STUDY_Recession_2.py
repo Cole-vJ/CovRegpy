@@ -38,8 +38,8 @@ plt.title(textwrap.fill('Cumulative Returns of Eleven Market Cap Weighted Sector
 plt.xticks([0, 365, 730, 1095, 1461, 1826],
            ['31-12-2016', '31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
-plt.plot(640 * np.ones(100), np.linspace(0.5, 2, 100), 'k--', Linewidth=2)
-plt.plot(722 * np.ones(100), np.linspace(0.5, 2, 100), 'k--', Linewidth=2,
+plt.plot(640 * np.ones(100), np.linspace(0.5, 2, 100), 'k--', linewidth=2)
+plt.plot(722 * np.ones(100), np.linspace(0.5, 2, 100), 'k--', linewidth=2,
          label=textwrap.fill('Final quarter 2018 bear market', 18))
 plt.plot(1144 * np.ones(100), np.linspace(0.1, 2.5, 100), 'k--')
 plt.plot(1177 * np.ones(100), np.linspace(0.1, 2.5, 100), 'k--', label='SARS-CoV-2')
@@ -115,7 +115,7 @@ for i in np.arange(-30, 1, 30):
         except:
             x_ssa = ssd_comps.copy()
 
-    sets = np.asarray([[i] for i in range(22)] + [[i * 2, i * 2 + 1] for i in range(11)])
+    sets = np.asarray([[i] for i in range(22)] + [[i * 2, i * 2 + 1] for i in range(11)], dtype=object)
 
     if i == 0:
         for subset in sets:
@@ -202,13 +202,13 @@ for i in np.arange(-30, 1, 30):
             # axs[1].set_yticklabels(['', '', '', ''], fontsize=8)
             # axs[0].set_ylim(-0.35, 1.15)
             # axs[1].set_ylim(-0.35, 1.15)
-            # # axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-            # # axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
+            # # axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', linewidth=2)
+            # # axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', linewidth=2,
             # #             label=textwrap.fill('Final quarter 2018 bear market', 14))
             # # axs[0].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
             # # axs[0].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-            # # axs[1].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2)
-            # # axs[1].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', Linewidth=2,
+            # # axs[1].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', linewidth=2)
+            # # axs[1].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', linewidth=2,
             # #             label=textwrap.fill('Final quarter 2018 bear market', 14))
             # # axs[1].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
             # # axs[1].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')

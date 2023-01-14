@@ -411,11 +411,11 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
             s, f = mlab.psd(np.asarray(time_series_resid), Fs=1 / dt)
             plt.title('Gaussian Function Initialisation')
             plt.plot(f * dt, s, label='Power-spectral density')
-            plt.plot(f * dt, gaus_1, '--', label=r'$g_1(f) = A_1^{(0)}e^{\frac{(f-\mu_1)^2}{\sigma^{(0)2}_1}}$', Linewidth=2)
-            plt.plot(f * dt, gaus_2, '--', label=r'$g_2(f) = A_2^{(0)}e^{\frac{(f-\mu_2)^2}{\sigma^{(0)2}_2}}$', Linewidth=2)
-            plt.plot(f * dt, gaus_3, '--', label=r'$g_3(f) = A_3^{(0)}e^{\frac{(f-\mu_3)^2}{\sigma^{(0)2}_3}}$', Linewidth=2)
+            plt.plot(f * dt, gaus_1, '--', label=r'$g_1(f) = A_1^{(0)}e^{\frac{(f-\mu_1)^2}{\sigma^{(0)2}_1}}$', linewidth=2)
+            plt.plot(f * dt, gaus_2, '--', label=r'$g_2(f) = A_2^{(0)}e^{\frac{(f-\mu_2)^2}{\sigma^{(0)2}_2}}$', linewidth=2)
+            plt.plot(f * dt, gaus_3, '--', label=r'$g_3(f) = A_3^{(0)}e^{\frac{(f-\mu_3)^2}{\sigma^{(0)2}_3}}$', linewidth=2)
             plt.plot(f * dt, gaus_1 + gaus_2 + gaus_3, '--',
-                     label=r'$\sum_{i=1}^{3}g_i(f)$', Linewidth=2)
+                     label=r'$\sum_{i=1}^{3}g_i(f)$', linewidth=2)
             plt.plot(mu_1 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_1$')
             plt.plot(mu_2 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_2$')
             plt.plot(mu_3 * np.ones(100), np.linspace(np.min(s), 1.1 * np.max(s), 100), '--', label=r'$\mu_3$')
@@ -428,15 +428,15 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
             plt.title('Gaussian Function Optimised')
             plt.plot(f * dt, s, label='Power-spectral density')
             plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]),
-                     '--', label=r'$g^{opt}_1(f) = A_1^{opt}e^{\frac{(f-\mu_1)^2}{\sigma^{opt2}_1}}$', Linewidth=2)
+                     '--', label=r'$g^{opt}_1(f) = A_1^{opt}e^{\frac{(f-\mu_1)^2}{\sigma^{opt2}_1}}$', linewidth=2)
             plt.plot(f * dt, gaussian(f * dt, thetas[1], mu_2, thetas[4]),
-                     '--', label=r'$g^{opt}_2(f) = A_2^{opt}e^{\frac{(f-\mu_2)^2}{\sigma^{opt2}_2}}$', Linewidth=2)
+                     '--', label=r'$g^{opt}_2(f) = A_2^{opt}e^{\frac{(f-\mu_2)^2}{\sigma^{opt2}_2}}$', linewidth=2)
             plt.plot(f * dt, gaussian(f * dt, thetas[2], mu_3, thetas[5]),
-                     '--', label=r'$g^{opt}_3(f) = A_3^{opt}e^{\frac{(f-\mu_3)^2}{\sigma^{opt2}_3}}$', Linewidth=2)
+                     '--', label=r'$g^{opt}_3(f) = A_3^{opt}e^{\frac{(f-\mu_3)^2}{\sigma^{opt2}_3}}$', linewidth=2)
             plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]) +
                      gaussian(f * dt, thetas[1], mu_2, thetas[4]) +
                      gaussian(f * dt, thetas[2], mu_3, thetas[5]), '--',
-                     label=r'$\sum_{i=1}^{3}g^{opt}_i(f)$', Linewidth=2)
+                     label=r'$\sum_{i=1}^{3}g^{opt}_i(f)$', linewidth=2)
             plt.plot(f_range[0] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--')
             plt.plot(f_range[1] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--', label='Frequency bounds')
             plt.legend(loc='best', fontsize=8)
@@ -479,10 +479,10 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         if plot:
             plt.plot(time_series_resid, label='Detrended time series')
             plt.title('Downsampled and Modified Embedding Estimates')
-            plt.plot(trend_est_1, '--', label='Downsampled estimate', LineWidth=2)
-            plt.plot(trend_est_2, '--', label='Modified embedding estimate', LineWidth=2)
+            plt.plot(trend_est_1, '--', label='Downsampled estimate', linewidth=2)
+            plt.plot(trend_est_2, '--', label='Modified embedding estimate', linewidth=2)
             plt.legend(loc='best')
-            plt.xlabel('Months')
+            # plt.xlabel('Months')
             # plt.ylim(-390, 390)
             plt.show()
 
@@ -498,10 +498,10 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         if plot:
             plt.title('Optimisation of Scaling Factor')
             plt.plot(np.asarray(time_series_resid), label=r'$v_i(t)$')
-            plt.plot(trend_est, '--', label=r'$g_i(t)$', LineWidth=2)
-            plt.plot(a_opt * trend_est, '--', label=r'$\tilde{g}_i(t)$', LineWidth=2)
+            plt.plot(trend_est, '--', label=r'$g_i(t)$', linewidth=2)
+            plt.plot(a_opt * trend_est, '--', label=r'$\tilde{g}_i(t)$', linewidth=2)
             plt.legend(loc='best')
-            plt.xlabel('Months')
+            # plt.xlabel('Months')
             # plt.ylim(-390, 390)
             plt.show()
         trend_est *= a_opt
@@ -612,6 +612,6 @@ if __name__ == "__main__":
     box_2 = axs[2].get_position()
     axs[2].set_position([box_2.x0 - 0.05, box_2.y0, box_2.width * 0.84, box_2.height])
     axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-    axs[2].set_xlabel('Months')
+    # axs[2].set_xlabel('Months')
     plt.savefig('aas_figures/Example_ssd_decomposition')
     plt.show()

@@ -134,11 +134,11 @@ ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.title(textwrap.fill('Annualised Returns of Benchmark Portfolios versus Risk Parity Portfolios', 45))
 plt.plot(realised_variance_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='Realised covariance',
-         Linewidth=2)
-plt.plot(dcc_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='DDC-GARCH', Linewidth=2)
-plt.plot(sp500_proxy_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='S&P 500 Proxy', Linewidth=2)
-plt.plot(minimum_var_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='Minimum variance', Linewidth=2)
-plt.plot(pca_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='PCA', Linewidth=2)
+         linewidth=2)
+plt.plot(dcc_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='DDC-GARCH', linewidth=2)
+plt.plot(sp500_proxy_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='S&P 500 Proxy', linewidth=2)
+plt.plot(minimum_var_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='Minimum variance', linewidth=2)
+plt.plot(pca_returns * np.ones(100), np.linspace(0, 25, 100), '--', label='PCA', linewidth=2)
 plt.plot(x, normal(np.log(np.mean(high_freq_cum_returns, axis=0)[-1]) / 4,
                    np.std(np.log(high_freq_cum_returns) / 4, axis=0)[-1], x), label=textwrap.fill('High frequency long/short', 10))
 plt.plot(x, normal(np.log(np.mean(mid_freq_cum_returns, axis=0)[-1]) / 4,

@@ -522,7 +522,7 @@ if __name__ == "__main__":
     returns = (np.log(np.asarray(close_data)[1:, :]) -
                np.log(np.asarray(close_data)[:-1, :]))
     realised_covariance = np.cov(returns.T)
-    risk_free = (0.02 / 365)
+    risk_free = (0.01 / 365)
 
     # global minimum variance
     global_minimum_weights, global_minimum_sd, global_minimum_returns = \
@@ -530,8 +530,8 @@ if __name__ == "__main__":
 
     # sharpe maximum ratio
     sharpe_maximum_weights, sharpe_maximum_sd, sharpe_maximum_returns = \
-        sharpe_information(realised_covariance, returns[-1, :], risk_free,
-                           global_minimum_weights, global_minimum_returns)
+        sharpe_information(realised_covariance, returns[-1, :],
+                           global_minimum_weights, global_minimum_returns, risk_free)
 
     # efficient frontier
     efficient_frontier_sd, efficient_frontier_returns = \

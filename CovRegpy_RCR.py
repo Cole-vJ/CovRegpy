@@ -200,8 +200,14 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
 
     if technique == 'direct':
 
-        B_est = \
-            np.matmul(y_tilda.T, np.matmul(x_tilda, np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
+        try:
+            B_est = \
+                np.matmul(y_tilda.T,
+                          np.matmul(x_tilda, np.linalg.inv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
+        except:
+            B_est = \
+                np.matmul(y_tilda.T,
+                          np.matmul(x_tilda, np.linalg.pinv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
 
     elif technique == 'lasso':
 
@@ -631,7 +637,7 @@ if __name__ == "__main__":
         cov_3d[:, :, depth] = Psi_est + np.matmul(np.matmul(B_est.T, mod_x_cov[:, depth]).reshape(2, -1),
                                                   np.matmul(mod_x_cov[:, depth].T, B_est).reshape(-1, 2))
 
-    fig, axs = plt.subplots(1, 2, figsize=(8, 5))
+    fig, axs = plt.subplots(1, 2, figsize=(10, 6))
     fig.suptitle('Rank 1 Figure 5 in Hoff and Niu (2012)')
     axs[0].scatter(peter_hoff_data['age'], peter_hoff_data['fev'], facecolor='none', edgecolor='black')
     axs[0].plot(np.linspace(4, 18, 15), mean_fev, linewidth=3, c='k')
@@ -652,7 +658,7 @@ if __name__ == "__main__":
     plt.savefig('aas_figures/Hoff_Figure_5')
     plt.show()
 
-    fig, axs = plt.subplots(1, 3, figsize=(8, 5))
+    fig, axs = plt.subplots(1, 3, figsize=(10, 6))
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
     fig.suptitle('Rank 1 Figure 6 in Hoff and Niu (2012)')
     axs[0].plot(np.linspace(4, 18, 15), cov_3d[0, 0, :], c='grey')
@@ -796,8 +802,8 @@ if __name__ == "__main__":
     axs[0].set_ylabel('Var(FEV)', fontsize=8)
     axs[0].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
     axs[0].set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
-    plt.setp(axs[0].get_xticklabels(), Fontsize=8)
-    plt.setp(axs[0].get_yticklabels(), Fontsize=8)
+    plt.setp(axs[0].get_xticklabels(), fontsize=8)
+    plt.setp(axs[0].get_yticklabels(), fontsize=8)
     box_0 = axs[0].get_position()
     axs[0].set_position([box_0.x0 - 0.051, box_0.y0, box_0.width, box_0.height])
     axs[1].plot(np.linspace(4, 18, 15), cov_3d[1, 1, :], c='grey')
@@ -814,8 +820,8 @@ if __name__ == "__main__":
     axs[1].set_ylabel('Var(height)', fontsize=8)
     axs[1].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
     axs[1].set_yticks([4, 6, 8, 10, 12])
-    plt.setp(axs[1].get_xticklabels(), Fontsize=8)
-    plt.setp(axs[1].get_yticklabels(), Fontsize=8)
+    plt.setp(axs[1].get_xticklabels(), fontsize=8)
+    plt.setp(axs[1].get_yticklabels(), fontsize=8)
     box_1 = axs[1].get_position()
     axs[1].set_position([box_1.x0 - 0.051, box_1.y0, box_1.width, box_1.height])
     axs[2].plot(np.linspace(4, 18, 15), cov_3d[0, 1, :] / (np.sqrt(cov_3d[0, 0, :]) * np.sqrt(cov_3d[1, 1, :])),
@@ -844,8 +850,8 @@ if __name__ == "__main__":
     axs[2].set_ylabel('Cor(FEV,height)', fontsize=8)
     axs[2].set_xticks([4, 6, 8, 10, 12, 14, 16, 18])
     axs[2].set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
-    plt.setp(axs[2].get_xticklabels(), Fontsize=8)
-    plt.setp(axs[2].get_yticklabels(), Fontsize=8)
+    plt.setp(axs[2].get_xticklabels(), fontsize=8)
+    plt.setp(axs[2].get_yticklabels(), fontsize=8)
     box_2 = axs[2].get_position()
     axs[2].set_position([box_2.x0 - 0.051, box_2.y0, box_2.width, box_2.height])
     axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)

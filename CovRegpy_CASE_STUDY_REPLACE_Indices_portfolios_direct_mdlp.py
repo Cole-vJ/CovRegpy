@@ -141,15 +141,16 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # calculate maximum sharpe ratio portfolio
     ms_w, ms_sd, ms_r = sharpe_forward_applied_information(annual_covariance, annual_returns,
                                                            monthly_covariance, monthly_returns,
-                                                           risk_free, gm_w, gm_r)
+                                                           gm_w, gm_r, risk_free)
     # plt.scatter(ms_sd, ms_r, label='Maximum Sharpe ratio portfolio', zorder=2)
 
     # calculate maximum sharpe ratio portfolio
     msr_w, msr_sd, msr_r = sharpe_forward_applied_information_summation_restriction(annual_covariance,
                                                                                     annual_returns,
                                                                                     monthly_covariance,
-                                                                                    monthly_returns, risk_free,
-                                                                                    gm_w, gm_r, short_limit=0.3,
+                                                                                    monthly_returns,
+                                                                                    risk_free=risk_free,
+                                                                                    short_limit=0.3,
                                                                                     long_limit=1.3)
     # print(np.sum(msr_w[msr_w < 0]))
     # print(np.sum(msr_w[msr_w > 0]))
@@ -835,7 +836,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # calculate efficient frontier
     plt.title(textwrap.fill(f'Realised Portfolio Returns versus Portfolio Variance for period from '
                             f'1 {month_vector[int(day % 12)]} {year_vector[int((day + 12) // 12)]} to '
-                            f'{np.str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
+                            f'{str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
                             f'{year_vector[int(int(day + 12) // 12)]}', 57), fontsize=12)
     ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, monthly_covariance)
     plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier')
@@ -932,7 +933,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # graph options
     plt.title(f'Actual Portfolio Returns versus Portfolio Variance for '
               f'1 {month_vector[int(day % 12)]} {year_vector[int((day + 12) // 12)]} to '
-              f'{np.str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
+              f'{str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
               f'{year_vector[int(int(day + 12) // 12)]}', fontsize=10)
     plt.xticks(fontsize=8)
     plt.yticks(fontsize=8)

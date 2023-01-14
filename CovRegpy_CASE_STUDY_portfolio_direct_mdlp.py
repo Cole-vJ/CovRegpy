@@ -591,7 +591,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     # calculate efficient frontier
     plt.title(textwrap.fill(f'Realised Portfolio Returns versus Portfolio Variance for period from '
                             f'1 {month_vector[int(day % 12)]} {year_vector[int((day + 12) // 12)]} to '
-                            f'{np.str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
+                            f'{str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
                             f'{year_vector[int(int(day + 12) // 12)]}', 57), fontsize=12)
     ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, monthly_covariance)
     # plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier')
