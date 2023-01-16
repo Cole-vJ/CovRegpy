@@ -35,6 +35,8 @@ Install 'CovRegpy' package.
 pip install CovRegpy
 ```
 
+
+
 ## Windows Installation
 
 Create new environment (if needed) with specific version of Python.
@@ -99,6 +101,34 @@ Install 'CovRegpy' package.
 ```bash
 pip install CovRegpy
 ```
+
+
+
+# NEW USERS START HERE
+
+#### https://github.com/Cole-vJ/CovRegpy/blob/main/Jupyter_Notebooks/CovRegpy_new_users.ipynb
+
+
+
+## Package Folders Content
+
+- 'aas_figures' - __users can ignore__ - contains figures in associated paper and supplement
+
+- 'B and Psi Estimates' - __users can ignore__ - contains detailed figures and coefficients for our team's additional studies
+
+- #### __'Case Studies'__ - contains all case studies - explore for simple to complex usage examples
+
+- 'experimental_figures' - __users can ignore__ - contains detailed figures exploring automated structure recognition study
+
+- 'figures' - __users can ignore__ - contains detailed figures and coefficient for our team's additional studies
+
+- #### __'Jupyter_Notebooks'__ - contains all Jupyter Notebooks - includes link above for new users and others
+
+- 'README_Images' - __users can ignore__ - contains images for this README file as seen below
+
+- 'S&P500_Data' - __users can ignore__ - contains S&P500 Data for additional studies
+
+- 'weights' - __users can ignore__ - contains all 250 weights resulting from Monte Carlo study of portfolios
 
 
 
