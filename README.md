@@ -140,7 +140,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from CovRegpy_RCR import cubic_b_spline, cov_reg_given_mean
+from CovRegpy.CovRegpy_RCR import cubic_b_spline, cov_reg_given_mean
 
 plt.rcParams['figure.figsize'] = [10, 8]  # resize figures
 sns.set(style='darkgrid')  # style of plot (dark grey background, etc)
