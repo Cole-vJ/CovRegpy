@@ -36,6 +36,6 @@ cov_plot = ax.plot_surface(X, -Z, Y, rstride=1, cstride=1, cmap='gist_rainbow', 
 ax.set_xlim(0, 2)
 ax.set_zlim(0, 2)
 ax.set_ylim(-2, 2)
-plt.savefig('B and Psi Estimates/Cone.png')
+plt.savefig('../B and Psi Estimates/Cone.png')
 plt.show()
 

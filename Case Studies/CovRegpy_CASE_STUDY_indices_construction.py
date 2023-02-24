@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 sns.set(style='darkgrid')
 
 # # pulling the market cap information
-# financial_data = pd.read_csv('S&P500_Data/constituents.csv', header=0)
+# financial_data = pd.read_csv('../S&P500_Data/constituents.csv', header=0)
 # tickers = [f"{np.asarray(financial_data)[i, 0].replace('.', '-')}" for i in range(np.shape(financial_data)[0])]
 # financial_data['Symbol'] = tickers
 # financial_data = financial_data.set_index('Symbol')
@@ -31,9 +31,9 @@ sns.set(style='darkgrid')
 #     except:
 #         print(symbol + ' shares not available')
 #         financial_data['Shares Outstanding'].loc[symbol] = np.nan
-# # financial_data.to_csv('S&P500_Data/sp_500_market_cap.csv')
+# # financial_data.to_csv('../S&P500_Data/sp_500_market_cap.csv')
 #
-# financial_data = pd.read_csv('S&P500_Data/sp_500_market_cap.csv', header=0)
+# financial_data = pd.read_csv('../S&P500_Data/sp_500_market_cap.csv', header=0)
 # financial_data = financial_data.set_index('Symbol')
 # # https://www.nasdaq.com/market-activity/stocks/apa/institutional-holdings
 # financial_data['Shares Outstanding'].loc['APA'] = 363 * 1e6
@@ -46,7 +46,7 @@ sns.set(style='darkgrid')
 #
 # # pull five years worth of data
 # # 'RCL' not working for some reason
-# tickers = pd.read_csv('S&P500_Data/constituents.csv', header=0)
+# tickers = pd.read_csv('../S&P500_Data/constituents.csv', header=0)
 # tickers_format = [f"{np.asarray(tickers)[i, 0].replace('.', '-')}" for i in range(np.shape(tickers)[0])]
 # data = yf.download(tickers_format, start="2016-12-30", end="2022-01-04")
 # close_data = data['Close']
@@ -54,10 +54,10 @@ sns.set(style='darkgrid')
 # close_data = close_data.reindex(date_index).interpolate()
 # close_data = close_data[::-1].interpolate()
 # close_data = close_data[::-1]
-# # close_data.to_csv('S&P500_Data/sp_500_close_5_year.csv')
+# # close_data.to_csv('../S&P500_Data/sp_500_close_5_year.csv')
 #
 # # call RCl individually afterwards and fill
-# close_data = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+# close_data = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
 # close_data = close_data.set_index('Unnamed: 0')
 # rcl = yf.download(['RCL'], start="2016-12-30", end="2022-01-04")
 # rcl_close = rcl['Close']
@@ -66,18 +66,18 @@ sns.set(style='darkgrid')
 # rcl_close = rcl_close[::-1].interpolate()
 # rcl_close = rcl_close[::-1]
 # close_data['RCL'] = rcl_close
-# # close_data.to_csv('S&P500_Data/sp_500_close_5_year.csv')
+# # close_data.to_csv('../S&P500_Data/sp_500_close_5_year.csv')
 #
-# close_data = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+# close_data = pd.read_csv(../'S&P500_Data/sp_500_close_5_year.csv', header=0)
 # close_data = close_data.set_index('Unnamed: 0')
 #
 # # calculate historical market cap data
 # market_cap_data = close_data.copy()
 # for symbol in market_cap_data.columns:
 #     market_cap_data[symbol] = market_cap_data[symbol] * financial_data['Shares Outstanding'].loc[symbol]
-# # market_cap_data.to_csv('S&P500_Data/sp_500_market_cap_5_year.csv')
+# # market_cap_data.to_csv('../S&P500_Data/sp_500_market_cap_5_year.csv')
 #
-# market_cap_data = pd.read_csv('S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
+# market_cap_data = pd.read_csv('../S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
 # market_cap_data = market_cap_data.set_index('Unnamed: 0')
 #
 # # separate 11 sectors worth of data
@@ -247,10 +247,10 @@ sns.set(style='darkgrid')
 #
 # sector_indices = sector_indices.drop(['2022-01-01'])
 #
-# # sector_indices.to_csv('S&P500_Data/sp_500_11_sector_indices.csv')
+# # sector_indices.to_csv('../S&P500_Data/sp_500_11_sector_indices.csv')
 
 # load 11 sector indices
-sector_11_indices = pd.read_csv('S&P500_Data/sp_500_11_sector_indices.csv', header=0)
+sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
 sector_11_indices = sector_11_indices.set_index(['Unnamed: 0'])
 
 # approximate daily treasury par yield curve rates for 3 year bonds

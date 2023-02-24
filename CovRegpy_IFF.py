@@ -228,7 +228,7 @@ def CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l1', alpha=
                 plt.xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi],
                            ['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$'])
                 # plt.legend(loc='upper left')
-                plt.savefig('aas_figures/iff_ht.png')
+                plt.savefig('../aas_figures/iff_ht.png')
                 plt.show()
                 ax = plt.subplot(111)
                 plt.gcf().subplots_adjust(bottom=0.15)
@@ -245,7 +245,7 @@ def CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l1', alpha=
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.90, box_0.height])
                 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-                plt.savefig('aas_figures/iff_freq.png')
+                plt.savefig('../aas_figures/iff_freq.png')
                 plt.show()
                 ax = plt.subplot(111)
                 plt.gcf().subplots_adjust(bottom=0.15)
@@ -261,7 +261,7 @@ def CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l1', alpha=
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.92, box_0.height])
                 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-                plt.savefig('aas_figures/iff_amp.png')
+                plt.savefig('../aas_figures/iff_amp.png')
                 plt.show()
                 ax = plt.subplot(111)
                 plt.gcf().subplots_adjust(bottom=0.15)
@@ -273,7 +273,7 @@ def CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l1', alpha=
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.94, box_0.height])
                 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-                plt.savefig('aas_figures/iff_unfit.png')
+                plt.savefig('../aas_figures/iff_unfit.png')
                 plt.show()
 
         try:

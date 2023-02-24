@@ -21,9 +21,9 @@ for seed in np.arange(250):
     sns.set(style='darkgrid')
 
     # create S&P 500 index
-    sp500_close = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+    sp500_close = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
     sp500_close = sp500_close.set_index(['Unnamed: 0'])
-    sp500_market_cap = pd.read_csv('S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
+    sp500_market_cap = pd.read_csv('../S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
     sp500_market_cap = sp500_market_cap.set_index(['Unnamed: 0'])
 
     sp500_returns = np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :])
@@ -32,7 +32,7 @@ for seed in np.arange(250):
     sp500_proxy = np.append(1, np.exp(np.cumsum(sp500_returns)))
 
     # load 11 sector indices
-    sector_11_indices = pd.read_csv('S&P500_Data/sp_500_11_sector_indices.csv', header=0)
+    sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
     sector_11_indices = sector_11_indices.set_index(['Unnamed: 0'])
 
     # approximate daily treasury par yield curve rates for 3 year bonds

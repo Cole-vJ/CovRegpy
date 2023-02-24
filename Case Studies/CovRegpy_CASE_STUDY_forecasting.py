@@ -54,7 +54,7 @@ plt.text(5.4 * np.pi, 0, '?', fontsize=16)
 ax.set_xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi, 5 * np.pi, 6 * np.pi])
 ax.set_xticklabels(['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$', r'$5\pi$', r'$6\pi$'])
 ax.set_xlim(-0.25 * np.pi, 6.25 * np.pi)
-plt.savefig('aas_figures/forecasting_time_series.png')
+plt.savefig('../aas_figures/forecasting_time_series.png')
 plt.show()
 
 np.random.seed(3)
@@ -77,7 +77,7 @@ plt.fill(np.append(np.linspace(int(edge - 1), 395, 101), np.linspace(395, int(ed
 plt.text(339, 1.028, '?', fontsize=32)
 plt.ylabel('Cumulative Returns')
 plt.xlabel('Days')
-plt.savefig('aas_figures/forecasting_asset.png')
+plt.savefig('../aas_figures/forecasting_asset.png')
 plt.show()
 
 ax = plt.subplot(111)
@@ -116,7 +116,7 @@ plt.grid(visible=None)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('aas_figures/forecasting_interval.png')
+plt.savefig('../aas_figures/forecasting_interval.png')
 plt.show()
 
 # interval plot
@@ -168,7 +168,7 @@ plt.grid(visible=None)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('figures/Inteval_plot.png')
+plt.savefig('../figures/Inteval_plot.png')
 plt.show()
 
 neural_network_forecast = CovRegpy_neural_network(time_series)
@@ -186,7 +186,7 @@ ax.set_xlim(-0.25 * np.pi, 6.25 * np.pi)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.94, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('aas_figures/neural_network.png')
+plt.savefig('../aas_figures/neural_network.png')
 plt.show()
 
 # capture varying frequency and amplitude
@@ -203,19 +203,18 @@ plt.gcf().subplots_adjust(bottom=0.15)
 plt.title('Gaussian Process Forecasting', fontsize=16)
 plt.plot(time, time_series, label='Time series')
 plt.plot(time_extended, y_forecast, 'k', label=textwrap.fill('Time series forecast', 12))
-plt.plot(time_extended, y_forecast_upper, 'r', label=textwrap.fill('95% upper bound', 12))
-plt.plot(time_extended, y_forecast_lower, 'blue', label=textwrap.fill('95% lower bound', 12))
-plt.fill(np.append(time_extended, time_extended[::-1]), np.append(y_forecast_upper, y_forecast[::-1]), c='lightcoral',
-         label=textwrap.fill('95% upper bound area', 12))
-plt.fill(np.append(time_extended, time_extended[::-1]), np.append(y_forecast_lower, y_forecast[::-1]), c='c',
-         label=textwrap.fill('95% lower bound area', 12))
+plt.plot(time_extended, y_forecast_upper, 'gray', label=textwrap.fill('95% confidence interval boundary', 12))
+plt.plot(time_extended, y_forecast_lower, 'gray')
+plt.fill(np.append(time_extended, time_extended[::-1]), np.append(y_forecast_upper, y_forecast[::-1]), c='lightgray',
+         label=textwrap.fill('95% confidence interval area', 12))
+plt.fill(np.append(time_extended, time_extended[::-1]), np.append(y_forecast_lower, y_forecast[::-1]), c='lightgray')
 ax.set_xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi, 5 * np.pi, 6 * np.pi])
 ax.set_xticklabels(['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$', r'$5\pi$', r'$6\pi$'])
 ax.set_xlim(-0.25 * np.pi, 6.25 * np.pi)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.94, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('aas_figures/gaussian_process.png')
+plt.savefig('../aas_figures/gaussian_process.png')
 plt.show()
 
 y_forecast_iff = CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l2',
@@ -223,7 +222,7 @@ y_forecast_iff = CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.15)
-plt.title('Instantaneous Frequency Forecasting', fontsize=16)
+plt.title('Fitted Instantaneous Frequency Forecast', fontsize=16)
 plt.plot(time, time_series,
          label=textwrap.fill('Time series', 12))
 plt.plot(y_forecast_iff[1], y_forecast_iff[0], 'k',
@@ -234,7 +233,7 @@ ax.set_xlim(-0.25 * np.pi, 6.25 * np.pi)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.94, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('aas_figures/iff.png')
+plt.savefig('../aas_figures/iff.png')
 plt.show()
 
 sigma = 1
@@ -275,5 +274,5 @@ plt.plot(time, rq(time, sigma, l, tau, alpha), '--', label='RQ')
 plt.plot(time, rbf(time, sigma, l, tau) * ess(time, sigma, l, tau, p), label='RBF x ESS', linewidth=2)
 plt.plot(time, rq(time, sigma, l, tau, alpha) * ess(time, sigma, l, tau, p), label='RQ x ESS', linewidth=2)
 plt.legend(loc='upper left')
-plt.savefig('aas_figures/kernels.png')
+plt.savefig('../aas_figures/kernels.png')
 plt.show()

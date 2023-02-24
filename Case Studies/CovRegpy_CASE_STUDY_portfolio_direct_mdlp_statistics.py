@@ -32,9 +32,9 @@ np.random.seed(0)
 sns.set(style='darkgrid')
 
 # create S&P 500 index
-sp500_close = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+sp500_close = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
 sp500_close = sp500_close.set_index(['Unnamed: 0'])
-sp500_market_cap = pd.read_csv('S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
+sp500_market_cap = pd.read_csv('../S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
 sp500_market_cap = sp500_market_cap.set_index(['Unnamed: 0'])
 
 sp500_returns = np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :])
@@ -43,7 +43,7 @@ sp500_returns = np.sum(sp500_returns * weights[:-1, :], axis=1)[365:]
 sp500_proxy = np.append(1, np.exp(np.cumsum(sp500_returns)))
 
 # load 11 sector indices
-sector_11_indices = pd.read_csv('S&P500_Data/sp_500_11_sector_indices.csv', header=0)
+sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
 sector_11_indices = sector_11_indices.set_index(['Unnamed: 0'])
 
 # approximate daily treasury par yield curve rates for 3 year bonds
@@ -68,9 +68,9 @@ sector_11_indices_array = sector_11_indices_array[1:, :]
 
 months = 12
 
-sp500_close = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+sp500_close = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
 sp500_close = sp500_close.set_index(['Unnamed: 0'])
-sp500_market_cap = pd.read_csv('S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
+sp500_market_cap = pd.read_csv('../S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
 sp500_market_cap = sp500_market_cap.set_index(['Unnamed: 0'])
 
 sp500_returns = np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :])
@@ -88,15 +88,15 @@ values = 250
 for i in range(values):
 
     weight_matrix_high = pd.read_csv(
-        '/home/cole/Desktop/Cole/Cole Documents/CovRegpy/CovRegpy/weights/direct_high_weights_{}.csv'.format(int(i)),
+        '../weights/direct_high_weights_{}.csv'.format(int(i)),
         header=0)
     weight_matrix_high = np.asarray(weight_matrix_high.set_index(['Unnamed: 0']))
     weight_matrix_mid = pd.read_csv(
-        '/home/cole/Desktop/Cole/Cole Documents/CovRegpy/CovRegpy/weights/direct_mid_weights_{}.csv'.format(int(i)),
+        '../weights/direct_mid_weights_{}.csv'.format(int(i)),
         header=0)
     weight_matrix_mid = np.asarray(weight_matrix_mid.set_index(['Unnamed: 0']))
     weight_matrix_low = pd.read_csv(
-        '/home/cole/Desktop/Cole/Cole Documents/CovRegpy/CovRegpy/weights/direct_low_weights_{}.csv'.format(int(i)),
+        '../weights/direct_low_weights_{}.csv'.format(int(i)),
         header=0)
     weight_matrix_low = np.asarray(weight_matrix_low.set_index(['Unnamed: 0']))
 
@@ -150,7 +150,7 @@ plt.ylabel('Density')
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('figures/Annualised_returns.png')
+plt.savefig('../figures/Annualised_returns.png')
 plt.show()
 
 print('High frequency returns mean: {}'.format(np.log(np.mean(high_freq_cum_returns, axis=0)[-1]) / 4))

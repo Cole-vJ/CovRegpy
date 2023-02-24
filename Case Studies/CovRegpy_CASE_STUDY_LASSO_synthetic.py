@@ -74,7 +74,7 @@ ax.set_zlabel('Covariance', fontsize=8)
 cbar = plt.colorbar(cov_plot)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.05, box_0.y0, box_0.width, box_0.height])
-plt.savefig('aas_figures/Synthetic_base_covariance')
+plt.savefig('../aas_figures/Synthetic_base_covariance')
 plt.show()
 
 # create correlation structure - random structure
@@ -127,7 +127,7 @@ ax.set_ylabel('Covariance', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.05, box_0.y0 + 0.025, box_0.width, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=10)
-plt.savefig('aas_figures/Synthetic_correlation')
+plt.savefig('../aas_figures/Synthetic_correlation')
 plt.show()
 
 cumulative_returns = np.ones((1098, 5))
@@ -157,7 +157,7 @@ ax.set_ylabel('Cumulative returns', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.05, box_0.y0 + 0.025, box_0.width, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=10)
-plt.savefig('aas_figures/Synthetic_cumulative_returns')
+plt.savefig('../aas_figures/Synthetic_cumulative_returns')
 plt.show()
 
 model_days = 701  # 2 years - less a month
@@ -207,7 +207,7 @@ for lag in range(forecast_days):
                                         '11', '12', '13', '14', '15'), fontsize=8)
                 axs[i].set_xlabel('Sinusoidal structures', fontsize=10)
         if lag == 0:
-            plt.savefig('aas_figures/Synthetic_case_study.png')
+            plt.savefig('../aas_figures/Synthetic_case_study.png')
         plt.show()
 
         variance_Model = Psi_est + np.matmul(np.matmul(B_est.T,
@@ -268,9 +268,9 @@ for lag in range(forecast_days):
             box_0 = ax.get_position()
             ax.set_position([box_0.x0 - 0.05, box_0.y0, box_0.width, box_0.height])
             if lag == 0:
-                plt.savefig('aas_figures/lasso_correlation_zero.png')
+                plt.savefig('../aas_figures/lasso_correlation_zero.png')
             if lag == 31:
-                plt.savefig('aas_figures/lasso_correlation_accurate.png')
+                plt.savefig('../aas_figures/lasso_correlation_accurate.png')
             plt.show()
 
         fig, axs = plt.subplots(5, 1)
@@ -291,9 +291,9 @@ for lag in range(forecast_days):
                                         '11', '12', '13', '14', '15'), fontsize=8)
                 axs[i].set_xlabel('Sinusoidal structures', fontsize=10)
         if lag == 0:
-            plt.savefig('aas_figures/Synthetic_case_study_lasso_zero.png')
+            plt.savefig('../aas_figures/Synthetic_case_study_lasso_zero.png')
         elif lag == 31:
-            plt.savefig('aas_figures/Synthetic_case_study_lasso_accurate.png')
+            plt.savefig('../aas_figures/Synthetic_case_study_lasso_accurate.png')
         plt.show()
 
         variance_Model = Psi_est + np.matmul(np.matmul(B_est.T,

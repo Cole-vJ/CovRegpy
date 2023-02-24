@@ -37,9 +37,9 @@ np.random.seed(0)
 sns.set(style='darkgrid')
 
 # create S&P 500 index
-sp500_close = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+sp500_close = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
 sp500_close = sp500_close.set_index(['Unnamed: 0'])
-sp500_market_cap = pd.read_csv('S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
+sp500_market_cap = pd.read_csv('../S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
 sp500_market_cap = sp500_market_cap.set_index(['Unnamed: 0'])
 
 sp500_returns = np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :])
@@ -48,7 +48,7 @@ sp500_returns = np.sum(sp500_returns * weights[:-1, :], axis=1)[365:]
 sp500_proxy = np.append(1, np.exp(np.cumsum(sp500_returns)))
 
 # load 11 sector indices
-sector_11_indices = pd.read_csv('S&P500_Data/sp_500_11_sector_indices.csv', header=0)
+sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
 sector_11_indices = sector_11_indices.set_index(['Unnamed: 0'])
 
 # approximate daily treasury par yield curve rates for 3 year bonds
@@ -447,7 +447,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
         # plt.fill(np.append(np.linspace(-10, 130, 100), np.linspace(-10, 130, 100)[::-1]),
         #          np.append(0.65 * np.ones(100), 0.33 * np.ones(100)), c='lightgrey')
         # if i == assets:
-        #     plt.savefig('experimental_figures/cut_point_demonstration.png')
+        #     plt.savefig('../experimental_figures/cut_point_demonstration.png')
         # plt.show()
 
     mdlp = MDLP()
@@ -536,7 +536,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
                 cut_point_storage[point, time_increment] = cut_point
                 point += 1
             ax1.legend(loc='upper left', fontsize=8)
-            plt.savefig('experimental_figures/cut_point_time_point.png')
+            plt.savefig('../experimental_figures/cut_point_time_point.png')
             plt.show()
 
             # plt.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red')
@@ -848,7 +848,7 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='gold', label=textwrap.fill('Efficient frontier low frequencies', 20))
     plt.xlabel('Portfolio variance')
     plt.legend(loc='lower right', fontsize=10)
-    plt.savefig('figures/efficient_frontiers/Efficient_frontiers_{}'.format(int(day + 1)))
+    plt.savefig('../figures/efficient_frontiers/Efficient_frontiers_{}'.format(int(day + 1)))
     plt.show()
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long only
@@ -944,12 +944,12 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     print(day)
 
-# with open('experimental_figures/extended_model_shorting.npy', 'wb') as f:
+# with open('../experimental_figures/extended_model_shorting.npy', 'wb') as f:
 #     np.save(f, weight_matrix_high)
 #     np.save(f, weight_matrix_mid)
 #     np.save(f, weight_matrix_trend)
 
-with open('experimental_figures/extended_model_shorting.npy', 'rb') as f:
+with open('../experimental_figures/extended_model_shorting.npy', 'rb') as f:
     weight_matrix_high = np.load(f)
     weight_matrix_mid = np.load(f)
     weight_matrix_trend = np.load(f)
@@ -968,7 +968,7 @@ with open('experimental_figures/extended_model_shorting.npy', 'rb') as f:
 #            fontsize=8, rotation=-30)
 # plt.xlabel('Days', fontsize=10)
 # plt.legend(loc='best', fontsize=6)
-# # plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_significant_weights.png')
+# # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_significant_weights.png')
 # plt.show()
 
 # plot significant weights
@@ -989,7 +989,7 @@ plt.xticks([0, 365, 730, 1096, 1460],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=6)
-plt.savefig('figures/S&P 500 - 11 Sectors/emd_mdlp_high_weights.png')
+plt.savefig('../figures/S&P 500 - 11 Sectors/emd_mdlp_high_weights.png')
 plt.show()
 
 # plot significant weights
@@ -1010,7 +1010,7 @@ plt.xticks([0, 365, 730, 1096, 1460],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=6)
-plt.savefig('figures/S&P 500 - 11 Sectors/emd_mdlp_mid_weights.png')
+plt.savefig('../figures/S&P 500 - 11 Sectors/emd_mdlp_mid_weights.png')
 plt.show()
 
 # plot significant weights
@@ -1031,7 +1031,7 @@ plt.xticks([0, 365, 730, 1096, 1460],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 plt.legend(loc='best', fontsize=6)
-plt.savefig('figures/S&P 500 - 11 Sectors/emd_mdlp_trend_weights.png')
+plt.savefig('../figures/S&P 500 - 11 Sectors/emd_mdlp_trend_weights.png')
 plt.show()
 
 cumulative_returns_mdlp_high = cumulative_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
@@ -1057,7 +1057,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
 plt.show()
 
 # measure performances - cumulative returns
@@ -1137,7 +1137,7 @@ print(f'PCA {cumulative_returns_pca_portfolio[-1]}')
 # box_0 = ax.get_position()
 # ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# # plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
+# # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
 # plt.show()
 
 # measure performances - mean returns
@@ -1169,7 +1169,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
 plt.show()
 
 mean_returns_global_minimum_portfolio = \
@@ -1235,7 +1235,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
 plt.show()
 
 # measure performances - variance returns
@@ -1267,7 +1267,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
 plt.show()
 
 # measure performances - variance returns
@@ -1337,7 +1337,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
 plt.show()
 
 # measure performances - value-at-risk returns
@@ -1372,7 +1372,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
 plt.show()
 
 # measure performances - value at risk returns
@@ -1442,7 +1442,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
 plt.show()
 
 # measure performances - maximum draw down returns
@@ -1477,7 +1477,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
 plt.show()
 
 # measure performances - Max draw down returns
@@ -1547,7 +1547,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
 plt.show()
 
 # measure performances - omega ratio returns
@@ -1582,7 +1582,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
 plt.show()
 
 # measure performances - Omega ratio returns
@@ -1652,7 +1652,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
 plt.show()
 
 # measure performances - Sharpe ratio returns
@@ -1687,7 +1687,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
 plt.show()
 
 # measure performances - Sharpe ratio returns
@@ -1757,7 +1757,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
 plt.show()
 
 # measure performances - Sharpe ratio returns
@@ -1827,7 +1827,7 @@ plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns.png')
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns.png')
 plt.show()
 
 # relationship with short limit

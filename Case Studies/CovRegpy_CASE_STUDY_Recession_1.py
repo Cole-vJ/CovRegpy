@@ -20,7 +20,7 @@ np.random.seed(0)
 sns.set(style='darkgrid')
 
 # load 11 sector indices
-sector_11_indices = pd.read_csv('S&P500_Data/sp_500_11_sector_indices.csv', header=0)
+sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
 sector_11_indices = sector_11_indices.set_index(['Unnamed: 0'])
 
 # approximate daily treasury par yield curve rates for 3 year bonds
@@ -124,9 +124,9 @@ for i in np.arange(-82, 1, 82):
 
     if i == 0:
         for subset in sets:
-            B_est = pd.read_csv('B and Psi Estimates/B_est_{}.csv'.format(str(subset)), header=0)
+            B_est = pd.read_csv('../B and Psi Estimates/B_est_{}.csv'.format(str(subset)), header=0)
             B_est = np.asarray(B_est.set_index('Unnamed: 0'))
-            Psi_est = pd.read_csv('B and Psi Estimates/Psi_est_{}.csv'.format(str(subset)), header=0)
+            Psi_est = pd.read_csv('../B and Psi Estimates/Psi_est_{}.csv'.format(str(subset)), header=0)
             Psi_est = np.asarray(Psi_est.set_index('Unnamed: 0'))
             variance_forecast_1 = np.zeros((d1, 11, 11))
             Psi = np.zeros((d1, 11, 11))
@@ -144,14 +144,14 @@ for i in np.arange(-82, 1, 82):
 
             x_mesh, y_mesh = np.meshgrid(np.arange(11), np.arange(11))
 
-            # B_est_20 = pd.read_csv('B and Psi Estimates/B_est_[20].csv', header=0)
+            # B_est_20 = pd.read_csv('../B and Psi Estimates/B_est_[20].csv', header=0)
             # B_est_20 = np.asarray(B_est_20.set_index('Unnamed: 0'))
-            # Psi_est_20 = pd.read_csv('B and Psi Estimates/Psi_est_[20].csv', header=0)
+            # Psi_est_20 = pd.read_csv('../B and Psi Estimates/Psi_est_[20].csv', header=0)
             # Psi_est_20 = np.asarray(Psi_est_20.set_index('Unnamed: 0'))
             #
-            # B_est_1213 = pd.read_csv('B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
+            # B_est_1213 = pd.read_csv('../B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
             # B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
-            # Psi_est_1213 = pd.read_csv('B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
+            # Psi_est_1213 = pd.read_csv('../B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
             # Psi_est_1213 = np.asarray(Psi_est_1213.set_index('Unnamed: 0'))
             #
             # for var_day in range(d1):
@@ -281,9 +281,9 @@ for i in np.arange(-82, 1, 82):
             #         except:
             #             x_ssa = ssd_comps.copy()
             #
-            # B_est_1213 = pd.read_csv('B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
+            # B_est_1213 = pd.read_csv('../B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
             # B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
-            # Psi_est_1213 = pd.read_csv('B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
+            # Psi_est_1213 = pd.read_csv('../B and Psi Estimates/Psi_est_CoV_[12, 13].csv', header=0)
             # Psi_est_1213 = np.asarray(Psi_est_1213.set_index('Unnamed: 0'))
             #
             # for var_day in range(33):
@@ -356,7 +356,7 @@ for i in np.arange(-82, 1, 82):
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-                plt.savefig('B and Psi Estimates/Psi_forecast_{}'.format(subset))
+                plt.savefig('../B and Psi Estimates/Psi_forecast_{}'.format(subset))
                 plt.show()
                 ax = plt.subplot(111)
                 if subset == [8]:
@@ -380,7 +380,7 @@ for i in np.arange(-82, 1, 82):
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-                plt.savefig('B and Psi Estimates/BxxB_forecast_{}'.format(subset))
+                plt.savefig('../B and Psi Estimates/BxxB_forecast_{}'.format(subset))
                 plt.show()
                 ax = plt.subplot(111)
                 if subset == [8]:
@@ -404,7 +404,7 @@ for i in np.arange(-82, 1, 82):
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-                plt.savefig('B and Psi Estimates/Sigma_forecast_{}'.format(subset))
+                plt.savefig('../B and Psi Estimates/Sigma_forecast_{}'.format(subset))
                 plt.show()
                 ax = plt.subplot(111)
                 if subset == [8]:
@@ -426,15 +426,15 @@ for i in np.arange(-82, 1, 82):
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.00, box_0.y0 + 0.025, box_0.width * 0.88, box_0.height * 0.98])
                 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-                plt.savefig('B and Psi Estimates/IMF_{}'.format(subset))
+                plt.savefig('../B and Psi Estimates/IMF_{}'.format(subset))
                 plt.show()
 
-            pd.DataFrame(np.median(variance_forecast_1, axis=0)).to_csv('B and Psi Estimates/cov_{}.csv'.format(str(subset)))
+            pd.DataFrame(np.median(variance_forecast_1, axis=0)).to_csv('../B and Psi Estimates/cov_{}.csv'.format(str(subset)))
 
         for row in np.arange(np.shape(x_ssa)[0]):
-            B_est_ssd = pd.read_csv('B and Psi Estimates/B_est_ssd_{}.csv'.format(row), header=0)
+            B_est_ssd = pd.read_csv('../B and Psi Estimates/B_est_ssd_{}.csv'.format(row), header=0)
             B_est_ssd = np.asarray(B_est_ssd.set_index('Unnamed: 0'))
-            Psi_est_ssd = pd.read_csv('B and Psi Estimates/Psi_est_ssd_{}.csv'.format(row), header=0)
+            Psi_est_ssd = pd.read_csv('../B and Psi Estimates/Psi_est_ssd_{}.csv'.format(row), header=0)
             Psi_est_ssd = np.asarray(Psi_est_ssd.set_index('Unnamed: 0'))
             variance_forecast_ssd_1 = np.zeros((d1, 11, 11))
             Psi_ssd = np.zeros((d1, 11, 11))
@@ -477,7 +477,7 @@ for i in np.arange(-82, 1, 82):
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-                plt.savefig('B and Psi Estimates/Psi_forecast_ssd_{}'.format(row))
+                plt.savefig('../B and Psi Estimates/Psi_forecast_ssd_{}'.format(row))
                 plt.show()
                 ax = plt.subplot(111)
                 if row == 0:
@@ -494,7 +494,7 @@ for i in np.arange(-82, 1, 82):
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-                plt.savefig('B and Psi Estimates/BxxB_forecast_ssd_{}'.format(row))
+                plt.savefig('../B and Psi Estimates/BxxB_forecast_ssd_{}'.format(row))
                 plt.show()
                 ax = plt.subplot(111)
                 if row == 0:
@@ -511,7 +511,7 @@ for i in np.arange(-82, 1, 82):
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-                plt.savefig('B and Psi Estimates/Sigma_forecast_ssd_{}'.format(row))
+                plt.savefig('../B and Psi Estimates/Sigma_forecast_ssd_{}'.format(row))
                 plt.show()
                 ax = plt.subplot(111)
                 if row == 0:
@@ -528,13 +528,13 @@ for i in np.arange(-82, 1, 82):
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.00, box_0.y0 + 0.025, box_0.width * 0.86, box_0.height * 0.98])
                 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-                plt.savefig('B and Psi Estimates/SSD_{}'.format(row))
+                plt.savefig('../B and Psi Estimates/SSD_{}'.format(row))
                 plt.show()
 
             pd.DataFrame(np.median(variance_forecast_1, axis=0)).to_csv(
-                'B and Psi Estimates/cov_ssd_row_{}.csv'.format(row))
+                '../B and Psi Estimates/cov_ssd_row_{}.csv'.format(row))
 
-        print('Minimum KL Distance: ' + str(row) + ' = {}'. format(min_kl_distance))
+        print('Minimum KL Distance: [20] = {}'. format(min_kl_distance))
         A_realised = np.cov(price_signal[int(721 - 2 * d1):int(721 - d1), :].T)
         kl_distance_realised = (1 / 2) * (np.sum(np.diag(np.matmul(np.linalg.inv(A_realised), B))) -
                                           np.log(np.linalg.det(B) / np.linalg.det(A_realised)))
@@ -542,9 +542,9 @@ for i in np.arange(-82, 1, 82):
 
         for row in np.arange(np.shape(x_ssa)[0]):
 
-            B_est_ssd = pd.read_csv('B and Psi Estimates/B_est_ssd_{}.csv'.format(row), header=0)
+            B_est_ssd = pd.read_csv('../B and Psi Estimates/B_est_ssd_{}.csv'.format(row), header=0)
             B_est_ssd = np.asarray(B_est_ssd.set_index('Unnamed: 0'))
-            Psi_est_ssd = pd.read_csv('B and Psi Estimates/Psi_est_ssd_{}.csv'.format(row), header=0)
+            Psi_est_ssd = pd.read_csv('../B and Psi Estimates/Psi_est_ssd_{}.csv'.format(row), header=0)
             Psi_est_ssd = np.asarray(Psi_est_ssd.set_index('Unnamed: 0'))
             variance_forecast_ssd_1 = np.zeros((d1, 11, 11))
             Psi_ssd = np.zeros((d1, 11, 11))
@@ -560,8 +560,8 @@ for i in np.arange(-82, 1, 82):
         # print(x[subset, :])
         B_est_direct = pd.DataFrame(B_est_direct)
         Psi_est_direct = pd.DataFrame(Psi_est_direct)
-        B_est_direct.to_csv('B and Psi Estimates/B_est_{}.csv'.format(str(subset)))
-        Psi_est_direct.to_csv('B and Psi Estimates/Psi_est_{}.csv'.format(str(subset)))
+        B_est_direct.to_csv('../B and Psi Estimates/B_est_{}.csv'.format(str(subset)))
+        Psi_est_direct.to_csv('../B and Psi Estimates/Psi_est_{}.csv'.format(str(subset)))
 
     for row in np.arange(np.shape(x_ssa)[0]):
         B_est_direct_ssd, Psi_est_direct_ssd = \
@@ -570,8 +570,8 @@ for i in np.arange(-82, 1, 82):
         # print(x[subset, :])
         B_est_direct_ssd = pd.DataFrame(B_est_direct_ssd)
         Psi_est_direct_ssd = pd.DataFrame(Psi_est_direct_ssd)
-        B_est_direct_ssd.to_csv('B and Psi Estimates/B_est_ssd_{}.csv'.format(str(row)))
-        Psi_est_direct_ssd.to_csv('B and Psi Estimates/Psi_est_ssd_{}.csv'.format(str(row)))
+        B_est_direct_ssd.to_csv('../B and Psi Estimates/B_est_ssd_{}.csv'.format(str(row)))
+        Psi_est_direct_ssd.to_csv('../B and Psi Estimates/Psi_est_ssd_{}.csv'.format(str(row)))
 
 # Kullback–Leibler divergence
 kl_distance = (1 / 2) * (np.sum(np.diag(np.matmul(np.linalg.inv(np.median(variance_forecast_1, axis=0)),

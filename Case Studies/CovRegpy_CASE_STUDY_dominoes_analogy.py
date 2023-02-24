@@ -101,7 +101,6 @@ plt.plot(time, high_freq)
 plt.yticks([-1, 0, 1], ['-1', '0', '1'])
 plt.xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi, 5 * np.pi],
            ['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$', r'$5\pi$'])
-plt.savefig('/home/cole/Desktop/Cole/Cole Documents/3rd Year PhD Presentation/High_freq')
 plt.show()
 
 plt.figure(figsize=[6.4, 3.8])
@@ -110,7 +109,6 @@ plt.plot(time, low_freq)
 plt.yticks([-1, 0, 1], ['-1', '0', '1'])
 plt.xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi, 5 * np.pi],
            ['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$', r'$5\pi$'])
-plt.savefig('/home/cole/Desktop/Cole/Cole Documents/3rd Year PhD Presentation/Low_freq')
 plt.show()
 
 plt.figure(figsize=[6.4, 3.8])
@@ -120,7 +118,6 @@ plt.yticks([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
            ['-5', '-4', '-3', '-2', '-1', '0', '1', '2', '3', '4', '5'])
 plt.xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi, 5 * np.pi],
            ['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$', r'$5\pi$'])
-plt.savefig('/home/cole/Desktop/Cole/Cole Documents/3rd Year PhD Presentation/High_amp')
 plt.show()
 
 plt.figure(figsize=[6.4, 3.8])
@@ -131,5 +128,4 @@ plt.yticks([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
 plt.xticks([0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi, 5 * np.pi],
            ['0', r'$\pi$', r'$2\pi$', r'$3\pi$', r'$4\pi$', r'$5\pi$'])
 plt.ylim(-5.5, 5.5)
-plt.savefig('/home/cole/Desktop/Cole/Cole Documents/3rd Year PhD Presentation/Low_amp')
 plt.show()

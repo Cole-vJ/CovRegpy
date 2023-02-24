@@ -18,7 +18,7 @@ from AdvEMDpy import AdvEMDpy
 sns.set(style='darkgrid')
 
 # load 11 sector indices
-sector_11_indices = pd.read_csv('S&P500_Data/sp_500_11_sector_indices.csv', header=0)
+sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
 sector_11_indices = sector_11_indices.set_index(['Unnamed: 0'])
 
 # approximate daily treasury par yield curve rates for 3 year bonds
@@ -27,7 +27,7 @@ risk_free = (0.01 / 365)  # daily risk free rate
 # sector numpy array
 sector_11_indices_array = np.vstack((np.zeros((1, 11)), np.asarray(sector_11_indices)))
 
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(12, 8))
 for col, sector in enumerate(sector_11_indices.columns):
     plt.plot(np.asarray(np.cumprod(np.exp(sector_11_indices_array[:, col]))), label=sector)
 plt.gcf().subplots_adjust(bottom=0.18)
@@ -45,7 +45,7 @@ plt.legend(loc='upper left', fontsize=7)
 plt.xlabel('Days', fontsize=10)
 plt.ylabel('Cumulative Returns', fontsize=10)
 plt.yticks([0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5], ['0.5', '1.0', '1.5', '2.0', '2.5', '3.0', '3.5'], fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices.png')
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices.png')
 del sector, col
 plt.show()
 
@@ -126,7 +126,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/forecast_start_1.png')
+plt.savefig('../figures/forecast_start_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Forecast Covariance at End of Period 1')
@@ -136,7 +136,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/forecast_end_1.png')
+plt.savefig('../figures/forecast_end_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Forecast Covariance at Start of Period 2')
@@ -146,7 +146,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/forecast_start_2.png')
+plt.savefig('../figures/forecast_start_2.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Forecast Covariance at End of Period 2')
@@ -156,7 +156,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/forecast_end_2.png')
+plt.savefig('../figures/forecast_end_2.png')
 plt.show()
 
 window_1 = 80
@@ -169,7 +169,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/realised_start_1.png')
+plt.savefig('../figures/realised_start_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance at End of Period 1')
@@ -179,7 +179,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/realised_end_1.png')
+plt.savefig('../figures/realised_end_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance After Recession of Period 1')
@@ -189,7 +189,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/realised_after_1.png')
+plt.savefig('../figures/realised_after_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance at Start of Period 2')
@@ -199,7 +199,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/realised_start_2.png')
+plt.savefig('../figures/realised_start_2.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance at End of Period 2')
@@ -209,7 +209,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/realised_end_2.png')
+plt.savefig('../figures/realised_end_2.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance After Recession of Period 2')
@@ -219,7 +219,7 @@ plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.c
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
-plt.savefig('figures/realised_after_2.png')
+plt.savefig('../figures/realised_after_2.png')
 plt.show()
 
 fig, axs = plt.subplots(1, 3)
@@ -297,7 +297,7 @@ axs[1].set_position([box_1.x0 - 0.045, box_1.y0, box_1.width * 0.9, box_1.height
 box_2 = axs[2].get_position()
 axs[2].set_position([box_2.x0 - 0.09, box_2.y0, box_2.width * 0.9, box_2.height * 1.0])
 axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-plt.savefig('figures/S&P 500 - 11 Sectors/Sector_11_indices_correlation_structure.png')
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_correlation_structure.png')
 plt.show()
 
 x = np.linspace(1, 10, 10)
@@ -332,7 +332,7 @@ ax.set_zticks(ticks=[0, 40, 80])
 ax.set_zticklabels(['01-10-2020', '02-10-2020', '03-10-2020'], rotation=-60, fontsize=8)
 cbar = plt.colorbar(cov_plot)
 cbar.set_label("Covariance")
-plt.savefig('figures/covariance_example.png')
+plt.savefig('../figures/covariance_example.png')
 plt.show()
 
 temp = 0
