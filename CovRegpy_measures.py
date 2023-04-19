@@ -67,7 +67,7 @@ def mean_return(weights, all_returns, window):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    mean_returns = np.zeros(int(np.shape(weights)[1] - window))
+    mean_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(mean_returns)):
         mean_returns[col] = np.mean(portfolio_returns[col:int(col + window)])
 
@@ -99,7 +99,7 @@ def variance_return(weights, all_returns, window):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    variance_returns = np.zeros(int(np.shape(weights)[1] - window))
+    variance_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(variance_returns)):
         variance_returns[col] = np.var(portfolio_returns[col:int(col + window)])
 
@@ -131,7 +131,7 @@ def value_at_risk_return(weights, all_returns, window):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    value_at_risk_returns = np.zeros(int(np.shape(weights)[1] - window))
+    value_at_risk_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(value_at_risk_returns)):
         value_at_risk_returns[col] = np.quantile(portfolio_returns[col:int(col + window)], 0.05)
 
@@ -163,7 +163,7 @@ def max_draw_down_return(weights, all_returns, window):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    max_draw_down_returns = np.zeros(int(np.shape(weights)[1] - window))
+    max_draw_down_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(max_draw_down_returns)):
         max_draw_down_returns[col] = (np.min(portfolio_returns[col:int(col + window)]) -
                                       np.max(portfolio_returns[col:int(col + window)])) / np.max(
@@ -197,7 +197,7 @@ def omega_ratio_return(weights, all_returns, window):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    omega_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
+    omega_ratio_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(omega_ratio_returns)):
         omega_ratio_returns[col] = np.mean(portfolio_returns[col:int(col + window)] *
                                            (portfolio_returns[col:int(col + window)] > 0)) / \
@@ -235,7 +235,7 @@ def sortino_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    sortino_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
+    sortino_ratio_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(sortino_ratio_returns)):
         sortino_ratio_returns[col] = (np.mean(portfolio_returns[col:int(col + window)]) - risk_free) / \
                                      np.std(portfolio_returns[col:int(col + window)] *
@@ -272,7 +272,7 @@ def sharpe_ratio_return(weights, all_returns, window, risk_free=(0.01/365)):
 
     """
     portfolio_returns = portfolio_return(weights, all_returns)
-    sharpe_ratio_returns = np.zeros(int(np.shape(weights)[1] - window))
+    sharpe_ratio_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
     for col in range(len(sharpe_ratio_returns)):
         sharpe_ratio_returns[col] = (np.mean(portfolio_returns[col:int(col + window)]) - risk_free) / \
                                      np.std(portfolio_returns[col:int(col + window)])

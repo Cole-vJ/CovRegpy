@@ -35,9 +35,9 @@ np.random.seed(0)
 sns.set(style='darkgrid')
 
 # create S&P 500 index
-sp500_close = pd.read_csv('S&P500_Data/sp_500_close_5_year.csv', header=0)
+sp500_close = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
 sp500_close = sp500_close.set_index(['Unnamed: 0'])
-sp500_market_cap = pd.read_csv('S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
+sp500_market_cap = pd.read_csv('../S&P500_Data/sp_500_market_cap_5_year.csv', header=0)
 sp500_market_cap = sp500_market_cap.set_index(['Unnamed: 0'])
 
 sp500_returns = np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :])

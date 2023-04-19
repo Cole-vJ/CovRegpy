@@ -119,7 +119,7 @@ for i in np.arange(-82, 1, 82):
         except:
             x_ssa = ssd_comps.copy()
 
-    sets = np.asarray([[i] for i in range(22)] + [[i * 2, i * 2 + 1] for i in range(11)] +
+    sets = np.asarray([[j] for j in range(22)] + [[j * 2, j * 2 + 1] for j in range(11)] +
                       [[8, 12]] + [[12, 20]] + [[8, 20]] + [[8, 12, 20]])
 
     if i == 0:
@@ -158,17 +158,31 @@ for i in np.arange(-82, 1, 82):
             #     variance_forecast_1[var_day] = \
             #         Psi_est_20 + np.matmul(B_est_20.T * x[20, var_day],
             #                                x[20, var_day] * B_est_20).astype(np.float64)
-            #
+
             # fig, axs = plt.subplots(1, 2)
-            # plt.suptitle('Correlation Structure Relative to Energy Sector')
+            # fig.set_size_inches(18, 12)
+            # plt.suptitle('Correlation Structure Relative to Energy Sector', fontsize=40)
             #
             # for col, sector in enumerate(sector_11_indices.columns):
             #     if col != 3:
             #         if col == 0 or col == 1 or col == 2 or col == 7:
             #             for ax in range(2):
+            #                 if col == 2:
+            #                     axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
+            #                                  np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                          variance_forecast_1[:, col, col])),
+            #                                  label=textwrap.fill(sector, 14), linewidth=10)
+            #                 else:
+            #                     axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
+            #                                                        np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                                                variance_forecast_1[:, col, col])),
+            #                                  label=textwrap.fill(sector, 14))
+            #         elif col == 9 or col == 10:
+            #             for ax in range(2):
             #                 axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
-            #                               np.sqrt(variance_forecast_1[:, 3, 3] *
-            #                                       variance_forecast_1[:, col, col])), label=textwrap.fill(sector, 14))
+            #                                                    np.sqrt(variance_forecast_1[:, 3, 3] *
+            #                                                            variance_forecast_1[:, col, col])),
+            #                              label=sector, linewidth=10)
             #         else:
             #             for ax in range(2):
             #                 axs[ax].plot(np.arange(82) + 639, (variance_forecast_1[:, col, 3] /
@@ -198,32 +212,32 @@ for i in np.arange(-82, 1, 82):
             #     else:
             #         pass
             #
-            # axs[0].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), 'k--',
-            #             label='Consumer staples median')
-            # axs[0].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), 'k:',
-            #             label='Real Estate median')
-            # axs[0].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), 'k-.',
-            #             label='Utilities median')
-            # axs[1].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), 'k--',
-            #             label=textwrap.fill('Consumer staples median', 10))
-            # axs[1].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), 'k:',
-            #             label=textwrap.fill('Real Estate median', 11))
-            # axs[1].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), 'k-.',
-            #             label=textwrap.fill('Utilities median', 10))
+            # axs[0].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), '--', c='gray',
+            #             label='Consumer Staples median', linewidth=10)
+            # axs[0].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), '--', c='magenta',
+            #             label='Real Estate median', linewidth=10)
+            # axs[0].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), '--', c='gold',
+            #             label='Utilities median', linewidth=10)
+            # axs[1].plot(np.arange(82) + 639, np.median(median_consumer_staples[11:]) * np.ones(82), '--', c='gray',
+            #             label=textwrap.fill('Consumer Staples median', 10), linewidth=10)
+            # axs[1].plot(np.arange(82) + 639, np.median(median_real_estate[11:]) * np.ones(82), '--', c='magenta',
+            #             label=textwrap.fill('Real Estate median', 11), linewidth=10)
+            # axs[1].plot(np.arange(82) + 639, np.median(median_utilities[11:]) * np.ones(82), '--', c='gold',
+            #             label=textwrap.fill('Utilities median', 10), linewidth=10)
             #
-            # axs[0].set_title(textwrap.fill('Market Down-Turn 2018', 9))
+            # axs[0].set_title('Market Down-Turn 2018', fontsize=30)
             # axs[0].set_xticks([639, 721])
-            # axs[0].set_xticklabels(['02-10-2018', '23-12-2018'], fontsize=8, rotation=-30)
+            # axs[0].set_xticklabels(['02-10-2018', '23-12-2018'], fontsize=20, rotation=-30)
             # axs[0].set_xlim(639 - 15, 721 + 5)
-            # axs[1].set_title(textwrap.fill('SARS-CoV-2 Pandemic 2020', 10))
+            # axs[1].set_title('SARS-CoV-2 Pandemic 2020', fontsize=30)
             # axs[1].set_xticks([1143, 1176])
-            # axs[1].set_xticklabels(['28-02-2020', '01-04-2020'], fontsize=8, rotation=-30)
+            # axs[1].set_xticklabels(['28-02-2020', '01-04-2020'], fontsize=20, rotation=-30)
             # axs[1].set_xlim(1143 - 12, 1176 + 2)
             #
-            # axs[0].set_yticklabels(['-0.5', '0.0', '0.5', '1.0'], fontsize=8)
+            # axs[0].set_yticklabels(['-0.5', '0.0', '0.5', '1.0'], fontsize=20)
             # axs[0].set_yticks([-0.5, 0.0, 0.5, 1.0])
             # axs[1].set_yticks([-0.5, 0.0, 0.5, 1.0])
-            # axs[1].set_yticklabels(['', '', '', ''], fontsize=8)
+            # axs[1].set_yticklabels(['', '', '', ''], fontsize=12)
             # # axs[0].plot(639 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', linewidth=2)
             # # axs[0].plot(721 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', linewidth=2,
             # #             label=textwrap.fill('Final quarter 2018 bear market', 14))
@@ -234,31 +248,31 @@ for i in np.arange(-82, 1, 82):
             # #             label=textwrap.fill('Final quarter 2018 bear market', 14))
             # # axs[1].plot(1143 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--')
             # # axs[1].plot(1176 * np.ones(100), np.linspace(-0.3, 1.1, 100), 'k--', label='SARS-CoV-2')
-            # axs[0].set_xlabel('Days', fontsize=10)
-            # axs[1].set_xlabel('Days', fontsize=10)
+            # axs[0].set_xlabel('Days', fontsize=30)
+            # axs[1].set_xlabel('Days', fontsize=30)
             # plt.subplots_adjust(wspace=0.1, top=0.8, bottom=0.16, left=0.08)
             # box_0 = axs[0].get_position()
             # axs[0].set_position([box_0.x0, box_0.y0, box_0.width * 0.92, box_0.height * 1.0])
             # box_1 = axs[1].get_position()
             # axs[1].set_position([box_1.x0 - 0.045, box_1.y0, box_1.width * 0.92, box_1.height * 1.0])
-            # axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.55), fontsize=6)
+            # axs[1].legend(loc='center left', bbox_to_anchor=(1, 0.55), fontsize=12)
             #
             # # temporary for plot #
             #
             # variance_forecast_1 = np.zeros((33, 11, 11))
             #
             # for i in np.arange(-30, 1, 30):
-            #     del x, x_ssa
+            #     # del x, x_ssa
             #     for signal in range(np.shape(price_signal)[1]):
             #         emd = AdvEMDpy.EMD(time_series=np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
             #                            time=np.arange(0, 33, 1))
             #         imfs, _, _, _, _, _, _ = \
             #             emd.empirical_mode_decomposition(knot_envelope=np.linspace(-12, 33 + 12, knots),
             #                                              matrix=True, mean_threshold=1e-3, initial_smoothing=False)
-            #         ssd_comps = CovRegpy_ssd(np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
+            #         ssd_comps_short = CovRegpy_ssd(np.asarray(price_signal[int(1143 + i):int(1176 + i), signal]),
             #                                  initial_trend_ratio=10, nmse_threshold=0.01, plot=False, debug=False,
             #                                  method='l2')
-            #         ssd_vectors[signal] = np.shape(ssd_comps)[0]
+            #         ssd_vectors[signal] = np.shape(ssd_comps_short)[0]
             #         # deal with constant last IMF and insert IMFs in dataframe
             #         # deal with different frequency structures here
             #         try:
@@ -269,17 +283,17 @@ for i in np.arange(-82, 1, 82):
             #         except:
             #             pass
             #         try:
-            #             x = np.vstack((imfs, x))
+            #             x_short = np.vstack((imfs, x_short))
             #         except:
-            #             x = imfs.copy()
-            #         if ssd_comps[-1, 0] == ssd_comps[-1, -1]:
-            #             ssd_comps = ssd_comps[-2, :].reshape(1, -1)
+            #             x_short = imfs.copy()
+            #         if ssd_comps_short[-1, 0] == ssd_comps_short[-1, -1]:
+            #             ssd_comps_short = ssd_comps_short[-2, :].reshape(1, -1)
             #         else:
-            #             ssd_comps = ssd_comps[-1, :].reshape(1, -1)
+            #             ssd_comps_short = ssd_comps_short[-1, :].reshape(1, -1)
             #         try:
-            #             x_ssa = np.vstack((ssd_comps, x_ssa))
+            #             x_ssa_short = np.vstack((ssd_comps_short, x_ssa_short))
             #         except:
-            #             x_ssa = ssd_comps.copy()
+            #             x_ssa_short = ssd_comps_short.copy()
             #
             # B_est_1213 = pd.read_csv('../B and Psi Estimates/B_est_CoV_[12, 13].csv', header=0)
             # B_est_1213 = np.asarray(B_est_1213.set_index('Unnamed: 0'))
@@ -288,8 +302,8 @@ for i in np.arange(-82, 1, 82):
             #
             # for var_day in range(33):
             #     variance_forecast_1[var_day] = \
-            #         Psi_est_1213 + np.matmul(np.matmul(B_est_1213.T, x[12:14, var_day].T),
-            #                                  np.matmul(x[12:14, var_day], B_est_1213)).astype(np.float64)
+            #         Psi_est_1213 + np.matmul(np.matmul(B_est_1213.T, x_short[12:14, var_day].T),
+            #                                  np.matmul(x_short[12:14, var_day], B_est_1213)).astype(np.float64)
             #
             # for col, sector in enumerate(sector_11_indices.columns):
             #     if col != 3:
@@ -321,7 +335,7 @@ for i in np.arange(-82, 1, 82):
             #         pass
             #
             # # temporary for plot #
-            #
+            # plt.savefig('../B and Psi Estimates/Relative_correlation_mod.pdf')
             # plt.show()
 
             A = variance_forecast_1[-1, :, :]
@@ -347,10 +361,10 @@ for i in np.arange(-82, 1, 82):
                 elif subset == [8, 12]:
                     plt.title(textwrap.fill(
                         'Optimal Unattributable Variance Forecast using High Frequency Energy and Health Care Implicit Factors',
-                        50))
+                        55))
 
-                plt.pcolormesh(x_mesh, y_mesh, Psi_day, cmap='gist_rainbow')
-                plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(Psi_day), cmap='gist_rainbow')
+                plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
                 plt.colorbar()
@@ -373,14 +387,17 @@ for i in np.arange(-82, 1, 82):
                     plt.title(textwrap.fill(
                         'Optimal Attributable Variance Forecast using High Frequency Energy and Health Care Implicit Factors',
                         50))
-                plt.pcolormesh(x_mesh, y_mesh, BxxB_day, cmap='gist_rainbow')
-                plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(BxxB_day), cmap='gist_rainbow')
+                plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
                 plt.colorbar()
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
                 plt.savefig('../B and Psi Estimates/BxxB_forecast_{}'.format(subset))
+                plt.show()
+                plt.figure(2)
+                plt.plot(BxxB_day)
                 plt.show()
                 ax = plt.subplot(111)
                 if subset == [8]:
@@ -397,8 +414,8 @@ for i in np.arange(-82, 1, 82):
                     plt.title(textwrap.fill(
                         'Optimal Variance Forecast using High Frequency Energy and Health Care Implicit Factors',
                         50))
-                plt.pcolormesh(x_mesh, y_mesh, variance_forecast_1[var_day], cmap='gist_rainbow')
-                plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(variance_forecast_1[var_day]), cmap='gist_rainbow')
+                plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
                 plt.colorbar()
@@ -460,18 +477,13 @@ for i in np.arange(-82, 1, 82):
             if kl_distance < 130.0:
                 print(str(row) + ' = {}'.format(kl_distance))
 
-            if row == 0 or row == 10:
+            if row == 2:
                 ax = plt.subplot(111)
-                if row == 0:
-                    plt.title(textwrap.fill(
-                        'Optimal Unattributable Variance Forecast using Communication Services SSD Implicit Factor', 50))
-                elif row == 10:
-                    plt.title(textwrap.fill(
-                        'Optimal Unattributable Variance Forecast using Utilities SSD Implicit Factor',
-                        50))
+                plt.title(textwrap.fill(
+                    'Optimal Unattributable Variance Forecast using Consumer Staples SSD Implicit Factor', 50))
 
-                plt.pcolormesh(x_mesh, y_mesh, Psi_day, cmap='gist_rainbow')
-                plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(Psi_day), cmap='gist_rainbow')
+                plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
                 plt.colorbar()
@@ -480,15 +492,13 @@ for i in np.arange(-82, 1, 82):
                 plt.savefig('../B and Psi Estimates/Psi_forecast_ssd_{}'.format(row))
                 plt.show()
                 ax = plt.subplot(111)
-                if row == 0:
-                    plt.title(textwrap.fill(
-                        'Optimal Attributable Variance Forecast using Communication Services SSD Implicit Factor', 50))
-                elif row == 10:
-                    plt.title(textwrap.fill(
-                        'Optimal Attributable Variance Forecast using Utilities SSD Implicit Factor',
-                        50))
-                plt.pcolormesh(x_mesh, y_mesh, BxxB_day, cmap='gist_rainbow')
-                plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
+                plt.title(textwrap.fill(
+                    'Optimal Attributable Variance Forecast using Consumer Staples SSD Implicit Factor', 50))
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(BxxB_day), cmap='gist_rainbow')
+                # plt.figure(2)
+                # plt.plot(BxxB_day)
+                # plt.show()
+                plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
                 plt.colorbar()
@@ -497,15 +507,10 @@ for i in np.arange(-82, 1, 82):
                 plt.savefig('../B and Psi Estimates/BxxB_forecast_ssd_{}'.format(row))
                 plt.show()
                 ax = plt.subplot(111)
-                if row == 0:
-                    plt.title(textwrap.fill(
-                        'Optimal Variance Forecast using Communication Services SSD Implicit Factor', 50))
-                elif row == 10:
-                    plt.title(textwrap.fill(
-                        'Optimal Variance Forecast using Utilities SSD Implicit Factor',
-                        50))
-                plt.pcolormesh(x_mesh, y_mesh, variance_forecast_1[var_day], cmap='gist_rainbow')
-                plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
+                plt.title(textwrap.fill(
+                    'Optimal Variance Forecast using Consumer Staples SSD Implicit Factor', 50))
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(variance_forecast_1[var_day]), cmap='gist_rainbow')
+                plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
                 plt.colorbar()
@@ -514,14 +519,9 @@ for i in np.arange(-82, 1, 82):
                 plt.savefig('../B and Psi Estimates/Sigma_forecast_ssd_{}'.format(row))
                 plt.show()
                 ax = plt.subplot(111)
-                if row == 0:
+                if row == 2:
                     plt.title('Communication Services SSD Implicit Factor')
                     plt.plot(np.arange(d1), x_ssa[row, :], label=textwrap.fill('Communication Services SSD', 13))
-                    plt.plot(np.arange(d1), x[row, :],
-                             label=textwrap.fill('High frequency IMF', 11))
-                elif row == 10:
-                    plt.title('Utilities SSD Implicit Factor')
-                    plt.plot(np.arange(d1), x_ssa[row, :], label=textwrap.fill('Utilities SSD', 9))
                     plt.plot(np.arange(d1), x[row, :],
                              label=textwrap.fill('High frequency IMF', 11))
                 plt.xticks([0, 81], ['12 July 2018', '2 October 2018'])
@@ -538,7 +538,7 @@ for i in np.arange(-82, 1, 82):
         A_realised = np.cov(price_signal[int(721 - 2 * d1):int(721 - d1), :].T)
         kl_distance_realised = (1 / 2) * (np.sum(np.diag(np.matmul(np.linalg.inv(A_realised), B))) -
                                           np.log(np.linalg.det(B) / np.linalg.det(A_realised)))
-        print('Realised covariance KL DIstance: = {}'.format(kl_distance_realised))
+        print('Realised covariance KL Distance: = {}'.format(kl_distance_realised))
 
         for row in np.arange(np.shape(x_ssa)[0]):
 
@@ -585,55 +585,61 @@ window_1 = 82
 window_2 = 30
 ax = plt.subplot(111)
 plt.title('Realised Covariance at Start of Period 1')
-plt.pcolormesh(x, y, np.cov(price_signal[int(721 - 2 * window_1):int(721 - window_1), :].T), cmap='gist_rainbow')
-plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
+plt.pcolormesh(x, y, np.fliplr(np.cov(price_signal[int(721 - 2 * window_1):int(721 - window_1), :].T)), cmap='gist_rainbow')
+plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
+plt.savefig('../B and Psi Estimates/realised_start_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance at End of Period 1')
-plt.pcolormesh(x, y, np.cov(price_signal[int(721 - window_1):int(721), :].T), cmap='gist_rainbow')
-plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
+plt.pcolormesh(x, y, np.fliplr(np.cov(price_signal[int(721 - window_1):int(721), :].T)), cmap='gist_rainbow')
+plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
+plt.savefig('../B and Psi Estimates/realised_end_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance After Recession of Period 1')
-plt.pcolormesh(x, y, np.cov(price_signal[int(721):int(721 + window_1), :].T), cmap='gist_rainbow')
-plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
+plt.pcolormesh(x, y, np.fliplr(np.cov(price_signal[int(721):int(721 + window_1), :].T)), cmap='gist_rainbow')
+plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
+plt.savefig('../B and Psi Estimates/realised_after_1.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance at Start of Period 2')
-plt.pcolormesh(x, y, np.cov(price_signal[int(1143 - window_2):1143, :].T), cmap='gist_rainbow')
-plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
+plt.pcolormesh(x, y, np.fliplr(np.cov(price_signal[int(1143 - window_2):1143, :].T)), cmap='gist_rainbow')
+plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
+plt.savefig('../B and Psi Estimates/realised_start_2.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance at End of Period 2')
-plt.pcolormesh(x, y, np.cov(price_signal[int(1176 - window_2):1176, :].T), cmap='gist_rainbow')
-plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
+plt.pcolormesh(x, y, np.fliplr(np.cov(price_signal[int(1176 - window_2):1176, :].T)), cmap='gist_rainbow')
+plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
+plt.savefig('../B and Psi Estimates/realised_end_2.png')
 plt.show()
 ax = plt.subplot(111)
 plt.title('Realised Covariance After Recession of Period 2')
-plt.pcolormesh(x, y, np.cov(price_signal[1176:int(1176 + window_2), :].T), cmap='gist_rainbow')
-plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
+plt.pcolormesh(x, y, np.fliplr(np.cov(price_signal[1176:int(1176 + window_2), :].T)), cmap='gist_rainbow')
+plt.xticks(np.arange(11)[::-1], [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8, rotation='45')
 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
 plt.colorbar()
 box_0 = ax.get_position()
 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
+plt.savefig('../B and Psi Estimates/realised_after_2.png')
 plt.show()

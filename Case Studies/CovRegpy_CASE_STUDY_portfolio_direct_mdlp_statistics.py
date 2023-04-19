@@ -124,6 +124,7 @@ x = np.linspace(0.05, 0.15, 100)
 realised_variance_returns = np.log(1.4849082851150919)/4
 dcc_returns = np.log(1.4668328786939422)/4
 sp500_proxy_returns = np.log(1.6552954098543056)/4
+sp500_proxy_001_returns = np.log(1.6552954098543056 * 0.9999 ** 1461)/4
 minimum_var_returns = np.log(1.3587817911842188)/4
 pca_returns = np.log(1.4897923114940013)/4
 
@@ -151,6 +152,42 @@ box_0 = ax.get_position()
 ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('../figures/Annualised_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 1, sharey=True, figsize=(32, 16))
+axs.set_title(textwrap.fill('Annualised Returns of Benchmark Portfolios versus Risk Parity Portfolios', 45),
+              fontsize=36, pad=20)
+axs.plot(sp500_proxy_001_returns * np.ones(100), np.linspace(0, 17.5, 100), '--', linewidth=5)
+axs.plot(sp500_proxy_001_returns * np.ones(100), np.linspace(0, 17.5, 100), '--',
+         label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=5)
+axs.plot(realised_variance_returns * np.ones(100), np.linspace(0, 17.5, 100), '--', label='Realised covariance',
+         linewidth=5)
+axs.plot(dcc_returns * np.ones(100), np.linspace(0, 17.5, 100), '--', label='DDC MGARCH', linewidth=5)
+axs.plot(minimum_var_returns * np.ones(100), np.linspace(0, 17.5, 100), '--',
+         label='Global minimum variance', linewidth=5)
+axs.plot(pca_returns * np.ones(100), np.linspace(0, 17.5, 100), '--',
+         label='Principle portfolio with 3 components', linewidth=5)
+axs.plot(x, normal(np.log(np.mean(high_freq_cum_returns, axis=0)[-1]) / 4,
+                      np.std(np.log(high_freq_cum_returns) / 4, axis=0)[-1], x),
+         label=textwrap.fill('High frequency IMFs', 30), color='red', linewidth=5)
+axs.plot(x, normal(np.log(np.mean(mid_freq_cum_returns, axis=0)[-1]) / 4,
+                      np.std(np.log(mid_freq_cum_returns) / 4, axis=0)[-1], x),
+         label=textwrap.fill('Mid frequencies IMFs', 30), color='gold', linewidth=5)
+axs.plot(x, normal(np.log(np.mean(low_freq_cum_returns, axis=0)[-1]) / 4,
+                      np.std(np.log(low_freq_cum_returns) / 4, axis=0)[-1], x),
+         label=textwrap.fill('Low frequency IMFs', 30), color='green', linewidth=5)
+axs.set_xticks([0.06, 0.08, 0.10, 0.12, 0.14])
+axs.set_xticklabels(['0.06', '0.08', '0.10', '0.12', '0.14'], fontsize=20)
+axs.set_yticks([0.0, 2.5, 5.0, 7.5, 10.0, 12.5, 15.0, 17.5])
+axs.set_yticklabels(['0.0', '2.5', '5.0', '7.5', '10.0', '12.5', '15.0', '17.5'], fontsize=20)
+axs.set_xlabel('Annualised Returns', fontsize=30)
+axs.set_ylabel('Density', fontsize=30)
+box_0 = axs.get_position()
+axs.set_position([box_0.x0 - 0.08, box_0.y0, box_0.width * 1.20, box_0.height])
+axs.legend(loc='upper right', fontsize=20)
+plt.savefig('../figures/Annualised_returns.pdf')
+plt.ylim(-0.5, 18.0)
+plt.xlim(0.05, 0.15)
 plt.show()
 
 print('High frequency returns mean: {}'.format(np.log(np.mean(high_freq_cum_returns, axis=0)[-1]) / 4))

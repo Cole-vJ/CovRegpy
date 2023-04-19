@@ -267,7 +267,7 @@ for i in np.arange(-30, 1, 30):
                         'Technology Implicit Factors',
                         50))
 
-                plt.pcolormesh(x_mesh, y_mesh, Psi_day, cmap='gist_rainbow')
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(Psi_day), cmap='gist_rainbow')
                 plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
@@ -275,6 +275,9 @@ for i in np.arange(-30, 1, 30):
                 box_0 = ax.get_position()
                 ax.set_position([box_0.x0 + 0.05, box_0.y0 + 0.075, box_0.width * 0.9, box_0.height * 0.9])
                 plt.savefig('../B and Psi Estimates/Psi_forecast_CoV_{}'.format(subset))
+                plt.show()
+                plt.figure(2)
+                plt.plot(BxxB_day)
                 plt.show()
                 ax = plt.subplot(111)
                 if subset == [0]:
@@ -311,7 +314,7 @@ for i in np.arange(-30, 1, 30):
                         'Optimal Attributable Variance Forecast using High Frequency and Low Frequency Information '
                         'Technology Implicit Factors',
                         65))
-                plt.pcolormesh(x_mesh, y_mesh, BxxB_day, cmap='gist_rainbow')
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(BxxB_day), cmap='gist_rainbow')
                 plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
@@ -355,7 +358,7 @@ for i in np.arange(-30, 1, 30):
                         'Optimal Variance Forecast using High Frequency and Low Frequency Information '
                         'Technology Implicit Factors',
                         55))
-                plt.pcolormesh(x_mesh, y_mesh, variance_forecast_1[var_day], cmap='gist_rainbow')
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(variance_forecast_1[var_day]), cmap='gist_rainbow')
                 plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
@@ -462,7 +465,7 @@ for i in np.arange(-30, 1, 30):
                 plt.title(textwrap.fill(
                     'Optimal Unattributable Variance Forecast using Communication Services SSD Implicit Factor', 50))
 
-                plt.pcolormesh(x_mesh, y_mesh, Psi_day, cmap='gist_rainbow')
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(Psi_day), cmap='gist_rainbow')
                 plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
@@ -474,7 +477,7 @@ for i in np.arange(-30, 1, 30):
                 ax = plt.subplot(111)
                 plt.title(textwrap.fill(
                     'Optimal Attributable Variance Forecast using Communication Services SSD Implicit Factor', 50))
-                plt.pcolormesh(x_mesh, y_mesh, BxxB_day, cmap='gist_rainbow')
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(BxxB_day), cmap='gist_rainbow')
                 plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)
@@ -486,7 +489,7 @@ for i in np.arange(-30, 1, 30):
                 ax = plt.subplot(111)
                 plt.title(textwrap.fill(
                     'Optimal Variance Forecast using Communication Services SSD Implicit Factor', 50))
-                plt.pcolormesh(x_mesh, y_mesh, variance_forecast_1[var_day], cmap='gist_rainbow')
+                plt.pcolormesh(x_mesh, y_mesh, np.fliplr(variance_forecast_1[var_day]), cmap='gist_rainbow')
                 plt.xticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8,
                            rotation='45')
                 plt.yticks(np.arange(11), [textwrap.fill(col, 15) for col in sector_11_indices.columns], fontsize=8)

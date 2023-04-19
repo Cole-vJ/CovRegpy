@@ -36,6 +36,33 @@ np.random.seed(0)
 
 sns.set(style='darkgrid')
 
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Cumulative Returns', fontsize=36, pad=20)
+axs[0].set_ylabel('Cumulative Returns', fontsize=20)
+axs[0].set_xticks([0, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=16, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=20)
+axs[0].set_yticks([0.8, 1.0, 1.2, 1.4, 1.6])
+axs[0].set_yticklabels([0.8, 1.0, 1.2, 1.4, 1.6], fontsize=16)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='upper left', fontsize=16)
+axs[0].set_ylim(0.6, 1.8)
+axs[1].set_title('Cumulative Returns', fontsize=36)
+# axs[1].set_yticks([0.8, 1.0, 1.2, 1.4, 1.6])
+# axs[1].set_yticklabels(['', '', '', '', ''], fontsize=8)
+# axs[1].set_ylabel('Cumulative Returns', fontsize=10)
+axs[1].set_xticks([0, 365, 730, 1096, 1461],
+                  ['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                  fontsize=16, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=20)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='upper left', fontsize=16)
+axs[0].set_ylim(0.6, 1.8)
+plt.show()
+
 # create S&P 500 index
 sp500_close = pd.read_csv('../S&P500_Data/sp_500_close_5_year.csv', header=0)
 sp500_close = sp500_close.set_index(['Unnamed: 0'])
@@ -44,8 +71,12 @@ sp500_market_cap = sp500_market_cap.set_index(['Unnamed: 0'])
 
 sp500_returns = np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :])
 weights = np.asarray(sp500_market_cap) / np.tile(np.sum(np.asarray(sp500_market_cap), axis=1).reshape(-1, 1), (1, 505))
-sp500_returns = np.sum(sp500_returns * weights[:-1, :], axis=1)[365:]
+sp500_returns = np.sum(sp500_returns * weights[:-1, :], axis=1)[365:-1]
 sp500_proxy = np.append(1, np.exp(np.cumsum(sp500_returns)))
+
+sp500_returns_001 = (np.log(np.asarray(sp500_close)[1:, :] / np.asarray(sp500_close)[:-1, :]) - 0.0001)
+sp500_returns_001 = np.sum(sp500_returns_001 * weights[:-1, :], axis=1)[365:-1]
+sp500_proxy_001 = np.append(1, np.exp(np.cumsum(sp500_returns_001)))
 
 # load 11 sector indices
 sector_11_indices = pd.read_csv('../S&P500_Data/sp_500_11_sector_indices.csv', header=0)
@@ -77,7 +108,7 @@ months = 12
 # store all weights from respective models
 weight_matrix_global_minimum = np.zeros_like(sector_11_indices_array)
 weight_matrix_global_minimum_long = np.zeros_like(sector_11_indices_array)
-weight_matrix_maximum_sharpe_ratio = np.zeros_like(sector_11_indices_array)
+# weight_matrix_maximum_sharpe_ratio = np.zeros_like(sector_11_indices_array)
 weight_matrix_maximum_sharpe_ratio_restriction = np.zeros_like(sector_11_indices_array)
 weight_matrix_pca = np.zeros_like(sector_11_indices_array)
 weight_matrix_direct_imf_covreg = np.zeros_like(sector_11_indices_array)
@@ -193,9 +224,9 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
         # ssa
         ssa_components = CovRegpy_ssa(np.asarray(price_signal[:, signal]), L=80, plot=False)[0]
-        plt.plot(imfs[-1, :])
-        plt.plot(ssa_components)
-        plt.show()
+        # plt.plot(imfs[-1, :])
+        # plt.plot(ssa_components)
+        # plt.show()
         try:
             x_ssa = np.vstack((x_ssa, ssa_components))
         except:
@@ -474,85 +505,116 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 
     for time_increment in range(np.shape(x_if[:int(assets * 3), :])[1]):
 
-        if len(X_mdlp_cut_points[time_increment]) == 2 and time_increment == 28:
-
-            point = 0
-
-            fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(6, 4))
-            plt.suptitle('Minimum Description Length Binning Example')
-            ax1.spines['bottom'].set_visible(False)
-            ax1.tick_params(axis='x', which='both', bottom=False)
-            ax2.spines['top'].set_visible(False)
-
-            bs = 0.08
-            ts = 0.1
-
-            ax2.set_ylim(0, bs)
-            ax1.set_ylim(ts, 0.6)
-
-            ax1.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red', label='IF 3')
-            ax1.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green', label='IF 2')
-            ax1.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue', label='IF 1')
-
-            ax2.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red')
-            ax2.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green')
-            ax2.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue')
-
-            print(x_if[:, time_increment][y == 1][:assets])
-            print(x_if[:, time_increment][y == 2][:assets])
-            print(x_if[:, time_increment][y == 3][:assets])
-
-            for tick in ax2.get_xticklabels():
-                tick.set_rotation(0)
-            d = .015
-            kwargs = dict(transform=ax1.transAxes, color='k', clip_on=False)
-            ax1.plot((-d, +d), (-d, +d), **kwargs)
-            ax1.plot((1 - d, 1 + d), (-d, +d), **kwargs)
-            kwargs.update(transform=ax2.transAxes)
-            ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)
-            ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
-
-            # for b1, b2 in zip(bars1, bars2):
-            #     posx = b2.get_x() + b2.get_width() / 2.
-            #     if b2.get_height() > bs:
-            #         ax2.plot((posx - 3 * d, posx + 3 * d), (1 - d, 1 + d), color='k', clip_on=False,
-            #                  transform=ax2.get_xaxis_transform())
-            #     if b1.get_height() > ts:
-            #         ax1.plot((posx - 3 * d, posx + 3 * d), (- d, + d), color='k', clip_on=False,
-            #                  transform=ax1.get_xaxis_transform())
-            ax2.set_yticks(np.arange(0.00, 0.09, 0.01))
-            ax2.set_yticklabels([0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08], fontsize=8)
-            ax1.set_title('Cut-Points at Time Increment: {}'.format(time_increment), fontsize=10)
-            ax1.set_yticks(np.arange(0.1, 0.7, 0.1))
-            ax1.set_yticklabels([0.1, 0.2, 0.3, 0.4, 0.5, 0.6], fontsize=8)
-            ax2.set_xticks([0])
-            ax2.set_xticklabels([''])
-            ax1.set_ylabel('Instantanoues frequency', fontsize=8)
-            ax2.set_ylabel('Instantanoues frequency', fontsize=8)
-            for cut_point in X_mdlp_cut_points[time_increment]:
-                # plt.title('Cut-points time time point: {}'.format(time_increment))
-                ax2.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--')
-                ax1.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--', label='Cut-point {}-{}'.format(point, int(point + 1)))
-                cut_point_storage[point, time_increment] = cut_point
-                point += 1
-            ax1.legend(loc='upper left', fontsize=8)
-            plt.savefig('../experimental_figures/cut_point_time_point.png')
-            plt.show()
-
-            # plt.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red')
-            # plt.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green')
-            # plt.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue')
-
-            point = 0
-
-            # for cut_point in X_mdlp_cut_points[time_increment]:
-            #     plt.title('Cut-points time time point: {}'.format(time_increment))
-            #     plt.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--')
-            #     cut_point_storage[point, time_increment] = cut_point
-            #     point += 1
-            #
-            # # plt.ylim(0.00, 0.08)
-            # plt.show()
+        # if len(X_mdlp_cut_points[time_increment]) == 2 and time_increment == 28:
+        #
+        #     point = 0
+        #
+        #     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(6, 4))
+        #     plt.suptitle('Minimum Description Length Binning Example')
+        #     ax1.spines['bottom'].set_visible(False)
+        #     ax1.tick_params(axis='x', which='both', bottom=False)
+        #     ax2.spines['top'].set_visible(False)
+        #
+        #     bs = 0.08
+        #     ts = 0.1
+        #
+        #     ax2.set_ylim(0, bs)
+        #     ax1.set_ylim(ts, 0.6)
+        #
+        #     # ax1.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red', label='IF 3')
+        #     # ax1.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green', label='IF 2')
+        #     # ax1.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue', label='IF 1')
+        #
+        #     # ax2.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red')
+        #     # ax2.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green')
+        #     # ax2.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue')
+        #
+        #     print(x_if[:, time_increment][y == 1][:assets])
+        #     print(x_if[:, time_increment][y == 2][:assets])
+        #     print(x_if[:, time_increment][y == 3][:assets])
+        #
+        #     for tick in ax2.get_xticklabels():
+        #         tick.set_rotation(0)
+        #     d = .015
+        #     kwargs = dict(transform=ax1.transAxes, color='k', clip_on=False)
+        #     ax1.plot((-d, +d), (-d, +d), **kwargs)
+        #     ax1.plot((1 - d, 1 + d), (-d, +d), **kwargs)
+        #     kwargs.update(transform=ax2.transAxes)
+        #     ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)
+        #     ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
+        #
+        #     # for b1, b2 in zip(bars1, bars2):
+        #     #     posx = b2.get_x() + b2.get_width() / 2.
+        #     #     if b2.get_height() > bs:
+        #     #         ax2.plot((posx - 3 * d, posx + 3 * d), (1 - d, 1 + d), color='k', clip_on=False,
+        #     #                  transform=ax2.get_xaxis_transform())
+        #     #     if b1.get_height() > ts:
+        #     #         ax1.plot((posx - 3 * d, posx + 3 * d), (- d, + d), color='k', clip_on=False,
+        #     #                  transform=ax1.get_xaxis_transform())
+        #     ax2.set_yticks(np.arange(0.00, 0.09, 0.01))
+        #     ax2.set_yticklabels([0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08], fontsize=8)
+        #     ax1.set_title('Cut-Points at Time Increment: {}'.format(time_increment), fontsize=10)
+        #     ax1.set_yticks(np.arange(0.1, 0.7, 0.1))
+        #     ax1.set_yticklabels([0.1, 0.2, 0.3, 0.4, 0.5, 0.6], fontsize=8)
+        #     ax2.set_xticks([0])
+        #     ax2.set_xticklabels([''])
+        #     ax1.set_ylabel('Instantanoues frequency', fontsize=8)
+        #     ax2.set_ylabel('Instantanoues frequency', fontsize=8)
+        #     for cut_point in X_mdlp_cut_points[time_increment]:
+        #         # plt.title('Cut-points time time point: {}'.format(time_increment))
+        #         ax2.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--')
+        #         ax1.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--', label='Cut-point {}-{}'.format(point, int(point + 1)))
+        #         cut_point_storage[point, time_increment] = cut_point
+        #         point += 1
+        #     ax1.legend(loc='upper left', fontsize=8)
+        #     plt.savefig('../experimental_figures/cut_point_time_point.png')
+        #     plt.show()
+        #
+        #     point = 0
+        #
+        #     fig = plt.figure(1)
+        #     fig.set_size_inches(18, 12)
+        #     plt.title('Minimum Description Length Binning Example', fontsize=32, pad=10.0)
+        #
+        #     plt.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red',
+        #                 label='IF 3', s=200)
+        #     plt.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green',
+        #                 label='IF 2', s=200)
+        #     plt.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue',
+        #                 label='IF 1', s=200)
+        #
+        #     plt.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red', s=200)
+        #     plt.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green', s=200)
+        #     plt.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue', s=200)
+        #
+        #     plt.ylabel('Instantanoues frequency', fontsize=20)
+        #     plt.xticks([0], [' '])
+        #     plt.yticks([0.0, 0.1, 0.2, 0.3, 0.4, 0.5], fontsize=16)
+        #     for cut_point in X_mdlp_cut_points[time_increment]:
+        #         # plt.title('Cut-points time time point: {}'.format(time_increment))
+        #         plt.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--', linewidth=5)
+        #         plt.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--',
+        #                  label='Cut-point {}-{}'.format(point, int(point + 1)), linewidth=5)
+        #         cut_point_storage[point, time_increment] = cut_point
+        #         point += 1
+        #     plt.legend(loc='upper left', fontsize=16)
+        #     plt.savefig('../experimental_figures/cut_point_time_point_example.pdf')
+        #     plt.show()
+        #
+        #     # plt.scatter(np.zeros(33)[y == 1][:assets], x_if[:, time_increment][y == 1][:assets], c='red')
+        #     # plt.scatter(np.zeros(33)[y == 2][:assets], x_if[:, time_increment][y == 2][:assets], c='green')
+        #     # plt.scatter(np.zeros(33)[y == 3][:assets], x_if[:, time_increment][y == 3][:assets], c='blue')
+        #
+        #     point = 0
+        #
+        #     # for cut_point in X_mdlp_cut_points[time_increment]:
+        #     #     plt.title('Cut-points time time point: {}'.format(time_increment))
+        #     #     plt.plot(np.linspace(-0.5, 0.5, 100), cut_point * np.ones(100), '--')
+        #     #     cut_point_storage[point, time_increment] = cut_point
+        #     #     point += 1
+        #     #
+        #     # # plt.ylim(0.00, 0.08)
+        #     # plt.show()
 
         pass
 
@@ -833,23 +895,23 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
     variance_forecast_trend = global_obj_fun(weights_forecast_trend, monthly_covariance)
     returns_forecast_trend = sum(weights_forecast_trend * monthly_returns)
 
-    # calculate efficient frontier
-    plt.title(textwrap.fill(f'Realised Portfolio Returns versus Portfolio Variance for period from '
-                            f'1 {month_vector[int(day % 12)]} {year_vector[int((day + 12) // 12)]} to '
-                            f'{str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
-                            f'{year_vector[int(int(day + 12) // 12)]}', 57), fontsize=12)
-    ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, monthly_covariance)
-    plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier')
-    ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, variance_median_high)
-    plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='cyan', label=textwrap.fill('Efficient frontier high frequencies', 20))
-    ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, variance_median_mid)
-    plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='magenta', label=textwrap.fill('Efficient frontier mid frequencies', 20))
-    ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, variance_median_trend)
-    plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='gold', label=textwrap.fill('Efficient frontier low frequencies', 20))
-    plt.xlabel('Portfolio variance')
-    plt.legend(loc='lower right', fontsize=10)
-    plt.savefig('../figures/efficient_frontiers/Efficient_frontiers_{}'.format(int(day + 1)))
-    plt.show()
+    # # calculate efficient frontier
+    # plt.title(textwrap.fill(f'Realised Portfolio Returns versus Portfolio Variance for period from '
+    #                         f'1 {month_vector[int(day % 12)]} {year_vector[int((day + 12) // 12)]} to '
+    #                         f'{str(end_of_month_vector[int(day + 13)])} {month_vector[int(int(day + 12) % 12)]} '
+    #                         f'{year_vector[int(int(day + 12) // 12)]}', 57), fontsize=12)
+    # ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, monthly_covariance)
+    # plt.plot(ef_sd, ef_r, 'k--', label='Efficient frontier')
+    # ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, variance_median_high)
+    # plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='cyan', label=textwrap.fill('Efficient frontier high frequencies', 20))
+    # ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, variance_median_mid)
+    # plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='magenta', label=textwrap.fill('Efficient frontier mid frequencies', 20))
+    # ef_sd, ef_r = efficient_frontier(gm_w, gm_r, gm_sd, ms_w, ms_r, ms_sd, variance_median_trend)
+    # plt.plot(ef_sd[1:-1], ef_r[1:-1], '--', c='gold', label=textwrap.fill('Efficient frontier low frequencies', 20))
+    # plt.xlabel('Portfolio variance')
+    # plt.legend(loc='lower right', fontsize=10)
+    # plt.savefig('../figures/efficient_frontiers/Efficient_frontiers_{}'.format(int(day + 1)))
+    # plt.show()
 
     # calculate weights, variance, and returns - direct application ssa Covariance Regression - long only
     weights_Model_forecast_direct_ssa = equal_risk_parity_weights_long_restriction(variance_median_direct_ssa).x
@@ -906,8 +968,8 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
         gm_w
     weight_matrix_global_minimum_long[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
         gm_w_long
-    weight_matrix_maximum_sharpe_ratio[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
-        ms_w
+    # weight_matrix_maximum_sharpe_ratio[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
+    #     ms_w
     weight_matrix_maximum_sharpe_ratio_restriction[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
         msr_w
     weight_matrix_pca[end_of_month_vector_cumsum[day]:end_of_month_vector_cumsum[int(day + 1)], :] = \
@@ -949,6 +1011,19 @@ for day in range(len(end_of_month_vector_cumsum[:-int(months + 1)])):
 #     np.save(f, weight_matrix_mid)
 #     np.save(f, weight_matrix_trend)
 
+# axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_covreg_realised, label='Realised covariance', linewidth=3)
+# axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_covreg_dcc, label='DCC MGARCH', linewidth=3)
+# axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15),
+#             linewidth=3)
+# axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20),
+#             linewidth=3)
+
+with open('../S&P500_Data/benchmarks.npy', 'wb') as f:
+    np.save(f, weight_matrix_realised)
+    np.save(f, weight_matrix_dcc)
+    np.save(f, weight_matrix_global_minimum)
+    np.save(f, weight_matrix_pca)
+
 with open('../experimental_figures/extended_model_shorting.npy', 'rb') as f:
     weight_matrix_high = np.load(f)
     weight_matrix_mid = np.load(f)
@@ -974,13 +1049,14 @@ with open('../experimental_figures/extended_model_shorting.npy', 'rb') as f:
 # plot significant weights
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('High Frequency Weights', fontsize=12)
 for i in range(11):
     if i == 10:
-        plt.plot(weight_matrix_high_long[:end_of_month_vector_cumsum[48], i],
+        plt.plot(weight_matrix_high[:end_of_month_vector_cumsum[48], i],
                  label=sector_11_indices.columns[i], c='k')
     else:
-        plt.plot(weight_matrix_high_long[:end_of_month_vector_cumsum[48], i],
+        plt.plot(weight_matrix_high[:end_of_month_vector_cumsum[48], i],
                  label=sector_11_indices.columns[i])
 plt.yticks(fontsize=8)
 plt.ylabel('Weights', fontsize=10)
@@ -995,13 +1071,14 @@ plt.show()
 # plot significant weights
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Mid-Frequency Weights', fontsize=12)
 for i in range(11):
     if i == 10:
-        plt.plot(weight_matrix_mid_long[:end_of_month_vector_cumsum[48], i],
+        plt.plot(weight_matrix_mid[:end_of_month_vector_cumsum[48], i],
                  label=sector_11_indices.columns[i], c='k')
     else:
-        plt.plot(weight_matrix_mid_long[:end_of_month_vector_cumsum[48], i],
+        plt.plot(weight_matrix_mid[:end_of_month_vector_cumsum[48], i],
                  label=sector_11_indices.columns[i])
 plt.yticks(fontsize=8)
 plt.ylabel('Weights', fontsize=10)
@@ -1016,13 +1093,14 @@ plt.show()
 # plot significant weights
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Low Frequency Weights', fontsize=12)
 for i in range(11):
     if i == 10:
-        plt.plot(weight_matrix_trend_long[:end_of_month_vector_cumsum[48], i],
+        plt.plot(weight_matrix_trend[:end_of_month_vector_cumsum[48], i],
                  label=sector_11_indices.columns[i], c='k')
     else:
-        plt.plot(weight_matrix_trend_long[:end_of_month_vector_cumsum[48], i],
+        plt.plot(weight_matrix_trend[:end_of_month_vector_cumsum[48], i],
                  label=sector_11_indices.columns[i])
 plt.yticks(fontsize=8)
 plt.ylabel('Weights', fontsize=10)
@@ -1034,20 +1112,22 @@ plt.legend(loc='best', fontsize=6)
 plt.savefig('../figures/S&P 500 - 11 Sectors/emd_mdlp_trend_weights.png')
 plt.show()
 
-cumulative_returns_mdlp_high = cumulative_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
+cumulative_returns_mdlp_high = cumulative_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                                  sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
-cumulative_returns_mdlp_mid = cumulative_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+cumulative_returns_mdlp_mid = cumulative_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
                                                 sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
-cumulative_returns_mdlp_trend = cumulative_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+cumulative_returns_mdlp_trend = cumulative_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                                   sector_11_indices_array[end_of_month_vector_cumsum[12]:].T)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Cumulative Returns', fontsize=12)
 plt.plot(sp500_proxy, label='S&P 500 Proxy')
-plt.plot(cumulative_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(cumulative_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(cumulative_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(sp500_proxy_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(cumulative_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(cumulative_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(cumulative_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Cumulative Returns', fontsize=10)
 plt.xticks([0, 365, 730, 1096, 1461],
@@ -1055,8 +1135,8 @@ plt.xticks([0, 365, 730, 1096, 1461],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
 plt.show()
 
@@ -1108,16 +1188,20 @@ print(f'S&P 500 Proxy: {sp500_proxy[-1]}')
 print(f'global minimum variance {cumulative_returns_global_minimum_portfolio[-1]}')
 print(f'PCA {cumulative_returns_pca_portfolio[-1]}')
 
-# ax = plt.subplot(111)
-# plt.gcf().subplots_adjust(bottom=0.18)
-# plt.title('Cumulative Returns', fontsize=12)
-# plt.plot(cumulative_returns_covreg_realised, label='Realised covariance')
-# plt.plot(cumulative_returns_covreg_dcc, label='DCC MGARCH')
-# plt.plot(sp500_proxy, label='S&P 500 Proxy')
-# plt.plot(cumulative_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
-# plt.plot(cumulative_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+ax = plt.subplot(111)
+plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
+plt.title('Cumulative Returns', fontsize=12)
+plt.plot(sp500_proxy, label='S&P 500 Proxy')
+plt.plot(sp500_proxy_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(cumulative_returns_covreg_realised, label='Realised covariance')
+plt.plot(cumulative_returns_covreg_dcc, label='DCC MGARCH')
+plt.plot(cumulative_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
+plt.plot(cumulative_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
+# plt.plot(cumulative_returns_maximum_sharpe_ratio_portfolio_restriction,
+#          label=textwrap.fill('Maximum Sharpe ratio', 15))
 # plt.plot(cumulative_returns_covreg_high,
-#          label=textwrap.fill('High frequency (long restriction)', 19))
+#          label=textwrap.fill('High frequency IMFs', 19))
 # plt.plot(cumulative_returns_covreg_high_restriction,
 #          label=textwrap.fill('High frequency (summation restriction)', 19))
 # plt.plot(cumulative_returns_covreg_imf_direct_portfolio,
@@ -1128,38 +1212,80 @@ print(f'PCA {cumulative_returns_pca_portfolio[-1]}')
 #          label=textwrap.fill('Low frequency (long restriction)', 19))
 # plt.plot(cumulative_returns_covreg_ssa_direct_portfolio_not_long,
 #          label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
-# plt.yticks(fontsize=8)
-# plt.ylabel('Cumulative Returns', fontsize=10)
-# plt.xticks([0, 365, 730, 1096, 1461],
-#            ['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
-#            fontsize=8, rotation=-30)
-# plt.xlabel('Days', fontsize=10)
-# box_0 = ax.get_position()
-# ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
-# # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
-# plt.show()
+plt.yticks(fontsize=8)
+plt.ylabel('Cumulative Returns', fontsize=10)
+plt.xticks([0, 365, 730, 1096, 1461],
+           ['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+           fontsize=8, rotation=-30)
+plt.xlabel('Days', fontsize=10)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Cumulative Returns', fontsize=36, pad=20)
+axs[0].plot(np.arange(0, 1462, 1), sp500_proxy, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(0, 1462, 1), sp500_proxy_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(0, 1462, 1), cumulative_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(0, 1462, 1), cumulative_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(0, 1462, 1), cumulative_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_ylabel('Cumulative Returns', fontsize=30)
+axs[0].set_xticks([0, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([0.8, 1.0, 1.2, 1.4, 1.6])
+axs[0].set_yticklabels([0.8, 1.0, 1.2, 1.4, 1.6], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='upper left', fontsize=20)
+axs[0].set_ylim(0.6, 1.8)
+axs[1].set_title('Cumulative Returns', fontsize=36, pad=20)
+axs[1].plot(np.arange(0, 1462, 1), sp500_proxy, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(0, 1462, 1), sp500_proxy_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_covreg_realised, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_covreg_dcc, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15),
+            linewidth=3)
+axs[1].plot(np.arange(0, 1462, 1), cumulative_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20),
+            linewidth=3)
+axs[1].set_xticks([0, 365, 730, 1096, 1461],
+                  ['31-12-2017', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                  fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='upper left', fontsize=20)
+axs[0].set_ylim(0.6, 1.8)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_cumulative_returns_joint_plot.pdf')
+plt.show()
 
 # measure performances - mean returns
 window = 30
 
-mean_returns_mdlp_high = mean_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
-                                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
-mean_returns_mdlp_mid = mean_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+mean_returns_mdlp_high = mean_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
-mean_returns_mdlp_trend = mean_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+mean_returns_mdlp_mid = mean_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
+                                    sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+mean_returns_mdlp_trend = mean_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 mean_returns_sp500 = \
     mean_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+mean_returns_sp500_001 = \
+    mean_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Mean Returns', fontsize=12)
 plt.plot(mean_returns_sp500, label='S&P 500 Proxy')
-plt.plot(mean_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(mean_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(mean_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(mean_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(mean_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(mean_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(mean_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Mean Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1167,8 +1293,8 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='lower left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
 plt.show()
 
@@ -1179,7 +1305,7 @@ mean_returns_global_minimum_portfolio_long = \
     mean_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 mean_returns_maximum_sharpe_ratio_portfolio = \
-    mean_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+    mean_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 mean_returns_pca_portfolio = \
     mean_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
@@ -1213,51 +1339,96 @@ mean_returns_covreg_imf_direct_high_not_long = \
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Mean Returns', fontsize=12)
+plt.plot(mean_returns_sp500, label='S&P 500 Proxy')
+plt.plot(mean_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
 plt.plot(mean_returns_realised_covariance, label='Realised covariance')
 plt.plot(mean_returns_mgarch, label='DCC MGARCH')
-plt.plot(mean_returns_sp500, label='S&P 500 Proxy')
 plt.plot(mean_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(mean_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(mean_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(mean_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(mean_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(mean_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(mean_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(mean_returns_covreg_ssa_direct_portfolio_not_long, label=textwrap.fill('Low frequency (summation restriction)', 19),
-         c='k')
+# plt.plot(mean_returns_maximum_sharpe_ratio_portfolio,  label=textwrap.fill('Maximum Sharpe ratio', 15))
+# plt.plot(mean_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(mean_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(mean_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(mean_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(mean_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(mean_returns_covreg_ssa_direct_portfolio_not_long, label=textwrap.fill('Low frequency (summation restriction)', 19),
+#          c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Mean Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
            ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
+plt.ylim(-0.018, 0.011)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='lower left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Mean Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), mean_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), mean_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), mean_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), mean_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), mean_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([-0.015, -0.010, -0.005, 0, 0.005, 0.010])
+axs[0].set_yticklabels(['-0.015', '-0.010', '-0.005', '0.000', '0.005', '0.010'], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='upper left', fontsize=20)
+axs[1].set_title('Mean Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), mean_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), mean_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), mean_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), mean_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), mean_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 30), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), mean_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 20),
+            linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='lower left', fontsize=20)
+axs[0].set_ylim(-0.016, 0.011)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_mean_returns_joint_plot.pdf')
 plt.show()
 
 # measure performances - variance returns
 window = 30
 
-variance_returns_mdlp_high = variance_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
+variance_returns_mdlp_high = variance_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                              sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
-variance_returns_mdlp_mid = variance_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+variance_returns_mdlp_mid = variance_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
                                             sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
-variance_returns_mdlp_trend = variance_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+variance_returns_mdlp_trend = variance_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                               sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 
 variance_returns_sp500 = \
     variance_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+variance_returns_sp500_001 = \
+    variance_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Variance Returns', fontsize=12)
 plt.plot(variance_returns_sp500, label='S&P 500 Proxy')
-plt.plot(variance_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(variance_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(variance_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(variance_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(variance_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(variance_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(variance_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Variance Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1265,8 +1436,8 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
 plt.show()
 
@@ -1279,7 +1450,7 @@ variance_returns_global_minimum_portfolio_long = \
     variance_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 variance_returns_maximum_sharpe_ratio_portfolio = \
-    variance_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+    variance_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 variance_returns_pca_portfolio = \
     variance_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
@@ -1315,19 +1486,21 @@ variance_returns_covreg_imf_direct_high_not_long = \
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Variance of Returns', fontsize=12)
+plt.plot(variance_returns_sp500, label='S&P 500 Proxy')
+plt.plot(variance_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
 plt.plot(variance_returns_realised_covariance, label='Realised covariance')
 plt.plot(variance_returns_mgarch, label='DCC MGARCH')
-plt.plot(variance_returns_sp500, label='S&P 500 Proxy')
 plt.plot(variance_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(variance_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(variance_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(variance_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(variance_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(variance_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(variance_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(variance_returns_covreg_ssa_direct_portfolio_not_long, label=textwrap.fill('Low frequency (summation restriction)', 19),
-         c='k')
+# plt.plot(variance_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(variance_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(variance_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(variance_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(variance_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(variance_returns_covreg_ssa_direct_portfolio_not_long, label=textwrap.fill('Low frequency (summation restriction)', 19),
+#          c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Variance', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1335,34 +1508,77 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Variance Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), variance_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), variance_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), variance_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), variance_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), variance_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([0, 0.00025, 0.0005, 0.00075, 0.00100,
+                   0.00125, 0.0015, 0.00175, 0.00200])
+axs[0].set_yticklabels(['0.00000', '0.00025', '0.00050', '0.00075', '0.00100',
+                        '0.00125', '0.00150', '0.00175', '0.00200'], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='upper left', fontsize=20)
+axs[0].set_ylim(-0.0002, 0.0022)
+axs[1].set_title('Variance Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), variance_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), variance_returns_sp500_001,
+            label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), variance_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), variance_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), variance_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 15), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), variance_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 20), linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='upper left', fontsize=20)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_variance_returns_joint_plot.pdf')
 plt.show()
 
 # measure performances - value-at-risk returns
 window = 30
 
-value_at_risk_returns_mdlp_high = value_at_risk_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
+value_at_risk_returns_mdlp_high = value_at_risk_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                                        sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                        window)
-value_at_risk_returns_mdlp_mid = value_at_risk_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+value_at_risk_returns_mdlp_mid = value_at_risk_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
                                                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                       window)
-value_at_risk_returns_mdlp_trend = value_at_risk_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+value_at_risk_returns_mdlp_trend = value_at_risk_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                                         sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                         window)
 
 value_at_risk_returns_sp500 = \
     value_at_risk_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+value_at_risk_returns_sp500_001 = \
+    value_at_risk_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Value-at-Risk Returns', fontsize=12)
 plt.plot(value_at_risk_returns_sp500, label='S&P 500 Proxy')
-plt.plot(value_at_risk_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(value_at_risk_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(value_at_risk_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(value_at_risk_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(value_at_risk_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(value_at_risk_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(value_at_risk_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Value-at-Risk Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1370,8 +1586,8 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='lower left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
 plt.show()
 
@@ -1384,7 +1600,7 @@ value_at_risk_returns_global_minimum_portfolio_long = \
     value_at_risk_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 value_at_risk_returns_maximum_sharpe_ratio_portfolio = \
-    value_at_risk_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+    value_at_risk_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 value_at_risk_returns_pca_portfolio = \
     value_at_risk_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
@@ -1420,19 +1636,21 @@ value_at_risk_returns_covreg_imf_direct_high_not_long = \
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Value-at-Risk Returns', fontsize=12)
+plt.plot(value_at_risk_returns_sp500, label='S&P 500 Proxy')
+plt.plot(value_at_risk_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
 plt.plot(value_at_risk_returns_realised_covariance, label='Realised covariance')
 plt.plot(value_at_risk_returns_mgarch, label='DCC MGARCH')
-plt.plot(value_at_risk_returns_sp500, label='S&P 500 Proxy')
 plt.plot(value_at_risk_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(value_at_risk_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(value_at_risk_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(value_at_risk_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio_not_long,
-         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
+# plt.plot(value_at_risk_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(value_at_risk_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(value_at_risk_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(value_at_risk_returns_covreg_ssa_direct_portfolio_not_long,
+#          label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Mean Value-at-Risk', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1440,34 +1658,76 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='lower left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Value-at-Risk Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), value_at_risk_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), value_at_risk_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), value_at_risk_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), value_at_risk_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), value_at_risk_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([0.00, -0.01, -0.02, -0.03, -0.04, -0.05, -0.06, -0.07][::-1])
+axs[0].set_yticklabels(['0.00', '-0.01', '-0.02', '-0.03', '-0.04', '-0.05', '-0.06', '-0.07'][::-1], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='lower left', fontsize=20)
+axs[0].set_ylim(-0.075, 0.005)
+axs[1].set_title('Value-at-Risk Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), value_at_risk_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), value_at_risk_returns_sp500_001,
+            label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), value_at_risk_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), value_at_risk_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), value_at_risk_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 15), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), value_at_risk_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 20),
+            linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='lower left', fontsize=20)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_value_at_risk_returns_joint_plot.pdf')
 plt.show()
 
 # measure performances - maximum draw down returns
 window = 30
 
-max_draw_down_returns_mdlp_high = max_draw_down_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
+max_draw_down_returns_mdlp_high = max_draw_down_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                                        sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                        window)
-max_draw_down_returns_mdlp_mid = max_draw_down_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+max_draw_down_returns_mdlp_mid = max_draw_down_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
                                                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                       window)
-max_draw_down_returns_mdlp_trend = max_draw_down_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+max_draw_down_returns_mdlp_trend = max_draw_down_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                                         sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                         window)
 
 max_draw_down_returns_sp500 = \
     max_draw_down_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+max_draw_down_returns_sp500_001 = \
+    max_draw_down_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Maximum Draw Down Returns', fontsize=12)
 plt.plot(max_draw_down_returns_sp500, label='S&P 500 Proxy')
-plt.plot(max_draw_down_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(max_draw_down_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(max_draw_down_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(max_draw_down_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(max_draw_down_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(max_draw_down_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(max_draw_down_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Maximum Draw Down Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1475,8 +1735,8 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='lower left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
 plt.show()
 
@@ -1489,7 +1749,7 @@ max_draw_down_returns_global_minimum_portfolio_long = \
     max_draw_down_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 max_draw_down_returns_maximum_sharpe_ratio_portfolio = \
-    max_draw_down_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+    max_draw_down_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 max_draw_down_returns_pca_portfolio = \
     max_draw_down_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
@@ -1525,19 +1785,21 @@ max_draw_down_returns_covreg_imf_direct_high_not_long = \
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Maximum Draw Down Returns', fontsize=12)
+plt.plot(max_draw_down_returns_sp500, label='S&P 500 Proxy')
+plt.plot(max_draw_down_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
 plt.plot(max_draw_down_returns_realised_covariance, label='Realised Covariance')
 plt.plot(max_draw_down_returns_mgarch, label='DCC MGARCH')
-plt.plot(max_draw_down_returns_sp500, label='S&P 500 Proxy')
 plt.plot(max_draw_down_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(max_draw_down_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(max_draw_down_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(max_draw_down_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio_not_long,
-         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
+# plt.plot(max_draw_down_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(max_draw_down_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(max_draw_down_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(max_draw_down_returns_covreg_ssa_direct_portfolio_not_long,
+#          label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Max Draw Down', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1545,34 +1807,76 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='lower left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Maximum Drawdown Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), max_draw_down_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), max_draw_down_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), max_draw_down_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), max_draw_down_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), max_draw_down_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0][::-1])
+axs[0].set_yticklabels([-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0][::-1], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='lower left', fontsize=20)
+axs[0].set_ylim(-8.5, -0.5)
+axs[1].set_title('Maximum Drawdown Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), max_draw_down_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), max_draw_down_returns_sp500_001,
+            label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), max_draw_down_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), max_draw_down_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), max_draw_down_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 30), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), max_draw_down_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 40),
+            linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='lower left', fontsize=20)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_max_draw_down_returns_joint_plot.pdf')
 plt.show()
 
 # measure performances - omega ratio returns
 window = 30
 
-omega_ratio_returns_mdlp_high = omega_ratio_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
+omega_ratio_returns_mdlp_high = omega_ratio_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                                    sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                    window)
-omega_ratio_returns_mdlp_mid = omega_ratio_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+omega_ratio_returns_mdlp_mid = omega_ratio_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
                                                   sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                   window)
-omega_ratio_returns_mdlp_trend = omega_ratio_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+omega_ratio_returns_mdlp_trend = omega_ratio_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                                     sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                     window)
 
 omega_ratio_returns_sp500 = \
     omega_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+omega_ratio_returns_sp500_001 = \
+    omega_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Omega Ratio Returns', fontsize=12)
 plt.plot(omega_ratio_returns_sp500, label='S&P 500 Proxy')
-plt.plot(omega_ratio_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(omega_ratio_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(omega_ratio_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(omega_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(omega_ratio_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(omega_ratio_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(omega_ratio_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Omega Ratio Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1580,8 +1884,8 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
 plt.show()
 
@@ -1594,7 +1898,7 @@ omega_ratio_returns_global_minimum_portfolio_long = \
     omega_ratio_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 omega_ratio_returns_maximum_sharpe_ratio_portfolio = \
-    omega_ratio_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+    omega_ratio_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 omega_ratio_returns_pca_portfolio = \
     omega_ratio_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
@@ -1631,18 +1935,20 @@ omega_ratio_returns_covreg_imf_direct_high_not_long = \
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
 plt.title('Omega Ratio Returns', fontsize=12)
+plt.gcf().set_size_inches(12, 8)
+plt.plot(omega_ratio_returns_sp500, label='S&P 500 Proxy')
+plt.plot(omega_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
 plt.plot(omega_ratio_returns_realised_covariance, label='Realised covariance')
 plt.plot(omega_ratio_returns_mgarch, label='DCC MGARCH')
-plt.plot(omega_ratio_returns_sp500, label='S&P 500 Proxy')
 plt.plot(omega_ratio_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(omega_ratio_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(omega_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(omega_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio_not_long,
-         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
+# plt.plot(omega_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(omega_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(omega_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(omega_ratio_returns_covreg_ssa_direct_portfolio_not_long,
+#          label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Omega Ratio', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1650,34 +1956,76 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Omega Ratio Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), omega_ratio_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), omega_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), omega_ratio_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), omega_ratio_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), omega_ratio_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
+axs[0].set_yticklabels([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='upper left', fontsize=20)
+axs[0].set_ylim(-0.25, 10.25)
+axs[1].set_title('Omega Ratio Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), omega_ratio_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), omega_ratio_returns_sp500_001,
+            label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), omega_ratio_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), omega_ratio_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), omega_ratio_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 15), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), omega_ratio_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 20),
+            linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='upper right', fontsize=20)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_omega_ratio_returns_joint_plot.pdf')
 plt.show()
 
 # measure performances - Sharpe ratio returns
 window = 30
 
-sharpe_ratio_returns_mdlp_high = sharpe_ratio_return(weight_matrix_high_long[:end_of_month_vector_cumsum[48]].T,
+sharpe_ratio_returns_mdlp_high = sharpe_ratio_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
                                                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                      window)
-sharpe_ratio_returns_mdlp_mid = sharpe_ratio_return(weight_matrix_mid_long[:end_of_month_vector_cumsum[48]].T,
+sharpe_ratio_returns_mdlp_mid = sharpe_ratio_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
                                                     sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                     window)
-sharpe_ratio_returns_mdlp_trend = sharpe_ratio_return(weight_matrix_trend_long[:end_of_month_vector_cumsum[48]].T,
+sharpe_ratio_returns_mdlp_trend = sharpe_ratio_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
                                                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
                                                       window)
 
 sharpe_ratio_returns_sp500 = \
     sharpe_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+sharpe_ratio_returns_sp500_001 = \
+    sharpe_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Sharpe Ratio Returns', fontsize=12)
 plt.plot(sharpe_ratio_returns_sp500, label='S&P 500 Proxy')
-plt.plot(sharpe_ratio_returns_mdlp_high, label='High frequency MDLP')
-plt.plot(sharpe_ratio_returns_mdlp_mid, label='Mid-frequency MDLP')
-plt.plot(sharpe_ratio_returns_mdlp_trend, label='Low frequency MDLP')
+plt.plot(sharpe_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(sharpe_ratio_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(sharpe_ratio_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(sharpe_ratio_returns_mdlp_trend, label='Low frequency IMFs', color='green')
 plt.yticks(fontsize=8)
 plt.ylabel('Sharpe Ratio Daily Returns', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1685,8 +2033,8 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
 plt.show()
 
@@ -1699,7 +2047,7 @@ sharpe_ratio_returns_global_minimum_portfolio_long = \
     sharpe_ratio_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sharpe_ratio_returns_maximum_sharpe_ratio_portfolio = \
-    sharpe_ratio_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
+    sharpe_ratio_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sharpe_ratio_returns_pca_portfolio = \
     sharpe_ratio_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
@@ -1735,19 +2083,21 @@ sharpe_ratio_returns_covreg_imf_direct_high_not_long = \
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Sharpe Ratio Returns', fontsize=12)
+plt.plot(sharpe_ratio_returns_sp500, label='S&P 500 Proxy')
+plt.plot(sharpe_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
 plt.plot(sharpe_ratio_returns_realised_covariance, label='Realised covariance')
 plt.plot(sharpe_ratio_returns_mgarch, label='DCC MGARCH')
-plt.plot(sharpe_ratio_returns_sp500, label='S&P 500 Proxy')
 plt.plot(sharpe_ratio_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(sharpe_ratio_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(sharpe_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(sharpe_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio_not_long,
-         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
+# plt.plot(sharpe_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(sharpe_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(sharpe_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(sharpe_ratio_returns_covreg_ssa_direct_portfolio_not_long,
+#          label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Sharpe Ratio', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1755,8 +2105,85 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
+# plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Sharpe Ratio Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([-0.4, -0.2, 0.0, 0.2, 0.4, 0.6])
+axs[0].set_yticklabels(['-0.4', '-0.2', '0.0', '0.2', '0.4', '0.6'], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='lower left', fontsize=20)
+axs[0].set_ylim(-0.55, 0.75)
+axs[1].set_title('Sharpe Ratio Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_sp500_001,
+            label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 30), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sharpe_ratio_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 40),
+            linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='best', fontsize=20)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns_joint_plot.pdf')
+plt.show()
+
+# measure performances - Sharpe ratio returns
+window = 30
+
+sortino_ratio_returns_mdlp_high = sortino_ratio_return(weight_matrix_high[:end_of_month_vector_cumsum[48]].T,
+                                                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
+                                                       window)
+sortino_ratio_returns_mdlp_mid = sortino_ratio_return(weight_matrix_mid[:end_of_month_vector_cumsum[48]].T,
+                                                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
+                                                      window)
+sortino_ratio_returns_mdlp_trend = sortino_ratio_return(weight_matrix_trend[:end_of_month_vector_cumsum[48]].T,
+                                                        sector_11_indices_array[end_of_month_vector_cumsum[12]:].T,
+                                                        window)
+
+sortino_ratio_returns_sp500 = \
+    sortino_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns.reshape(1, -1), window)
+sortino_ratio_returns_sp500_001 = \
+    sortino_ratio_return(np.ones_like(sp500_returns.reshape(1, -1)), sp500_returns_001.reshape(1, -1), window)
+
+ax = plt.subplot(111)
+plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
+plt.title('Sortino Ratio Returns', fontsize=12)
+plt.plot(sortino_ratio_returns_sp500, label='S&P 500 Proxy')
+plt.plot(sortino_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 15))
+plt.plot(sortino_ratio_returns_mdlp_high, label='High frequency IMFs', color='red')
+plt.plot(sortino_ratio_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold')
+plt.plot(sortino_ratio_returns_mdlp_trend, label='Low frequency IMFs', color='green')
+plt.yticks(fontsize=8)
+plt.ylabel('Sharpe Ratio Daily Returns', fontsize=10)
+plt.xticks([0, 334, 699, 1065, 1430],
+           ['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+           fontsize=8, rotation=-30)
+plt.xlabel('Days', fontsize=10)
+box_0 = ax.get_position()
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sharpe_ratio_returns.png')
 plt.show()
 
@@ -1769,8 +2196,8 @@ sortino_ratio_returns_global_minimum_portfolio_long = \
     sortino_ratio_return(weight_matrix_global_minimum_long[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sortino_ratio_returns_maximum_sharpe_ratio_portfolio = \
-    sortino_ratio_return(weight_matrix_maximum_sharpe_ratio[:end_of_month_vector_cumsum[48]].T,
-                      sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
+    sortino_ratio_return(weight_matrix_maximum_sharpe_ratio_restriction[:end_of_month_vector_cumsum[48]].T,
+                         sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
 sortino_ratio_returns_pca_portfolio = \
     sortino_ratio_return(weight_matrix_pca[:end_of_month_vector_cumsum[48]].T,
                       sector_11_indices_array[end_of_month_vector_cumsum[12]:].T, window)
@@ -1805,19 +2232,21 @@ sortino_ratio_returns_covreg_imf_direct_high_not_long = \
 
 ax = plt.subplot(111)
 plt.gcf().subplots_adjust(bottom=0.18)
+plt.gcf().set_size_inches(12, 8)
 plt.title('Sortino Ratio Returns', fontsize=12)
+plt.plot(sortino_ratio_returns_sp500, label='S&P 500 Proxy')
+plt.plot(sortino_ratio_returns_sp500, label='S&P 500 Proxy')
 plt.plot(sortino_ratio_returns_realised_covariance, label='Realised covariance')
 plt.plot(sortino_ratio_returns_mgarch, label='DCC MGARCH')
-plt.plot(sortino_ratio_returns_sp500, label='S&P 500 Proxy')
 plt.plot(sortino_ratio_returns_global_minimum_portfolio, label=textwrap.fill('Global minimum variance', 15))
 plt.plot(sortino_ratio_returns_pca_portfolio, label=textwrap.fill('Principle portfolio with 3 components', 20))
-plt.plot(sortino_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
-plt.plot(sortino_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
-plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
-plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
-plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
-plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio_not_long,
-         label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
+# plt.plot(sortino_ratio_returns_covreg_imf_direct_high, label=textwrap.fill('High frequency (long restriction)', 19))
+# plt.plot(sortino_ratio_returns_covreg_imf_direct_high_not_long, label=textwrap.fill('High frequency (summation restriction)', 19))
+# plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio, label=textwrap.fill('All frequencies (long restriction)', 19))
+# plt.plot(sortino_ratio_returns_covreg_imf_direct_portfolio_not_long, label=textwrap.fill('All frequencies (summation restriction)', 19))
+# plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio, label=textwrap.fill('Low frequency (long restriction)', 19))
+# plt.plot(sortino_ratio_returns_covreg_ssa_direct_portfolio_not_long,
+#          label=textwrap.fill('Low frequency (summation restriction)', 19), c='k')
 plt.yticks(fontsize=8)
 plt.ylabel('Sortino Ratio', fontsize=10)
 plt.xticks([0, 334, 699, 1065, 1430],
@@ -1825,9 +2254,47 @@ plt.xticks([0, 334, 699, 1065, 1430],
            fontsize=8, rotation=-30)
 plt.xlabel('Days', fontsize=10)
 box_0 = ax.get_position()
-ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 0.84, box_0.height])
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
+ax.set_position([box_0.x0 - 0.04, box_0.y0, box_0.width * 1.04, box_0.height])
+ax.legend(loc='upper left', fontsize=8)
 # plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns.png')
+plt.show()
+
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(32, 16))
+axs[0].set_title('Sortino Ratio Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[0].plot(np.arange(30, 1462, 1), sortino_ratio_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sortino_ratio_returns_sp500_001, label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sortino_ratio_returns_mdlp_high, label='High frequency IMFs', color='red', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sortino_ratio_returns_mdlp_mid, label='Mid-frequency IMFs', color='gold', linewidth=3)
+axs[0].plot(np.arange(30, 1462, 1), sortino_ratio_returns_mdlp_trend, label='Low frequency IMFs', color='green', linewidth=3)
+axs[0].set_xticks([30, 365, 730, 1096, 1461])
+axs[0].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[0].set_xlabel('Days', fontsize=30)
+axs[0].set_yticks([0.0, 1.0, 2.0, 3.0])
+axs[0].set_yticklabels([0.0, 1.0, 2.0, 3.0], fontsize=20)
+box_0 = axs[0].get_position()
+axs[0].set_position([box_0.x0 - 0.075, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[0].legend(loc='upper left', fontsize=20)
+axs[0].set_ylim(-0.9, 3.9)
+axs[1].set_title('Sortino Ratio Returns - 30 Day Rolling Window', fontsize=36, pad=20)
+axs[1].plot(np.arange(30, 1462, 1), sortino_ratio_returns_sp500, label='S&P 500 Proxy', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sortino_ratio_returns_sp500_001,
+            label=textwrap.fill('S&P 500 Proxy with 0.01% charge', 17), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sortino_ratio_returns_realised_covariance, label='Realised covariance', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sortino_ratio_returns_mgarch, label='DCC MGARCH', linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sortino_ratio_returns_global_minimum_portfolio,
+            label=textwrap.fill('Global minimum variance', 15), linewidth=3)
+axs[1].plot(np.arange(30, 1462, 1), sortino_ratio_returns_pca_portfolio,
+            label=textwrap.fill('Principle portfolio with 3 components', 20),
+            linewidth=3)
+axs[1].set_xticks([30, 365, 730, 1096, 1461])
+axs[1].set_xticklabels(['30-01-2018', '31-12-2018', '31-12-2019', '31-12-2020', '31-12-2021'],
+                       fontsize=20, rotation=-30)
+axs[1].set_xlabel('Days', fontsize=30)
+box_0 = axs[1].get_position()
+axs[1].set_position([box_0.x0 - 0.02, box_0.y0 + 0.02, box_0.width * 1.24, box_0.height])
+axs[1].legend(loc='upper right', fontsize=20)
+plt.savefig('../figures/S&P 500 - 11 Sectors/Sector_11_indices_sortino_ratio_returns_joint_plot.pdf')
 plt.show()
 
 # relationship with short limit
