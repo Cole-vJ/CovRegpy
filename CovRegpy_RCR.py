@@ -327,7 +327,7 @@ def gamma_v_m_error(errors, x, Psi, B):
             const = np.matmul(np.linalg.lstsq(Psi.astype(np.float64).dot(Psi.astype(np.float64).T),
                                               Psi.astype(np.float64).dot(B.T.astype(np.float64)), rcond=None)[0], x)
 
-    v = (1 + (x * np.matmul(B, const)).sum(0)) ** (-1)
+    v = np.abs((1 + (x * np.matmul(B, const)).sum(0)) ** (-1))
     m = v * sum(errors * const)
 
     return m.astype(np.float64), v.astype(np.float64)
