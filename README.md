@@ -5,7 +5,7 @@ Regularised Covariance regression software project based on Hoff and Niu (2012).
 
 # Disclaimer
 
-Our team acknowledges the financial contributions and support of our benefactors in the production of this research. The authors, owners, and benefactors of this research reserve the right to request compensation from commercial entities seeking to use our software. All non-commercial usage of this software package is allowed with the associated permissions, limitations, and conditions as outlined in the GNU General Public License v3.0. Any commercial usage of this software without the explicit permission from all parties involved in its construction (the authors, owners, and benefactors) is strictly forbidden.
+Our team acknowledges the financial contributions and support of our  benefactors in the production of this research. The authors, owners, and benefactors of this research reserve the right to request compensation  from commercial entities seeking to use our software. All non-commercial usage of this software package is allowed with the associated  permissions, limitations, and conditions as outlined in the GNU General  Public License v3.0. For any commercial usage of this software, the  authors, owners, and benefactors of this research respectfully request  that the commercial entity in question consult the authors, owners, and  benefactors.
 
 
 
