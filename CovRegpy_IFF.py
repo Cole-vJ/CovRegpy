@@ -350,10 +350,6 @@ def CovRegpy_IFF(time, imfs, hts, ifs, type='linear', optimisation='l1', alpha=0
                 amp_forecast[0, :] * \
                 np.sin(phase + np.cumsum((freq_forecast[0, :] * np.diff(np.append(time[-1], forecast_time)))))
 
-            plt.plot(time, imfs[comp, :])
-            plt.plot(forecast_time, imf_forecast)
-            plt.show()
-
         try:
             imf_forecast_mat = np.vstack((imf_forecast_mat.reshape(comp, -1),
                                           imf_forecast.reshape(1, -1)))
