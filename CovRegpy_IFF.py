@@ -288,14 +288,14 @@ def CovRegpy_IMF_IFF(time, time_series, type='linear', optimisation='l1', alpha=
     return imf_forecast, forecast_time
 
 
-def fit_sinusoid(time, time_series, time_forecast, time_series_forecast, alpha=0.1):
+def fit_sinusoid(time, time_series, time_forecast, time_series_forecast, forecast_window):
 
     slope_1 = (time_series[:, -2] - time_series[:, -1]) / (time[-2] - time[-1])
     slope_2 = (time_series[:, -1] - time_series_forecast[:, 0]) / (time[-1] - time_forecast[0])
     slope_3 = (time_series_forecast[:, 0] - time_series_forecast[:, 1]) / (time_forecast[0] - time_forecast[1])
 
     time_series_forecast_fit = time_series_forecast - \
-        np.tile(((((slope_1 + slope_3) / 2) - slope_2) * (time[-1] - time_forecast[0])).reshape(-1, 1), (1, 50))
+        np.tile(((((slope_1 + slope_3) / 2) - slope_2) * (time[-1] - time_forecast[0])).reshape(-1, 1), (1, forecast_window))
 
     return time_forecast, time_series_forecast_fit
 
@@ -357,7 +357,7 @@ def CovRegpy_IFF(time, imfs, hts, ifs, type='linear', optimisation='l1', alpha=0
             imf_forecast_mat = imf_forecast.copy()
 
     if fit:
-        forecast_time, imf_forecast_mat = fit_sinusoid(time, imfs, forecast_time, imf_forecast_mat, alpha=0.1)
+        forecast_time, imf_forecast_mat = fit_sinusoid(time, imfs, forecast_time, imf_forecast_mat, forecast_window)
 
     return imf_forecast_mat, forecast_time
 

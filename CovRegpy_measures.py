@@ -138,6 +138,39 @@ def value_at_risk_return(weights, all_returns, window):
     return value_at_risk_returns
 
 
+def c_value_at_risk_return(weights, all_returns, window):
+    """
+    Calculate c-value-at-risk (c-VaR) of daily returns of portfolio. No assumptions of Normality.
+
+    Parameters
+    ----------
+    weights : real ndarray
+        Matrix containing weights.
+
+    all_returns : real ndarray
+        Matrix containing daily returns.
+
+    window : positive integer
+        Window over which measure is calculated.
+
+    Returns
+    -------
+    variance_returns : real ndarray
+        Vector containing value-at-risk of portfolio daily returns using specified window.
+
+    Notes
+    -----
+
+    """
+    portfolio_returns = portfolio_return(weights, all_returns)
+    c_value_at_risk_returns = np.zeros(int(np.shape(weights)[1] - window + 1))
+    for col in range(len(c_value_at_risk_returns)):
+        quant = np.quantile(portfolio_returns[col:int(col + window)], 0.05)
+        c_value_at_risk_returns[col] = np.mean(portfolio_returns[col:int(col + window)][portfolio_returns[col:int(col + window)] < quant])
+
+    return c_value_at_risk_returns
+
+
 def max_draw_down_return(weights, all_returns, window):
     """
     Calculate maximum drawdown of daily returns of portfolio.
