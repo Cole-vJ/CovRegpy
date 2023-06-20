@@ -352,6 +352,49 @@ def global_weights_long(cov):
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
+def cons_long_restrict(x, a):
+    return -(x - a)
+
+
+def cons_short_restrict(x, b):
+    return x + b
+
+
+def global_weights_short_and_long_restrict(cov, a, b):
+    """
+    Global minimum variance weight calculation with constraints on individual weight longing and shorting..
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    a : float
+        Individual long limit.
+
+    b : float
+        Individual short limit.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised weights.
+
+    Notes
+    -----
+    Global minimum variance portfolio weighting with long and short restriction on individual weights.
+    Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
+
+    Recommended above direct calculation via inverse and pseudo inverse as inverting large matrices is unstable.
+
+    """
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_long_restrict, 'args': [a]},
+            {'type': 'ineq', 'fun': cons_short_restrict, 'args': [b]})
+    return minimize(global_obj_fun, w0, args=(cov),method='SLSQP', constraints=cons, options={'ftol': 1e-30})
+
+
 if __name__ == "__main__":
 
     variance = np.zeros((2, 2))
