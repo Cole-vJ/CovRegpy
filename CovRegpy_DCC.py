@@ -62,6 +62,17 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
     -----
 
     """
+    if not isinstance(returns_matrix, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])),
+                                       type(pd.DataFrame(np.asarray([[1.0, 2.0], [3.0, 4.0]]))))):
+        raise TypeError('Returns must be of type np.ndarray and pd.Dataframe.')
+    if pd.isnull(np.asarray(returns_matrix)).any():
+        raise TypeError('Returns must not contain nans.')
+    if np.array(returns_matrix).dtype != np.array([[1., 1.], [1., 1.]]).dtype:
+        raise TypeError('Returns must only contain floats.')
+
+    # convert Dataframe
+    returns_matrix = np.asarray(returns_matrix)
+
     # flip matrix to be consistent
     if np.shape(returns_matrix)[0] < np.shape(returns_matrix)[1]:
         returns_matrix = returns_matrix.T
@@ -173,6 +184,8 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
     -----
 
     """
+    
+
     t = np.shape(returns_matrix)[0]  # time interval
     q_bar = np.cov(returns_matrix.T)  # base (unconditional) covariance
 

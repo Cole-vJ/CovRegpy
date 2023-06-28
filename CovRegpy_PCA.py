@@ -40,6 +40,11 @@ def pca_func(cov, n_components):
     weights = pca_components.T / pca_components.sum(axis=1)
     pca_weights = weights * (pca_singular_values / pca_singular_values.sum())
 
+    # for comparison and verification of formula
+    # print(np.matmul(pca_components.T / np.matmul(np.ones((1, 5)), pca_components.T), (
+    #             pca_singular_values.reshape(3, 1) / np.matmul(np.ones((1, 3)), pca_singular_values.reshape(3, 1)))))
+    # print(np.matmul(pca_weights, np.ones((3, 1))))
+
     return pca_weights
 
 
