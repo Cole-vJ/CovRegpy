@@ -395,6 +395,40 @@ def global_weights_short_and_long_restrict(cov, a, b):
     return minimize(global_obj_fun, w0, args=(cov),method='SLSQP', constraints=cons, options={'ftol': 1e-30})
 
 
+def equal_risk_parity_weights_individual_restriction(cov, short_limit=1.0, long_limit=1.0):
+    """
+    Risk Parity or Risk Premia Parity minimizer with shorting summation restriction.
+
+    Parameters
+    ----------
+    cov : real ndarray
+        Covariance matrix of portfolio.
+
+    short_limit : positive float
+        Negative weights summation asset shorting restriction.
+
+    long_limit : positive float
+        Positive weights summation asset long restriction.
+
+    Returns
+    -------
+    OptimizeResult : OptimizeResult
+        Optimised result and optimised weights.
+
+    Notes
+    -----
+    Risk Premia Parity weighting with long and short summation restriction.
+    Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
+
+    """
+    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    cons = ({'type': 'eq', 'fun': cons_sum_weight},
+            {'type': 'ineq', 'fun': cons_long_restrict, 'args': [long_limit]},
+            {'type': 'ineq', 'fun': cons_short_restrict, 'args': [short_limit]})
+    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+                    method='SLSQP', constraints=cons, options={'ftol': 1e-9})
+
+
 if __name__ == "__main__":
 
     variance = np.zeros((2, 2))
