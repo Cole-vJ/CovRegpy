@@ -59,6 +59,20 @@ def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
     -----
 
     """
+
+    if not isinstance(x_fit, (type(np.asarray([1.0, 2.0])), type(pd.DataFrame(np.asarray([1.0, 2.0]))))):
+        raise TypeError('Independent variable for fitting must be of type np.ndarray and pd.Dataframe.')
+    if pd.isnull(np.asarray(x_fit)).any():
+        raise TypeError('Independent variable for fitting must not contain nans.')
+    if np.array(x_fit).dtype != np.array(np.arange(11.0)).dtype:
+        raise TypeError('Independent variable for fitting must only contain floats.')
+    if not isinstance(y_fit, (type(np.asarray([1.0, 2.0])), type(pd.DataFrame(np.asarray([1.0, 2.0]))))):
+        raise TypeError('Dependent variable for fitting must be of type np.ndarray and pd.Dataframe.')
+    if pd.isnull(np.asarray(y_fit)).any():
+        raise TypeError('Dependent variable for fitting must not contain nans.')
+    if np.array(y_fit).dtype != np.array(np.arange(11.0)).dtype:
+        raise TypeError('Dependent variable for fitting must only contain floats.')
+
     # reshape variables
     subset_x = np.atleast_2d(x_fit).T
     x = np.atleast_2d(x_forecast).T
