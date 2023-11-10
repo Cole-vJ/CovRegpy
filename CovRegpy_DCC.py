@@ -24,15 +24,11 @@
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
 from arch import arch_model
 from scipy.optimize import minimize
-import matplotlib.pyplot as plt
-
-from AdvEMDpy import emd_basis
 
 
-def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
+def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False, rescale=False):
     """
     Dynamic Conditional Correlation - Multivariate Generalized Autoregressive Conditional Heteroskedasticity model.
 
@@ -82,8 +78,12 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False):
 
     # iteratively calculate modelled variance using univariate GARCH model
     for stock in range(np.shape(returns_matrix)[1]):
-        model = arch_model(returns_matrix[:, stock], mean='Zero', vol='GARCH', p=p, q=q, rescale=False)
+        model = arch_model(returns_matrix[:, stock], mean='Zero', vol='GARCH', p=p, q=q, rescale=rescale)
         model_fit = model.fit(disp="off")
+        # if rescale:
+        #     modelled_variance[:, stock] = model_fit.conditional_volatility / model.scale
+        # else:
+        #     modelled_variance[:, stock] = model_fit.conditional_volatility
         modelled_variance[:, stock] = model_fit.conditional_volatility
 
     # optimise alpha & beta parameters to be used in page 90 equation (40)
@@ -192,8 +192,8 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
         raise ValueError('Returns must not contain nans.')
     if np.array(returns_matrix).dtype != np.array([[1., 1.], [1., 1.]]).dtype:
         raise ValueError('Returns must only contain floats.')
-    if np.shape(modelled_variance)[0] != np.shape(modelled_variance)[1]:
-        raise ValueError('Covariance must be square matrix.')
+    # if np.shape(modelled_variance)[0] != np.shape(modelled_variance)[1]:
+    #     raise ValueError('Covariance must be square matrix.')
     if pd.isnull(np.asarray(modelled_variance)).any():
         raise ValueError('Covariance must not contain nans.')
     if np.array(modelled_variance).dtype != np.array([[1., 1.], [1., 1.]]).dtype:
@@ -262,60 +262,3 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
                                             u_t[:, var].reshape(-1, 1)))[0][0])
 
     return loglike
-
-
-if __name__ == "__main__":
-
-    np.random.seed(3)
-
-    # pull all close data
-    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
-    data = yf.download(tickers_format, start="2018-12-31", end="2022-01-01")
-    close_data = data['Close']
-    del data, tickers_format
-
-    # create date range and interpolate
-    date_index = pd.date_range(start='31/12/2018', end='01/01/2022')
-    close_data = close_data.reindex(date_index).interpolate()
-    close_data = close_data[::-1].interpolate()
-    close_data = close_data[::-1]
-    del date_index
-
-    # calculate returns and realised covariance
-    returns = (np.log(np.asarray(close_data)[1:, :]) -
-               np.log(np.asarray(close_data)[:-1, :]))
-    realised_covariance = np.cov(returns.T)
-    risk_free = (0.02 / 365)
-
-    # calculate knots and returns subset
-    model_days = 731
-    knots = 80
-    forecast_days = 30
-    knots_vector = np.linspace(0, model_days - 1, int(knots - 6))
-    knots_vector = np.linspace(-knots_vector[3], 2 * (model_days - 1) - knots_vector[-4], knots)
-    returns_subset_forecast = returns[:model_days, :]
-
-    # calculate spline basis and mean forecast
-    spline_basis_transform = emd_basis.Basis(time_series=np.arange(model_days), time=np.arange(model_days))
-    spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=knots_vector)
-    coef_forecast = np.linalg.lstsq(spline_basis_transform.T, returns_subset_forecast, rcond=None)[0]
-    mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform).T
-
-    # # plot returns and means
-    for i in range(5):
-        plt.plot(returns_subset_forecast[:, i])
-        plt.plot(mean_forecast[:, i])
-        plt.show()
-
-    # # not necessary, but helps to follow process
-    # rt = returns_subset_forecast
-    # import mgarch
-    # vol = mgarch.mgarch()
-    # vol.fit(rt)
-    # ndays = 10 # volatility of nth day
-    # cov_nextday = vol.predict(ndays)
-
-    returns_minus_mean = returns_subset_forecast - mean_forecast
-
-    forecasted_covariance = covregpy_dcc(returns_minus_mean, p=3, q=3, days=10, print_correlation=True)
-    print(forecasted_covariance)

@@ -7,12 +7,10 @@
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
 from scipy.stats import norm
-from AdvEMDpy import emd_basis
 import matplotlib.pyplot as plt
+from sklearn.linear_model import Ridge
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import ExpSineSquared, WhiteKernel, RBF, RationalQuadratic
 
 
 def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
@@ -64,8 +62,9 @@ def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
         raise TypeError('Independent variable for fitting must be of type np.ndarray and pd.Dataframe.')
     if pd.isnull(np.asarray(x_fit)).any():
         raise TypeError('Independent variable for fitting must not contain nans.')
-    if np.array(x_fit).dtype != np.array(np.arange(11.0)).dtype:
-        raise TypeError('Independent variable for fitting must only contain floats.')
+    if not (np.array(x_fit).dtype != np.array(np.arange(11.0)).dtype or
+            np.array(x_fit).dtype != np.array(np.arange(11)).dtype):
+        raise TypeError('Independent variable for fitting must only contain floats or integers.')
     if not isinstance(y_fit, (type(np.asarray([1.0, 2.0])), type(pd.DataFrame(np.asarray([1.0, 2.0]))))):
         raise TypeError('Dependent variable for fitting must be of type np.ndarray and pd.Dataframe.')
     if pd.isnull(np.asarray(y_fit)).any():
@@ -107,76 +106,25 @@ def gp_forecast(x_fit, y_fit, x_forecast, kernel, confidence_level, plot=False):
     return y_forecast, sigma, y_forecast_upper, y_forecast_lower
 
 
-if __name__ == "__main__":
+def CovRegpy_neural_network(time_series, no_sample=300, fit_window=200, alpha=1.0):
 
-    # simple sinusoid
-    time_full = np.linspace(0, 120, 1201)
-    time = time_full[:1002]
-    time_series = np.sin((1 / 10) * time) + np.cos((1 / 5) * time)
-    sinusiod_kernel = RBF(length_scale=10.0) * ExpSineSquared(length_scale=1.3, periodicity=1.0)
+    X = np.zeros((no_sample, fit_window))
+    y = np.zeros(no_sample)
 
-    y_forecast, sigma, y_forecast_upper, y_forecast_lower = \
-        gp_forecast(time, time_series, time_full, sinusiod_kernel, 0.95, plot=False)
-    plt.plot(time, time_series)
-    plt.plot(time_full, y_forecast, '--')
-    plt.show()
+    for model in range(no_sample):
+        X[model, :] = time_series[-int(no_sample + fit_window - model):-int(no_sample - model)]
+        y[model] = time_series[-int(no_sample - model)]
 
-    # pull all close data
-    tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']
-    data = yf.download(tickers_format, start="2018-12-31", end="2021-12-01")
-    close_data = data['Close']
-    del data, tickers_format
+    clf = Ridge(alpha=alpha)
+    clf.fit(X, y)
 
-    # create date range and interpolate
-    date_index = pd.date_range(start='31/12/2018', end='12/01/2021')
-    close_data = close_data.reindex(date_index).interpolate()
-    close_data = close_data[::-1].interpolate()
-    close_data = close_data[::-1]
-    del date_index
+    forecast_time_series = np.zeros(fit_window)
 
-    close_data = np.asarray(close_data).T
-    model_days = np.shape(close_data)[1]
-    knots = 114
-    knots_vector = np.linspace(0, model_days - 1, int(knots - 6))
-    knots_vector = np.linspace(-knots_vector[3], 2 * (model_days - 1) - knots_vector[-4], knots)
-    time = np.arange(model_days)
-    time_extended = np.arange(int(model_days + 50))
+    for model in range(fit_window):
+        if model == 0:
+            forecast_time_series[model] = clf.predict(time_series[-int(fit_window - model):].reshape(1, -1))
+        else:
+            forecast_time_series[model] = clf.predict(np.append(time_series[-int(fit_window - model):],
+                                                                forecast_time_series[:model]).reshape(1, -1))
 
-    spline_basis_transform = emd_basis.Basis(time_series=time, time=time)
-    spline_basis_transform = spline_basis_transform.cubic_b_spline(knots=knots_vector)
-    coef_forecast = np.linalg.lstsq(spline_basis_transform.T, close_data.T, rcond=None)[0]
-    mean_forecast = np.matmul(coef_forecast.T, spline_basis_transform)
-
-    plt.plot(close_data.T)
-    plt.plot(mean_forecast.T)
-    plt.show()
-
-    # long term smooth rising trend
-    k1 = 66.0 ** 2 * RBF(length_scale=67.0)
-    # seasonal component
-    k2 = (2.4 ** 2 * RBF(length_scale=90.0) * ExpSineSquared(length_scale=1.3, periodicity=1.0))
-    # medium term irregularity
-    k3 = 0.66 ** 2 * RationalQuadratic(length_scale=1.2, alpha=0.78)
-    # noise terms
-    k4 = 0.18 ** 2 * RBF(length_scale=0.134) + WhiteKernel(noise_level=0.19 ** 2)
-
-    kernel = k1 + k2 + k3 + k4
-
-    lag = 200
-
-    for time_series in range(np.shape(close_data)[0]):
-        # forecast time series
-        y_forecast, sigma, y_forecast_upper, y_forecast_lower = \
-            gp_forecast(time[int(model_days - lag - 1):],
-                        close_data[time_series, int(model_days - lag - 1):],
-                        time_extended[int(model_days - lag - 1):],
-                        kernel, 0.95, plot=False)
-
-        plt.plot(time[int(model_days - lag - 1):], close_data[time_series, int(model_days - lag - 1):])
-        plt.plot(time_extended[int(model_days - lag - 1):], y_forecast)
-        plt.fill(np.concatenate([time_extended[int(model_days - lag - 1):],
-                                 time_extended[int(model_days - lag - 1):][::-1]]),
-                 np.concatenate([y_forecast_lower, y_forecast_upper[::-1]]), alpha=.5, fc='b', ec='None')
-        plt.plot(time_extended[int(model_days - lag - 1):], y_forecast_upper, '--')
-        plt.plot(time_extended[int(model_days - lag - 1):], y_forecast_lower, '--')
-        plt.show()
+    return forecast_time_series
