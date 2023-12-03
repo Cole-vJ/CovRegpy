@@ -9,24 +9,16 @@
 # Hoff, P. and Niu, X., A Covariance Regression Model.
 # Statistica Sinica, Institute of Statistical Science, 2012, 22(2), 729–753.
 
-import textwrap
 import numpy as np
 import group_lasso
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn import linear_model
-from sklearn.model_selection import GridSearchCV
-from sklearn.linear_model import SGDRegressor, LassoLars, Lars
-from mpl_toolkits.mplot3d import Axes3D
 
 np.random.seed(0)
 
-sns.set(style='darkgrid')
 
-
-def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, group_reg, max_iter, groups,
-               test_lasso=False):
+def calc_B_Psi(m: np.ndarray, v: np.ndarray, x: np.ndarray, y: np.ndarray, basis: np.ndarray, A_est: np.ndarray,
+               technique: str, alpha: float, l1_ratio_or_reg: float, group_reg: float, max_iter: int,
+               groups: np.ndarray):
     """
     This follows the calculation at the bottom of page 10 and top of page 11 in Hoff and Niu (2012).
 
@@ -34,9 +26,15 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
     ----------
     m : real ndarray
         Column vector of shape (n x 1) of means in random effects model with 'n' being number of observations.
+        Initialised in cov_reg_given_mean() with:
+
+            m = (np.random.normal(0, 1, np.shape(y)[1])).reshape(-1, 1)
 
     v : real ndarray
         Column vector of shape (n x 1) of variances in random effects model with 'n' being number of observations.
+        Initialised in cov_reg_given_mean() with:
+
+            v = np.ones_like(m)
 
     x : real ndarray
         Matrix of shape (m x n) of covariates with 'm' being number of covariates
@@ -52,7 +50,7 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
     A_est : real ndarray
         Coefficient matrix used to estimate local mean - (A_est^T * basis) approximates local mean of y matrix.
 
-    technique : string
+    technique : string_like
         'direct' : Direct calculation method used in Hoff and Niu (2012).
             beta = [(x_tilda^T * x_tilda)^(-1)] * (x_tilda^T * y)
 
@@ -96,9 +94,6 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
     groups : real ndarray (integer ndarray)
         Groups to be used in 'group-lasso' regression.
 
-    test_lasso : bool
-        If True, then given 'alpha' value is disregarded at each iteration and an optimal 'alpha' is calculated.
-
     Returns
     -------
     B_est : real ndarray
@@ -128,13 +123,6 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
                           np.matmul(x_tilda, np.linalg.pinv(np.matmul(x_tilda.T, x_tilda).astype(np.float64))))
 
     elif technique == 'lasso':
-
-        if test_lasso:
-            parameters = {'alpha': 10 ** (np.linspace(-12, 0, 121))}
-            reg_lasso = linear_model.Lasso()
-            clf = GridSearchCV(reg_lasso, parameters)
-            clf.fit(x_tilda, y_tilda)
-            alpha = np.asarray(clf.cv_results_['param_alpha'])[clf.best_index_]
 
         reg_lasso = linear_model.MultiTaskLasso(alpha=alpha, fit_intercept=False, max_iter=max_iter)
         reg_lasso.fit(x_tilda, y_tilda)
@@ -205,7 +193,7 @@ def calc_B_Psi(m, v, x, y, basis, A_est, technique, alpha, l1_ratio_or_reg, grou
     return B_est.astype(np.float64), Psi_est.astype(np.float64)
 
 
-def gamma_v_m_error(errors, x, Psi, B):
+def gamma_v_m_error(errors: np.ndarray, x: np.ndarray, Psi: np.ndarray, B: np.ndarray):
     """
     Function to calculate variance and mean for random error formulation which follows calculation
     at the bottom of page 9 in Hoff and Niu (2012).
@@ -251,12 +239,9 @@ def gamma_v_m_error(errors, x, Psi, B):
     return m.astype(np.float64), v.astype(np.float64)
 
 
-# define covariance regression function with mean given
-
-
-def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', alpha=1.0, l1_ratio_or_reg=0.1,
-                       group_reg=1e-6, max_iter=10000, groups=np.arange(76), test_lasso=False, LARS=False,
-                       true_coefficients=np.zeros((5, 15))):
+def cov_reg_given_mean(A_est: np.ndarray, basis: np.ndarray, x: np.ndarray, y: np.ndarray, iterations: int = 10,
+                       technique: str = 'direct', alpha: float = 1.0, l1_ratio_or_reg: float = 0.1,
+                       group_reg: float = 1e-6, max_iter: int = 10000, groups: np.ndarray = None):
     """
     Calculate Psi and B matrices of covariance regression as in Hoff and Niu (2012) except that A_est and basis
     are now given as inputs allowing for customisable definition of "mean" or "trend".
@@ -318,11 +303,8 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
     max_iter : positive integer
         Maximum number of iterations in regularised regression.
 
-    groups : real ndarray (consisting of negative integers)
+    groups : real ndarray (consisting of non-negative integers)
         Vector of groups to be used in group LASSO regression.
-
-    test_lasso : boolean
-        Whether to optimise alpha value in LASSO regression.
 
     Returns
     -------
@@ -336,25 +318,8 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
     -----
 
     """
-    if LARS:
-        # https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_lars.html#sphx-glr-auto-examples-linear-model-plot-lasso-lars-py
-        reg = LassoLars(normalize=False, alpha=1e-06)
-        # reg = Lars(normalize=False)
-        reg.fit(X=x.T, y=y.T)
-        coef_paths = reg.coef_path_
-        for path in range(len(coef_paths)):
-            for row in range(np.shape(coef_paths[path])[0]):
-                xx = np.sum(np.abs(coef_paths[path]), axis=0)
-                xx /= xx[-1]
-                plt.plot(xx[:len(coef_paths[path][row, :])], coef_paths[path][row, :],
-                         label=f'Structure: {int(row + 1)} coef: {int(true_coefficients[path, row])}')
-                if np.abs(true_coefficients[path, row]) > 0:
-                    plt.plot(xx[:len(coef_paths[path][row, :])], coef_paths[path][row, :], ':', Linewidth=3)
-            plt.vlines(xx[:len(coef_paths[path][row, :])], min(coef_paths[path][:, -1]),
-                       max(coef_paths[path][:, -1]), linestyle="dashed")
-            plt.legend(loc='upper left', fontsize=6)
-            plt.show()
-
+    if groups is None:
+        groups = {}
     m = (np.random.normal(0, 1, np.shape(y)[1])).reshape(-1, 1)  # initialise m
     v = np.ones_like(m)  # initialise v
 
@@ -364,7 +329,7 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
 
         B_est, Psi_est = calc_B_Psi(m=m, v=v, x=x, y=y, basis=basis, A_est=A_est, technique=technique,
                                     l1_ratio_or_reg=l1_ratio_or_reg, group_reg=group_reg, alpha=alpha,
-                                    max_iter=max_iter, groups=groups, test_lasso=test_lasso)
+                                    max_iter=max_iter, groups=groups)
 
         m, v = gamma_v_m_error(errors=(y - mean), x=x, Psi=Psi_est, B=B_est.T)
         m = m.reshape(-1, 1)
@@ -375,10 +340,7 @@ def cov_reg_given_mean(A_est, basis, x, y, iterations=10, technique='direct', al
     return B_est.astype(np.float64), Psi_est.astype(np.float64)
 
 
-# sub-gradient optimisation
-
-
-def subgrad_opt(x_tilda, y_tilda, max_iter, alpha=1e-12):
+def subgrad_opt(x_tilda: np.ndarray, y_tilda: np.ndarray, max_iter: int, alpha: float = 1e-12):
     """
     Subgradient optimisation of coefficients.
 
