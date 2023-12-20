@@ -11,6 +11,7 @@
 
 import numpy as np
 import group_lasso
+import pandas as pd
 from sklearn import linear_model
 
 np.random.seed(0)
@@ -108,6 +109,66 @@ def calc_B_Psi(m: np.ndarray, v: np.ndarray, x: np.ndarray, y: np.ndarray, basis
     breaking of correlation structure or nonsensical results.
 
     """
+
+    if not isinstance(m, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('m must be of type np.ndarray.')
+    if np.array(m).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('m must only contain floats.')
+    try:
+        if np.shape(np.array(m))[1] != 1:
+            raise ValueError('m must be column vector.')
+    except IndexError:
+        raise ValueError('m must be column vector. Suggest: m.reshape(-1, 1)')
+    if not isinstance(v, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('v must be of type np.ndarray.')
+    if np.array(v).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('v must only contain floats.')
+    try:
+        if np.shape(np.array(v))[1] != 1:
+            raise ValueError('v must be column vector.')
+    except IndexError:
+        raise ValueError('v must be column vector. Suggest: v.reshape(-1, 1)')
+
+    if len(m) != len(v):
+        raise ValueError('m and v are incompatible lengths.')
+
+    if not isinstance(x, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('x must be of type np.ndarray.')
+    if np.array(x).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('x must only contain floats.')
+
+    if not isinstance(y, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('y must be of type np.ndarray.')
+    if np.array(y).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('y must only contain floats.')
+
+    if not isinstance(basis, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('basis must be of type np.ndarray.')
+    if np.array(basis).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('basis must only contain floats.')
+
+    if not isinstance(A_est, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('A_est must be of type np.ndarray.')
+    if np.array(A_est).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('A_est must only contain floats.')
+
+    if technique not in {'direct', 'lasso', 'ridge', 'elastic-net', 'group-lasso', 'sub-gradient'}:
+        raise ValueError('\'technique\' not an acceptable value.')
+
+    if (not isinstance(alpha, float)) or alpha < 0:
+        raise ValueError('\'alpha\' must be a non-negative float.')
+    if (not isinstance(l1_ratio_or_reg, float)) or l1_ratio_or_reg < 0:
+        raise ValueError('\'l1_ratio_or_reg\' must be a non-negative float.')
+    if (not isinstance(group_reg, float)) or group_reg < 0:
+        raise ValueError('\'group_reg\' must be a non-negative float.')
+    if (not isinstance(max_iter, int)) or max_iter < 1:
+        raise ValueError('\'max_iter\' must be a positive integer.')
+
+    if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('groups must be of type np.ndarray.')
+    if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
+        raise TypeError('groups must only contain integers.')
+
     x_tilda = np.vstack([m * x.T, (v ** (1 / 2)) * x.T])
     y_tilda = np.vstack(((y.T - np.matmul(A_est.T, basis).T), np.zeros_like(y.T)))
 
@@ -194,6 +255,24 @@ def calc_B_Psi(m: np.ndarray, v: np.ndarray, x: np.ndarray, y: np.ndarray, basis
 
 
 def gamma_v_m_error(errors: np.ndarray, x: np.ndarray, Psi: np.ndarray, B: np.ndarray):
+
+    if not isinstance(errors, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('errors must be of type np.ndarray.')
+    if np.array(errors).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('errors must only contain floats.')
+    if not isinstance(x, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('x must be of type np.ndarray.')
+    if np.array(x).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('x must only contain floats.')
+    if not isinstance(Psi, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('Psi must be of type np.ndarray.')
+    if np.array(Psi).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('Psi must only contain floats.')
+    if not isinstance(B, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('B must be of type np.ndarray.')
+    if np.array(B).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('B must only contain floats.')
+
     """
     Function to calculate variance and mean for random error formulation which follows calculation
     at the bottom of page 9 in Hoff and Niu (2012).
@@ -318,6 +397,40 @@ def cov_reg_given_mean(A_est: np.ndarray, basis: np.ndarray, x: np.ndarray, y: n
     -----
 
     """
+    if not isinstance(A_est, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('A_est must be of type np.ndarray.')
+    if np.array(A_est).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('A_est must only contain floats.')
+
+    if not isinstance(basis, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('basis must be of type np.ndarray.')
+    if np.array(basis).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('basis must only contain floats.')
+
+    if not isinstance(x, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('x must be of type np.ndarray.')
+    if np.array(x).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('x must only contain floats.')
+
+    if not isinstance(y, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('y must be of type np.ndarray.')
+    if np.array(y).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('y must only contain floats.')
+
+    if (not isinstance(iterations, int)) or iterations < 1:
+        raise ValueError('\'iterations\' must be a positive integer.')
+    if technique not in {'direct', 'lasso', 'ridge', 'elastic-net', 'group-lasso', 'sub-gradient'}:
+        raise ValueError('\'technique\' not an acceptable value.')
+    if (not isinstance(alpha, float)) or alpha < 0:
+        raise ValueError('\'alpha\' must be a non-negative float.')
+    if (not isinstance(l1_ratio_or_reg, float)) or l1_ratio_or_reg < 0:
+        raise ValueError('\'l1_ratio_or_reg\' must be a non-negative float.')
+
+    if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('groups must be of type np.ndarray.')
+    if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
+        raise TypeError('groups must only contain integers.')
+
     if groups is None:
         groups = {}
     m = (np.random.normal(0, 1, np.shape(y)[1])).reshape(-1, 1)  # initialise m
@@ -369,6 +482,21 @@ def subgrad_opt(x_tilda: np.ndarray, y_tilda: np.ndarray, max_iter: int, alpha: 
     Starting point of algorithm can be changed and optimised.
 
     """
+
+    if not isinstance(x_tilda, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('x_tilda must be of type np.ndarray.')
+    if np.array(x_tilda).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('x_tilda must only contain floats.')
+
+    if not isinstance(y_tilda, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('y_tilda must be of type np.ndarray.')
+    if np.array(y_tilda).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('y_tilda must only contain floats.')
+
+    if (not isinstance(max_iter, int)) or max_iter < 1:
+        raise ValueError('\'max_iter\' must be a positive integer.')
+    if (not isinstance(alpha, float)) or alpha < 0:
+        raise ValueError('\'alpha\' must be a non-negative float.')
 
     # will not necessarily converge if not satisfied
     # if np.shape(x_tilda)[0] > np.shape(x_tilda)[1]:
