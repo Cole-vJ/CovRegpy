@@ -20,8 +20,8 @@ np.random.seed(0)
 sns.set(style='darkgrid')
 
 
-def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1,
-                 figure_plot=False, max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10):
+def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1.0,
+                 max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10):
     """
     Singular Spectrum Analysis (SSA) as in Hassani (2007).
 
@@ -45,13 +45,10 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
     plot_KS_test : boolean
         Whether to plot all intermediate Kolmogorov-Smirnov tests.
 
-    KS_scale_limit : float
+    KS_scale_limit : positive float
         Kolmogorov-Smirnov conditions optimised subject to a minimum standard deviation.
         Without this limit, 'optimised' trend estimate would be the exact time series.
-        Set to zero or small for a test - see example at end of script.
-
-    figure_plot : boolean
-        This is not integral to core code - demonstration purposes only - plots demonstration of KS test.
+        Set to zero or small for a test - see example.
 
     max_eig_ratio : float
         Not in original algorithm, but we conjecture that is essential for time-saving and prevention of inclusion
@@ -80,19 +77,48 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
     Kolmogorov-Smirnov Singular Spectrum Analysis (KS-SSA) is experimental and effective.
 
     """
+
+    if not isinstance(time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('time_series must be of type np.ndarray.')
+    if np.array(time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('time_series must only contain floats.')
+    if (not isinstance(L, int)) or (not L > 0) or (not L < len(time_series)):
+        raise ValueError('\'L\' must be a positive integer of appropriate magnitude: L < len(time_series).')
+    if (not isinstance(est, int)) or (not est > 0) or (not est <= L):
+        raise ValueError('\'est\' must be a positive integer of appropriate magnitude: est <= L.')
+    if not isinstance(plot, bool):
+        raise TypeError('\'plot\' must be boolean.')
+    if not isinstance(KS_test, bool):
+        raise TypeError('\'KS_test\' must be boolean.')
+    if not isinstance(plot_KS_test, bool):
+        raise TypeError('\'plot_KS_test\' must be boolean.')
+    if (not isinstance(KS_scale_limit, float)) or KS_scale_limit <= 0:
+        raise ValueError('\'KS_scale_limit\' must be a positive float.')
+    if (not isinstance(max_eig_ratio, float)) or max_eig_ratio <= 0 or max_eig_ratio >= 1:
+        raise ValueError('\'max_eig_ratio\' must be a float percentage between 0 and 1.')
+    if (not isinstance(KS_start, int)) or (not KS_start > 0) or (not KS_start <= len(time_series) / 3):
+        raise ValueError('\'KS_start\' must be a positive integer of appropriate magnitude: '
+                         'KS_start <= len(time_series) / 3.')
+    if (not isinstance(KS_end, int)) or (not KS_end > KS_start) or (not KS_end <= len(time_series) / 3):
+        raise ValueError('\'KS_end\' must be a positive integer of appropriate magnitude: '
+                         'KS_end > KS_start and KS_end <= len(time_series) / 3.')
+    if (not isinstance(KS_interval, int)) or (not KS_interval > 0) or (not KS_interval < (KS_end - KS_start)):
+        raise ValueError('\'KS_interval\' must be a positive integer of appropriate magnitude: '
+                         'KS_interval < (KS_end - KS_start).')
+
     KS_value = 1000
 
     fig_plot_count = 0
 
     if KS_test:
         for L_test in np.arange(KS_start, int(min(len(time_series) / 3, KS_end)), KS_interval):
-            for est_test in np.arange(L_test):
+            for est_test in np.arange(1, int(L_test)):
 
                 prev_test_value = 1.0
-                if est_test > 0:
+                if int(est_test) > 1:
                     prev_test_value = test_value.copy()
 
-                trend = CovRegpy_ssa(time_series, L=L_test, est=est_test, KS_test=False)[0]
+                trend = CovRegpy_ssa(time_series, L=int(L_test), est=int(est_test), KS_test=False)[0]
 
                 errors = time_series - trend
                 std_of_errors = np.std(errors)
@@ -124,52 +150,10 @@ def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=
                     plt.ylabel('Cumulative Distribution', fontsize=10)
                     plt.show()
 
-                if figure_plot and fig_plot_count < 2:
-                    if fig_plot_count == 0:
-                        fig, axs = plt.subplots(2, 2)
-                        plt.subplots_adjust(hspace=0.3, wspace=0.3)
-                        axs[fig_plot_count, 0].set_title('Time Series and Trend', fontsize=10)
-                        axs[fig_plot_count, 1].set_title('Kolmogorov-Smirnov Test', fontsize=10)
-                        axs[fig_plot_count, 1].set_xticks([-1500, 0, 1500])
-                        axs[fig_plot_count, 1].set_xticklabels([-1500, 0, 1500], fontsize=6)
-                        axs[fig_plot_count, 0].set_xlabel('Months', fontsize=8)
-                        axs[fig_plot_count, 1].set_xlabel('Errors', fontsize=8)
-                        axs[fig_plot_count, 1].set_ylabel('Cumulative Distribution', fontsize=8)
-                    if fig_plot_count == 1:
-                        axs[fig_plot_count, 1].set_xticks([-500, 0, 500])
-                        axs[fig_plot_count, 1].set_xticklabels([-500, 0, 500], fontsize=6)
-                        axs[fig_plot_count, 0].set_xlabel('Months', fontsize=8)
-                        axs[fig_plot_count, 1].set_xlabel('Errors', fontsize=8)
-                        axs[fig_plot_count, 1].set_ylabel('Cumulative Distribution', fontsize=8)
-                    axs[fig_plot_count, 0].plot(time_series, label='Time series')
-                    axs[fig_plot_count, 0].plot(trend, label='Trend estimate')
-                    axs[fig_plot_count, 0].set_yticks([0, 500, 1000, 1500])
-                    axs[fig_plot_count, 0].set_yticklabels([0, 500, 1000, 1500], fontsize=6)
-                    axs[fig_plot_count, 0].set_xticks([0, 60, 120])
-                    axs[fig_plot_count, 0].set_xticklabels([0, 60, 120], fontsize=6)
-                    axs[fig_plot_count, 1].set_yticks([0, 0.5, 1])
-                    axs[fig_plot_count, 1].set_yticklabels([0, 0.5, 1], fontsize=6)
-                    axs[fig_plot_count, 1].plot(x, norm.cdf(x, scale=std_of_errors),
-                                                    label='Cumulative distribution')
-                    axs[fig_plot_count, 1].plot(x, ks_vector, label='Test distribution')
-                    axs[fig_plot_count, 1].plot(x_test_value * np.ones(100),
-                                                np.linspace(norm.cdf(x_test_value, scale=std_of_errors),
-                                                            ks_vector[np.max(np.abs(norm.cdf(x, scale=std_of_errors) -
-                                                                                    ks_vector)) ==
-                                                                      np.abs(norm.cdf(x, scale=std_of_errors) -
-                                                                             ks_vector)], 100),
-                                                'k', label='KS distance')
-                    if fig_plot_count == 1:
-                        axs[fig_plot_count, 0].legend(loc='best', fontsize=6)
-                        axs[fig_plot_count, 1].legend(loc='best', fontsize=6)
-                        plt.savefig('../aas_figures/Example_ks_test')
-                        plt.show()
-                    fig_plot_count += 1
-
                 if (test_value < KS_value) and (std_of_errors > KS_scale_limit):
                     KS_value = test_value
-                    L_opt = L_test
-                    est_opt = est_test
+                    L_opt = int(L_test)
+                    est_opt = int(est_test)
                 if test_value == prev_test_value:
                     break
                 prev_test_value = test_value.copy()

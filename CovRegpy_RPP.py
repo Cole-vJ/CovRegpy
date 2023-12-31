@@ -83,6 +83,26 @@ def risk_parity_obj_fun(x, p_cov, rb):
     -----
 
     """
+
+    if not isinstance(x, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'x\' must be of type np.ndarray.')
+    if np.array(x).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'x\' must only contain floats.')
+    if not isinstance(p_cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'p_cov\' must be of type np.ndarray.')
+    if np.array(p_cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'p_cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(p_cov) > 0):
+        raise ValueError('\'p_cov\' must be PSD.')
+    if len(x) != np.shape(p_cov)[0] or len(x) != np.shape(p_cov)[1]:
+        raise ValueError('\'x\' and \'p_cov\' are incompatible lengths.')
+    if not isinstance(rb, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'rb\' must be of type np.ndarray.')
+    if np.array(rb).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'rb\' must only contain floats.')
+    if len(x) != len(rb):
+        raise ValueError('\'x\' and \'rb\' are incompatible lengths.')
+
     risk_budget_obj = np.sum((x * np.dot(p_cov, x) / np.dot(x.transpose(), np.dot(p_cov, x)) - rb) ** 2)
 
     return risk_budget_obj
@@ -108,6 +128,14 @@ def equal_risk_parity_weights_long_restriction(cov):
     Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_only_weight})
@@ -143,7 +171,35 @@ def cons_short_limit_weight(x, k):
     return y
 
 
-def equal_risk_parity_weights_short_restriction(cov, short_limit=1):
+def cons_long_limit_weight(x, k):
+    """
+    Constraint function - weights must all be individually less than k.
+
+    Parameters
+    ----------
+    x : real ndarray
+        Weights of assets in portfolio.
+
+    k : positive float
+        Individual weights must each be less than k.
+
+    Returns
+    -------
+    y : real ndarray
+        Weights must all be less than k.
+
+    Notes
+    -----
+    Inequality constraint: < k.
+    Require a summation restriction as with a large number of assets this can grow unreasonably large.
+
+    """
+    y = x - k
+
+    return y
+
+
+def equal_risk_parity_weights_short_restriction(cov, short_limit=1.0):
     """
     Risk Parity or Risk Premia Parity minimizer with individual shorting restriction.
 
@@ -166,6 +222,16 @@ def equal_risk_parity_weights_short_restriction(cov, short_limit=1):
     Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+    if (not isinstance(short_limit, float)) or short_limit <= 0:
+        raise ValueError('\'short_limit\' must be a positive float.')
+
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
@@ -254,6 +320,18 @@ def equal_risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_l
     Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+    if (not isinstance(short_limit, float)) or short_limit <= 0:
+        raise ValueError('\'short_limit\' must be a positive float.')
+    if (not isinstance(long_limit, float)) or long_limit <= 0:
+        raise ValueError('\'long_limit\' must be a positive float.')
+
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [short_limit]},
@@ -286,6 +364,20 @@ def global_obj_fun(x, p_cov):
     -----
 
     """
+
+    if not isinstance(x, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'x\' must be of type np.ndarray.')
+    if np.array(x).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'x\' must only contain floats.')
+    if not isinstance(p_cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'p_cov\' must be of type np.ndarray.')
+    if np.array(p_cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'p_cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(p_cov) > 0):
+        raise ValueError('\'p_cov\' must be PSD.')
+    if len(x) != np.shape(p_cov)[0] or len(x) != np.shape(p_cov)[1]:
+        raise ValueError('\'x\' and \'p_cov\' are incompatible lengths.')
+
     obj = np.sum(x * np.dot(p_cov, x))
 
     return obj
@@ -309,6 +401,14 @@ def global_weights(cov):
     -----
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+
     try:
         weights = (np.matmul(np.linalg.inv(cov), np.ones(np.shape(cov)[1]).reshape(-1, 1)) /
                    np.matmul(np.ones(np.shape(cov)[1]).reshape(1, -1),
@@ -343,39 +443,19 @@ def global_weights_long(cov):
     Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_only_weight})
     return minimize(global_obj_fun, w0, args=(cov),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
-
-
-def cons_long_limit_weight(x, k):
-    """
-    Constraint function - weights must all be individually less than k.
-
-    Parameters
-    ----------
-    x : real ndarray
-        Weights of assets in portfolio.
-
-    k : positive float
-        Individual weights must each be less than k.
-
-    Returns
-    -------
-    y : real ndarray
-        Weights must all be less than k.
-
-    Notes
-    -----
-    Inequality constraint: < k.
-    Require a summation restriction as with a large number of assets this can grow unreasonably large.
-
-    """
-    y = x - k
-
-    return y
 
 
 def global_weights_short_and_long_restrict(cov, a, b):
@@ -406,6 +486,18 @@ def global_weights_short_and_long_restrict(cov, a, b):
     Recommended above direct calculation via inverse and pseudo inverse as inverting large matrices is unstable.
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+    if (not isinstance(b, float)) or b <= 0:
+        raise ValueError('\'b\' must be a positive float.')
+    if (not isinstance(a, float)) or a <= 0:
+        raise ValueError('\'a\' must be a positive float.')
+
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_limit_weight, 'args': [a]},
@@ -440,6 +532,18 @@ def equal_risk_parity_weights_individual_restriction(cov, short_limit=1.0, long_
     Constrained optimisation - 'SLSQP' won't change if variance is too low - must change 'ftol' to smaller value.
 
     """
+
+    if not isinstance(cov, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'cov\' must be of type np.ndarray.')
+    if np.array(cov).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'cov\' must only contain floats.')
+    if not np.all(np.linalg.eigvals(cov) > 0):
+        raise ValueError('\'cov\' must be PSD.')
+    if (not isinstance(short_limit, float)) or short_limit <= 0:
+        raise ValueError('\'short_limit\' must be a positive float.')
+    if (not isinstance(long_limit, float)) or long_limit <= 0:
+        raise ValueError('\'long_limit\' must be a positive float.')
+
     w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_limit_weight, 'args': [long_limit]},

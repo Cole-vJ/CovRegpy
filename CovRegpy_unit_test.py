@@ -16,7 +16,14 @@ from sklearn.gaussian_process.kernels import RBF
 
 from CovRegpy import calc_B_Psi, gamma_v_m_error, cov_reg_given_mean, subgrad_opt
 from CovRegpy_DCC import covregpy_dcc, dcc_loglike
-from CovRegpy_forecasting import gp_forecast
+from CovRegpy_RPP import (risk_parity_obj_fun, equal_risk_parity_weights_long_restriction,
+                          equal_risk_parity_weights_short_restriction, equal_risk_parity_weights_summation_restriction,
+                          global_obj_fun, global_weights, global_weights_long, global_weights_short_and_long_restrict,
+                          equal_risk_parity_weights_individual_restriction)
+from CovRegpy_SSA import CovRegpy_ssa
+from CovRegpy_SSD import (gaussian, max_bool, spectral_obj_func_l1, spectral_obj_func_l2, gaus_param,
+                          scaling_factor_obj_func, scaling_factor, CovRegpy_ssd)
+from CovRegpy_X11 import henderson_kernel, henderson_weights, henderson_ma, seasonal_ma, CovRegpy_X11
 
 sns.set(style='darkgrid')
 
@@ -24,7 +31,10 @@ sns.set(style='darkgrid')
 class RCRUnitTests:
 
     def __init__(self, calc_B_Psi, gamma_v_m_error, cov_reg_given_mean, subgrad_opt, covregpy_dcc, dcc_loglike,
-                 gp_forecast):
+                 CovRegpy_ssa, gaussian, max_bool, spectral_obj_func_l1, spectral_obj_func_l2, gaus_param,
+                 scaling_factor_obj_func, scaling_factor, CovRegpy_ssd, risk_parity_obj_fun,
+                 henderson_kernel, henderson_weights,
+                 henderson_ma, seasonal_ma, CovRegpy_X11):
 
         self.calc_B_Psi = calc_B_Psi
         self.gamma_v_m_error = gamma_v_m_error
@@ -33,7 +43,33 @@ class RCRUnitTests:
 
         self.covregpy_dcc = covregpy_dcc
         self.dcc_loglike = dcc_loglike
-        self.gp_forecast = gp_forecast
+
+        self.CovRegpy_ssa = CovRegpy_ssa
+
+        self.gaussian = gaussian
+        self.max_bool = max_bool
+        self.spectral_obj_func_l1 = spectral_obj_func_l1
+        self.spectral_obj_func_l2 = spectral_obj_func_l2
+        self.gaus_param = gaus_param
+        self.scaling_factor_obj_func = scaling_factor_obj_func
+        self.scaling_factor = scaling_factor
+        self.CovRegpy_ssd = CovRegpy_ssd
+
+        self.risk_parity_obj_fun = risk_parity_obj_fun
+        self.equal_risk_parity_weights_long_restriction = equal_risk_parity_weights_long_restriction
+        self.equal_risk_parity_weights_short_restriction = equal_risk_parity_weights_short_restriction
+        self.equal_risk_parity_weights_summation_restriction = equal_risk_parity_weights_summation_restriction
+        self.global_obj_fun = global_obj_fun
+        self.global_weights = global_weights
+        self.global_weights_long = global_weights_long
+        self.global_weights_short_and_long_restrict = global_weights_short_and_long_restrict
+        self.equal_risk_parity_weights_individual_restriction = equal_risk_parity_weights_individual_restriction
+
+        self.henderson_kernel = henderson_kernel
+        self.henderson_weights = henderson_weights
+        self.henderson_ma = henderson_ma
+        self.seasonal_ma = seasonal_ma
+        self.CovRegpy_X11 = CovRegpy_X11
 
     def test_all(self, print_all=False):
 
@@ -113,12 +149,23 @@ class RCRUnitTests:
         test_8 = self.test_dcc_loglike_covariance_shape(test_all=True)
         test_9 = self.test_dcc_loglike_covariance_nans(test_all=True)
         test_10 = self.test_dcc_loglike_covariance_floats(test_all=True)
+
         test_11 = self.test_gp_forecast_independent_suitable(test_all=True)
         test_12 = self.test_gp_forecast_independent_nans(test_all=True)
         test_13 = self.test_gp_forecast_independent_floats(test_all=True)
         test_14 = self.test_gp_forecast_dependent_suitable(test_all=True)
         test_15 = self.test_gp_forecast_dependent_nans(test_all=True)
         test_16 = self.test_gp_forecast_dependent_floats(test_all=True)
+
+        test_x11_1 = self.test_X11_henderson_kernel_order_value(test_all=True)
+        test_x11_2 = self.test_X11_henderson_kernel_start_value(test_all=True)
+        test_x11_3 = self.test_X11_henderson_kernel_end_value(test_all=True)
+        test_x11_4 = self.test_X11_henderson_kernel_start_end_value(test_all=True)
+
+        test_x11_5 = self.test_X11_henderson_weights_order_value(test_all=True)
+        test_x11_6 = self.test_X11_henderson_weights_start_value(test_all=True)
+        test_x11_7 = self.test_X11_henderson_weights_end_value(test_all=True)
+        test_x11_8 = self.test_X11_henderson_weights_start_end_value(test_all=True)
 
         tests = [test_covreg_1, test_covreg_2, test_covreg_3, test_covreg_4, test_covreg_5, test_covreg_6,
                  test_covreg_7, test_covreg_8, test_covreg_9, test_covreg_10, test_covreg_11, test_covreg_12,
@@ -131,7 +178,9 @@ class RCRUnitTests:
                  test_covreg_49, test_covreg_50, test_covreg_51, test_covreg_52, test_covreg_53,
 
                  test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10, test_11, test_12,
-                 test_13, test_14, test_15, test_16]
+                 test_13, test_14, test_15, test_16,
+
+                 test_x11_1, test_x11_2, test_x11_3, test_x11_4, test_x11_5, test_x11_6, test_x11_7, test_x11_8]
 
         if print_all:
             print(tests)
@@ -1139,76 +1188,2103 @@ class RCRUnitTests:
                                                                                 'only contain floats.'
 
 
+    def test_X11_henderson_kernel_order_value(self, test_all=False):
+
+        order_bool = True
+        for order in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_kernel(order=order, start=None, end=None)
+            order_bool = order_bool and (error_info.type is ValueError and
+                                         error_info.value.args[0] ==
+                                         '\'order\' must be a positive odd integer.')
+
+        if (not test_all) and order_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'order\' must be a positive odd integer.')
+        elif order_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'order\' must be a positive odd integer.'
+
+
+    def test_X11_henderson_kernel_start_value(self, test_all=False):
+
+        start_bool = True
+        for start in [6.0, 1, -8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_kernel(order=13, start=start, end=None)
+            start_bool = \
+                start_bool and (error_info.type is ValueError and
+                                error_info.value.args[0] ==
+                                '\'start\' must be negative integer of correct magnitude.')
+
+        if (not test_all) and start_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' must be negative integer of correct magnitude.')
+        elif start_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' must be negative integer of correct magnitude.'
+
+
+    def test_X11_henderson_kernel_end_value(self, test_all=False):
+
+        end_bool = True
+        for end in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_kernel(order=13, start=None, end=end)
+            end_bool = \
+                end_bool and (error_info.type is ValueError and
+                              error_info.value.args[0] ==
+                              '\'end\' must be positive integer of correct magnitude.')
+
+        if (not test_all) and end_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'end\' must be positive integer of correct magnitude.')
+        elif end_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'end\' must be nan or positive integer of correct magnitude.'
+
+
+    def test_X11_henderson_kernel_start_end_value(self, test_all=False):
+
+        start = -6
+        end = 4
+        with pytest.raises(ValueError) as error_info:
+            henderson_kernel(order=13, start=start, end=end)
+
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' and \'end\' must be equal and opposite.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' and \'end\' must be equal and opposite.'
+
+
+    def test_X11_henderson_weights_order_value(self, test_all=False):
+
+        order_bool = True
+        for order in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_weights(order=order, start=None, end=None)
+            order_bool = order_bool and (error_info.type is ValueError and
+                                         error_info.value.args[0] ==
+                                         '\'order\' must be a positive odd integer.')
+
+        if (not test_all) and order_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'order\' must be a positive odd integer.')
+        elif order_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'order\' must be a positive odd integer.'
+
+
+    def test_X11_henderson_weights_start_value(self, test_all=False):
+
+        start_bool = True
+        for start in [6.0, 1, -8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_weights(order=13, start=start, end=None)
+            start_bool = \
+                start_bool and (error_info.type is ValueError and
+                                error_info.value.args[0] ==
+                                '\'start\' must be negative integer of correct magnitude.')
+
+        if (not test_all) and start_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' must be negative integer of correct magnitude.')
+        elif start_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' must be negative integer of correct magnitude.'
+
+
+    def test_X11_henderson_weights_end_value(self, test_all=False):
+
+        end_bool = True
+        for end in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_weights(order=13, start=None, end=end)
+            end_bool = \
+                end_bool and (error_info.type is ValueError and
+                              error_info.value.args[0] ==
+                              '\'end\' must be positive integer of correct magnitude.')
+
+        if (not test_all) and end_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'end\' must be positive integer of correct magnitude.')
+        elif end_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'end\' must be positive integer of correct magnitude.'
+
+
+    def test_X11_henderson_weights_start_end_value(self, test_all=False):
+
+        start = -6
+        end = 4
+        with pytest.raises(ValueError) as error_info:
+            henderson_weights(order=13, start=start, end=end)
+
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' and \'end\' must be equal and opposite.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'start\' and \'end\' must be equal and opposite.'
+
+
+    def test_X11_henderson_ma_time_series_array(self, test_all=False):
+
+        time_series = 5
+
+        with pytest.raises(TypeError) as error_info:
+            henderson_ma(time_series, order=13, method='kernel')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.'
+
+
+    def test_X11_henderson_ma_time_series_only_floats(self, test_all=False):
+
+        time_series = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            henderson_ma(time_series, order=13, method='kernel')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.'
+
+
+    def test_X11_henderson_ma_order_value(self, test_all=False):
+
+        order_bool = True
+        for order in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                henderson_ma(time_series=np.array(1000.0), order=order, method='kernel')
+            order_bool = order_bool and (error_info.type is ValueError and
+                                         error_info.value.args[0] ==
+                                         '\'order\' must be a positive odd integer.')
+
+        if (not test_all) and order_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'order\' must be a positive odd integer.')
+        elif order_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'order\' must be a positive odd integer.'
+
+
+    def test_X11_henderson_ma_method_type(self, test_all=False):
+
+        method = 'not-direct'
+
+        with pytest.raises(ValueError) as error_info:
+            henderson_ma(time_series=np.array(1000.0), order=13, method=method)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'method\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'method\' not an acceptable value.'
+
+
+    def test_X11_seasonal_ma_time_series_array(self, test_all=False):
+
+        time_series = 5
+
+        with pytest.raises(TypeError) as error_info:
+            seasonal_ma(time_series, factors='3x3', seasonality='annual')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.'
+
+
+    def test_X11_seasonal_ma_time_series_only_floats(self, test_all=False):
+
+        time_series = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            seasonal_ma(time_series, factors='3x3', seasonality='annual')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.'
+
+
+    def test_X11_seasonal_ma_factors_type(self, test_all=False):
+
+        factors = '3x11'
+
+        with pytest.raises(ValueError) as error_info:
+            seasonal_ma(time_series=np.arange(1000.0), factors=factors, seasonality='annual')
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'factors\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'factors\' not an acceptable value.'
+
+
+    def test_X11_seasonal_ma_seasonality_type(self, test_all=False):
+
+        seasonality = 'monthly'
+
+        with pytest.raises(ValueError) as error_info:
+            seasonal_ma(time_series=np.arange(1000.0), factors='3x9', seasonality=seasonality)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'seasonality\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'seasonality\' not an acceptable value.'
+
+
+    def test_X11_time_array(self, test_all=False):
+
+        time = 5
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_X11(time, time_series=np.arange(100.0), seasonality='annual', seasonal_factor='3x3',
+                         trend_window_width_1=13, trend_window_width_2=13, trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time must be of type np.ndarray.'
+
+
+    def test_X11_time_only_floats(self, test_all=False):
+
+        time = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_X11(time, time_series=np.arange(100.0), seasonality='annual', seasonal_factor='3x3',
+                         trend_window_width_1=13, trend_window_width_2=13, trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time must only contain floats.'
+
+
+    def test_X11_time_series_array(self, test_all=False):
+
+        time_series = 5
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_X11(time=np.arange(100.0), time_series=time_series, seasonality='annual', seasonal_factor='3x3',
+                         trend_window_width_1=13, trend_window_width_2=13, trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.'
+
+
+    def test_X11_time_series_only_floats(self, test_all=False):
+
+        time_series = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_X11(time=np.arange(100.0), time_series=time_series, seasonality='annual', seasonal_factor='3x3',
+                         trend_window_width_1=13, trend_window_width_2=13, trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.'
+
+
+    def test_X11_time_series_error_length(self, test_all=False):
+
+        time = np.arange(101.0)
+        time_series = np.arange(100.0)
+
+        with pytest.raises(ValueError) as error_info:
+            CovRegpy_X11(time=time, time_series=time_series, seasonality='annual', seasonal_factor='3x3',
+                         trend_window_width_1=13, trend_window_width_2=13, trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is ValueError and
+                  error_info.value.args[0] == 'time_series and time are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                   'time_series and time are incompatible lengths.'
+
+
+    def test_X11_seasonality_value(self, test_all=False):
+
+        seasonality = 'monthly'
+
+        with pytest.raises(ValueError) as error_info:
+            CovRegpy_X11(time=np.arange(100.0), time_series=np.arange(100.0), seasonality=seasonality,
+                         seasonal_factor='3x3', trend_window_width_1=13, trend_window_width_2=13,
+                         trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'seasonality\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'seasonality\' not an acceptable value.'
+
+
+    def test_X11_seasonal_factor_value(self, test_all=False):
+
+        seasonal_factor='3x11'
+
+        with pytest.raises(ValueError) as error_info:
+            CovRegpy_X11(time=np.arange(100.0), time_series=np.arange(100.0), seasonality='quarterly',
+                         seasonal_factor=seasonal_factor, trend_window_width_1=13, trend_window_width_2=13,
+                         trend_window_width_3=13)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'seasonal_factor\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'seasonal_factor\' not an acceptable value.'
+
+
+    def test_X11_trend_window_width_1_value(self, test_all=False):
+
+        trend_window_width_1_bool = True
+        for trend_window_width_1 in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_X11(time=np.arange(100.0), time_series=np.arange(100.0), seasonality='quarterly',
+                             seasonal_factor='3x9', trend_window_width_1=trend_window_width_1, trend_window_width_2=13,
+                             trend_window_width_3=13)
+            trend_window_width_1_bool = \
+                trend_window_width_1_bool and (error_info.type is ValueError and
+                                               error_info.value.args[0] ==
+                                               '\'trend_window_width_1\' must be a positive odd integer.')
+
+        if (not test_all) and trend_window_width_1_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'trend_window_width_1\' must be a positive odd integer.')
+        elif trend_window_width_1_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'trend_window_width_1\' must be a positive odd integer.'
+
+
+    def test_X11_trend_window_width_2_value(self, test_all=False):
+
+        trend_window_width_2_bool = True
+        for trend_window_width_2 in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_X11(time=np.arange(100.0), time_series=np.arange(100.0), seasonality='quarterly',
+                             seasonal_factor='3x9', trend_window_width_1=13, trend_window_width_2=trend_window_width_2,
+                             trend_window_width_3=13)
+            trend_window_width_2_bool = \
+                trend_window_width_2_bool and (error_info.type is ValueError and
+                                               error_info.value.args[0] ==
+                                               '\'trend_window_width_2\' must be a positive odd integer.')
+
+        if (not test_all) and trend_window_width_2_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'trend_window_width_2\' must be a positive odd integer.')
+        elif trend_window_width_2_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'trend_window_width_2\' must be a positive odd integer.'
+
+
+    def test_X11_trend_window_width_3_value(self, test_all=False):
+
+        trend_window_width_3_bool = True
+        for trend_window_width_3 in [6.0, -1, 8]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_X11(time=np.arange(100.0), time_series=np.arange(100.0), seasonality='quarterly',
+                             seasonal_factor='3x9', trend_window_width_1=13, trend_window_width_2=13,
+                             trend_window_width_3=trend_window_width_3)
+            trend_window_width_3_bool = \
+                trend_window_width_3_bool and (error_info.type is ValueError and
+                                               error_info.value.args[0] ==
+                                               '\'trend_window_width_3\' must be a positive odd integer.')
+
+        if (not test_all) and trend_window_width_3_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'trend_window_width_3\' must be a positive odd integer.')
+        elif trend_window_width_3_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'trend_window_width_3\' must be a positive odd integer.'
+
+
+    def test_SSA_time_series_array(self, test_all=False):
+
+        time_series = 5
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssa(time_series, L=10, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1.0,
+                         max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must be of type np.ndarray.'
+
+
+    def test_SSA_time_series_only_floats(self, test_all=False):
+
+        time_series = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssa(time_series, L=10, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1.0,
+                         max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == 'time_series must only contain floats.'
+
+
+    def test_SSA_L_value(self, test_all=False):
+
+        L_bool = True
+        for L in [6.0, -1, 120]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(100.0), L=L, est=3, plot=False, KS_test=False, plot_KS_test=False,
+                             KS_scale_limit=1.0,
+                             max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+            L_bool = \
+                L_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'L\' must be a positive integer of appropriate magnitude: L < len(time_series).')
+
+        if (not test_all) and L_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'L\' must be a positive integer of appropriate magnitude: L < len(time_series).')
+        elif L_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'L\' must be a positive integer of appropriate magnitude: L < len(time_series).'
+
+
+    def test_SSA_est_value(self, test_all=False):
+
+        est_bool = True
+        for est in [6.0, -1, 30]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(100.0), L=20, est=est, plot=False, KS_test=False,
+                             plot_KS_test=False, KS_scale_limit=1.0,
+                             max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+            est_bool = \
+                est_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'est\' must be a positive integer of appropriate magnitude: est <= L.')
+
+        if (not test_all) and est_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'est\' must be a positive integer of appropriate magnitude: est <= L.')
+        elif est_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'est\' must be a positive integer of appropriate magnitude: est <= L.'
+
+
+    def test_SSA_plot_bool(self, test_all=False):
+
+        plot = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssa(time_series=np.arange(100.0), L=20, est=5, plot=plot, KS_test=False,
+                         plot_KS_test=False, KS_scale_limit=1.0,
+                         max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'plot\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'plot\' must be boolean.'
+
+
+    def test_SSA_KS_test_bool(self, test_all=False):
+
+        KS_test = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssa(time_series=np.arange(100.0), L=20, est=5, plot=False, KS_test=KS_test,
+                         plot_KS_test=False, KS_scale_limit=1.0,
+                         max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'KS_test\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'KS_test\' must be boolean.'
+
+
+    def test_SSA_plot_KS_test_bool(self, test_all=False):
+
+        plot_KS_test = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssa(time_series=np.arange(100.0), L=20, est=5, plot=False, KS_test=False,
+                         plot_KS_test=plot_KS_test, KS_scale_limit=1.0,
+                         max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'plot_KS_test\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'plot_KS_test\' must be boolean.'
+
+
+    def test_SSA_KS_scale_limit_value(self, test_all=False):
+
+        KS_scale_limit_bool = True
+        for KS_scale_limit in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(100.0), L=20, est=10, plot=False, KS_test=False,
+                             plot_KS_test=False, KS_scale_limit=KS_scale_limit,
+                             max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10)
+            KS_scale_limit_bool = \
+                KS_scale_limit_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'KS_scale_limit\' must be a positive float.')
+
+        if (not test_all) and KS_scale_limit_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'KS_scale_limit\' must be a positive float.')
+        elif KS_scale_limit_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'KS_scale_limit\' must be a positive float.'
+
+
+    def test_SSA_max_eig_ratio_value(self, test_all=False):
+
+        max_eig_ratio_bool = True
+        for max_eig_ratio in [1, -0.1, 1.1]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(100.0), L=20, est=10, plot=False, KS_test=False,
+                             plot_KS_test=False, KS_scale_limit=1.0,
+                             max_eig_ratio=max_eig_ratio, KS_start=10, KS_end=100, KS_interval=10)
+            max_eig_ratio_bool = \
+                max_eig_ratio_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'max_eig_ratio\' must be a float percentage between 0 and 1.')
+
+        if (not test_all) and max_eig_ratio_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'max_eig_ratio\' must be a float percentage between 0 and 1.')
+        elif max_eig_ratio_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'max_eig_ratio\' must be a float percentage between 0 and 1.'
+
+
+    def test_SSA_KS_start_value(self, test_all=False):
+
+        KS_start_bool = True
+        for KS_start in [10.0, -10, 350]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(1000.0), L=200, est=10, plot=False, KS_test=False,
+                             plot_KS_test=False, KS_scale_limit=1.0,
+                             max_eig_ratio=0.5, KS_start=KS_start, KS_end=100, KS_interval=10)
+            KS_start_bool = \
+                KS_start_bool and (error_info.type is ValueError) and (error_info.value.args[0] ==
+                            '\'KS_start\' must be a positive integer of appropriate magnitude: '
+                            'KS_start <= len(time_series) / 3.')
+
+        if (not test_all) and KS_start_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'KS_start\' must be a positive integer of appropriate magnitude: '
+                  'KS_start <= len(time_series) / 3.')
+        elif KS_start_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                ('\'KS_start\' must be a positive integer of appropriate magnitude: '
+                 'KS_start <= len(time_series) / 3.')
+
+
+    def test_SSA_KS_end_value(self, test_all=False):
+
+        KS_end_bool = True
+        for KS_end in [50.0, -10, 15]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(1000.0), L=200, est=10, plot=False, KS_test=False,
+                             plot_KS_test=False, KS_scale_limit=1.0,
+                             max_eig_ratio=0.5, KS_start=20, KS_end=KS_end, KS_interval=10)
+            KS_end_bool = \
+                KS_end_bool and (error_info.type is ValueError) and (error_info.value.args[0] ==
+                            '\'KS_end\' must be a positive integer of appropriate magnitude: '
+                            'KS_end > KS_start and KS_end <= len(time_series) / 3.')
+
+        if (not test_all) and KS_end_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'KS_end\' must be a positive integer of appropriate magnitude: '
+                  'KS_end > KS_start and KS_end <= len(time_series) / 3.')
+        elif KS_end_bool:
+            return error_info.type is ValueError and (error_info.value.args[0] == \
+                '\'KS_end\' must be a positive integer of appropriate magnitude: '
+                'KS_end > KS_start and KS_end <= len(time_series) / 3.')
+
+
+    def test_SSA_KS_interval_value(self, test_all=False):
+
+        KS_interval_bool = True
+        for KS_interval in [50.0, -10, 90]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssa(time_series=np.arange(1000.0), L=200, est=10, plot=False, KS_test=False,
+                             plot_KS_test=False, KS_scale_limit=1.0,
+                             max_eig_ratio=0.5, KS_start=20, KS_end=100, KS_interval=KS_interval)
+            KS_interval_bool = \
+                KS_interval_bool and (error_info.type is ValueError) and (error_info.value.args[0] ==
+                            '\'KS_interval\' must be a positive integer of appropriate magnitude: '
+                            'KS_interval < (KS_end - KS_start).')
+
+        if (not test_all) and KS_interval_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'KS_interval\' must be a positive integer of appropriate magnitude: '
+                  'KS_interval < (KS_end - KS_start).')
+        elif KS_interval_bool:
+            return error_info.type is ValueError and (error_info.value.args[0] ==
+                                                      '\'KS_interval\' must be a positive integer of appropriate magnitude: '
+                                                      'KS_interval < (KS_end - KS_start).')
+
+
+    def test_SSD_gaussian_f_array(self, test_all=False):
+
+        f = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            gaussian(f=f, A=1.0, mu=1.0, sigma=1.0)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.'
+
+
+    def test_SSD_gaussian_f_only_floats(self, test_all=False):
+
+        f = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            gaussian(f=f, A=1.0, mu=1.0, sigma=1.0)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.'
+
+
+    def test_SSD_gaussian_A_value(self, test_all=False):
+
+        A_bool = True
+        for A in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                gaussian(f=np.arange(100.0), A=A, mu=1.0, sigma=1.0)
+            A_bool = \
+                A_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'A\' must be a positive float.')
+
+        if (not test_all) and A_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'A\' must be a positive float.')
+        elif A_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'A\' must be a positive float.'
+
+
+    def test_SSD_gaussian_mu_value(self, test_all=False):
+
+        mu_bool = True
+        for mu in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                gaussian(f=np.arange(100.0), A=1.0, mu=mu, sigma=1.0)
+            mu_bool = \
+                mu_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu\' must be a positive float.')
+
+        if (not test_all) and mu_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu\' must be a positive float.')
+        elif mu_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu\' must be a positive float.'
+
+
+    def test_SSD_gaussian_sigma_value(self, test_all=False):
+
+        sigma_bool = True
+        for sigma in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                gaussian(f=np.arange(100.0), A=1.0, mu=1.0, sigma=sigma)
+            sigma_bool = \
+                sigma_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'sigma\' must be a positive float.')
+
+        if (not test_all) and sigma_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'sigma\' must be a positive float.')
+        elif sigma_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'sigma\' must be a positive float.'
+
+
+    def test_SSD_max_bool_time_series_array(self, test_all=False):
+
+        time_series = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            max_bool(time_series=time_series)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must be of type np.ndarray.'
+
+
+    def test_SSD_max_bool_time_series_only_floats(self, test_all=False):
+
+        time_series = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            max_bool(time_series=time_series)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l1_theta_array(self, test_all=False):
+
+        theta = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l1(theta, f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must be of type np.ndarray.'
+
+
+    def test_SSD_spectral_obj_func_l1_theta_only_floats(self, test_all=False):
+
+        theta = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l1(theta, f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l1_theta_length(self, test_all=False):
+
+        theta = np.arange(7.0)
+
+        with pytest.raises(ValueError) as error_info:
+            spectral_obj_func_l1(theta, f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'theta\' must be of length 6.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'theta\' must be of length 6.'
+
+
+    def test_SSD_spectral_obj_func_l1_f_array(self, test_all=False):
+
+        f = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l1(theta=np.arange(6.0), f=f, mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.'
+
+
+    def test_SSD_spectral_obj_func_l1_f_only_floats(self, test_all=False):
+
+        f = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l1(theta=np.arange(6.0), f=f, mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l1_mu_1_value(self, test_all=False):
+
+        mu_1_bool = True
+        for mu_1 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                spectral_obj_func_l1(theta=np.arange(6.0), f=np.asarray(1000.0),
+                                     mu_1=mu_1, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+            mu_1_bool = \
+                mu_1_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_1\' must be a positive float.')
+
+        if (not test_all) and mu_1_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_1\' must be a positive float.')
+        elif mu_1_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_1\' must be a positive float.'
+
+
+    def test_SSD_spectral_obj_func_l1_mu_2_value(self, test_all=False):
+
+        mu_2_bool = True
+        for mu_2 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                spectral_obj_func_l1(theta=np.arange(6.0), f=np.asarray(1000.0),
+                                     mu_1=1.0, mu_2=mu_2, mu_3=1.0, spectrum=np.asarray(1000.0))
+            mu_2_bool = \
+                mu_2_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_2\' must be a positive float.')
+
+        if (not test_all) and mu_2_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_2\' must be a positive float.')
+        elif mu_2_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_2\' must be a positive float.'
+
+
+    def test_SSD_spectral_obj_func_l1_mu_3_value(self, test_all=False):
+
+        mu_3_bool = True
+        for mu_3 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                spectral_obj_func_l1(theta=np.arange(6.0), f=np.asarray(1000.0),
+                                     mu_1=1.0, mu_2=1.0, mu_3=mu_3, spectrum=np.asarray(1000.0))
+            mu_3_bool = \
+                mu_3_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_3\' must be a positive float.')
+
+        if (not test_all) and mu_3_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_3\' must be a positive float.')
+        elif mu_3_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_3\' must be a positive float.'
+
+
+    def test_SSD_spectral_obj_func_l1_spectrum_array(self, test_all=False):
+
+        spectrum = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l1(theta=np.arange(6.0), f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                                 spectrum=spectrum)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must be of type np.ndarray.'
+
+
+    def test_SSD_spectral_obj_func_l1_spectrum_only_floats(self, test_all=False):
+
+        spectrum = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l1(theta=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                                 spectrum=spectrum)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l1_f_and_spectrum_lengths(self, test_all=False):
+
+        spectrum = np.arange(70.0)
+
+        with pytest.raises(ValueError) as error_info:
+            spectral_obj_func_l1(theta=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                                 spectrum=spectrum)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'f\' and \'spectrum\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'f\' and \'spectrum\' are incompatible lengths.'
+
+
+    def test_SSD_spectral_obj_func_l2_theta_array(self, test_all=False):
+
+        theta = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l2(theta, f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must be of type np.ndarray.'
+
+
+    def test_SSD_spectral_obj_func_l2_theta_only_floats(self, test_all=False):
+
+        theta = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l2(theta, f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'theta\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l2_theta_length(self, test_all=False):
+
+        theta = np.arange(7.0)
+
+        with pytest.raises(ValueError) as error_info:
+            spectral_obj_func_l2(theta, f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'theta\' must be of length 6.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'theta\' must be of length 6.'
+
+
+    def test_SSD_spectral_obj_func_l2_f_array(self, test_all=False):
+
+        f = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l2(theta=np.arange(6.0), f=f, mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.'
+
+
+    def test_SSD_spectral_obj_func_l2_f_only_floats(self, test_all=False):
+
+        f = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l2(theta=np.arange(6.0), f=f, mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l2_mu_1_value(self, test_all=False):
+
+        mu_1_bool = True
+        for mu_1 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                spectral_obj_func_l2(theta=np.arange(6.0), f=np.asarray(1000.0),
+                                     mu_1=mu_1, mu_2=1.0, mu_3=1.0, spectrum=np.asarray(1000.0))
+            mu_1_bool = \
+                mu_1_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_1\' must be a positive float.')
+
+        if (not test_all) and mu_1_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_1\' must be a positive float.')
+        elif mu_1_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_1\' must be a positive float.'
+
+
+    def test_SSD_spectral_obj_func_l2_mu_2_value(self, test_all=False):
+
+        mu_2_bool = True
+        for mu_2 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                spectral_obj_func_l2(theta=np.arange(6.0), f=np.asarray(1000.0),
+                                     mu_1=1.0, mu_2=mu_2, mu_3=1.0, spectrum=np.asarray(1000.0))
+            mu_2_bool = \
+                mu_2_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_2\' must be a positive float.')
+
+        if (not test_all) and mu_2_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_2\' must be a positive float.')
+        elif mu_2_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_2\' must be a positive float.'
+
+
+    def test_SSD_spectral_obj_func_l2_mu_3_value(self, test_all=False):
+
+        mu_3_bool = True
+        for mu_3 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                spectral_obj_func_l2(theta=np.arange(6.0), f=np.asarray(1000.0),
+                                     mu_1=1.0, mu_2=1.0, mu_3=mu_3, spectrum=np.asarray(1000.0))
+            mu_3_bool = \
+                mu_3_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_3\' must be a positive float.')
+
+        if (not test_all) and mu_3_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_3\' must be a positive float.')
+        elif mu_3_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_3\' must be a positive float.'
+
+
+    def test_SSD_spectral_obj_func_l2_spectrum_array(self, test_all=False):
+
+        spectrum = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l2(theta=np.arange(6.0), f=np.asarray(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                                 spectrum=spectrum)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must be of type np.ndarray.'
+
+
+    def test_SSD_spectral_obj_func_l2_spectrum_only_floats(self, test_all=False):
+
+        spectrum = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            spectral_obj_func_l2(theta=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                                 spectrum=spectrum)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must only contain floats.'
+
+
+    def test_SSD_spectral_obj_func_l2_f_and_spectrum_lengths(self, test_all=False):
+
+        spectrum = np.arange(70.0)
+
+        with pytest.raises(ValueError) as error_info:
+            spectral_obj_func_l2(theta=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                                 spectrum=spectrum)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'f\' and \'spectrum\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'f\' and \'spectrum\' are incompatible lengths.'
+
+
+    def test_SSD_gaus_param_w0_array(self, test_all=False):
+
+        w0 = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            gaus_param(w0=w0, f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.arange(1000.0),
+                       method='l1')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'w0\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'w0\' must be of type np.ndarray.'
+
+
+    def test_SSD_gaus_param_w0_only_floats(self, test_all=False):
+
+        w0 = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            gaus_param(w0=w0, f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.arange(1000.0),
+                       method='l1')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'w0\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'w0\' must only contain floats.'
+
+
+    def test_SSD_gaus_param_w0_length(self, test_all=False):
+
+        w0 = np.arange(7.0)
+
+        with pytest.raises(ValueError) as error_info:
+            gaus_param(w0=w0, f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.arange(1000.0),
+                       method='l1')
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'w0\' must be of length 6.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'w0\' must be of length 6.'
+
+
+    def test_SSD_gaus_param_f_array(self, test_all=False):
+
+        f = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            gaus_param(w0=np.arange(6.0), f=f, mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.arange(1000.0),
+                       method='l1')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must be of type np.ndarray.'
+
+
+    def test_SSD_gaus_param_f_only_floats(self, test_all=False):
+
+        f = np.arange(5)
+
+        with pytest.raises(TypeError) as error_info:
+            gaus_param(w0=np.arange(6.0), f=f, mu_1=1.0, mu_2=1.0, mu_3=1.0, spectrum=np.arange(1000.0),
+                       method='l1')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'f\' must only contain floats.'
+
+
+    def test_SSD_gaus_param_mu_1_value(self, test_all=False):
+
+        mu_1_bool = True
+        for mu_1 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=mu_1, mu_2=1.0, mu_3=1.0, spectrum=np.arange(1000.0),
+                           method='l1')
+            mu_1_bool = \
+                mu_1_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_1\' must be a positive float.')
+
+        if (not test_all) and mu_1_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_1\' must be a positive float.')
+        elif mu_1_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_1\' must be a positive float.'
+
+
+    def test_SSD_gaus_param_mu_2_value(self, test_all=False):
+
+        mu_2_bool = True
+        for mu_2 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=mu_2, mu_3=1.0,
+                           spectrum=np.arange(1000.0),
+                           method='l1')
+            mu_2_bool = \
+                mu_2_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_2\' must be a positive float.')
+
+        if (not test_all) and mu_2_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_2\' must be a positive float.')
+        elif mu_2_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_2\' must be a positive float.'
+
+
+    def test_SSD_gaus_param_mu_3_value(self, test_all=False):
+
+        mu_3_bool = True
+        for mu_3 in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=mu_3,
+                           spectrum=np.arange(1000.0),
+                           method='l1')
+            mu_3_bool = \
+                mu_3_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'mu_3\' must be a positive float.')
+
+        if (not test_all) and mu_3_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'mu_3\' must be a positive float.')
+        elif mu_3_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'mu_3\' must be a positive float.'
+
+
+    def test_SSD_gaus_param_spectrum_array(self, test_all=False):
+
+        spectrum = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                       spectrum=spectrum,
+                       method='l1')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must be of type np.ndarray.'
+
+
+    def test_SSD_gaus_param_spectrum_only_floats(self, test_all=False):
+
+        spectrum = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                       spectrum=spectrum,
+                       method='l1')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'spectrum\' must only contain floats.'
+
+
+    def test_SSD_gaus_param_f_and_spectrum_lengths(self, test_all=False):
+
+        spectrum = np.arange(70.0)
+
+        with pytest.raises(ValueError) as error_info:
+            gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                       spectrum=spectrum,
+                       method='l1')
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'f\' and \'spectrum\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'f\' and \'spectrum\' are incompatible lengths.'
+
+
+    def test_SSD_gaus_param_method_value(self, test_all=False):
+
+        method = 'l3'
+
+        with pytest.raises(ValueError) as error_info:
+            gaus_param(w0=np.arange(6.0), f=np.arange(1000.0), mu_1=1.0, mu_2=1.0, mu_3=1.0,
+                       spectrum=np.arange(1000.0),
+                       method=method)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'method\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'method\' not an acceptable value.'
+
+
+    def test_SSD_scaling_factor_obj_func_a_value(self, test_all=False):
+
+        a_bool = True
+        for a in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                scaling_factor_obj_func(a=a, residual_time_series=np.arange(1000.0), trend_estimate=np.arange(1000.0))
+            a_bool = \
+                a_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'a\' must be a positive float.')
+
+        if (not test_all) and a_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'a\' must be a positive float.')
+        elif a_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'a\' must be a positive float.'
+
+
+    def test_SSD_scaling_factor_obj_func_residual_time_series_array(self, test_all=False):
+
+        residual_time_series = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor_obj_func(a=1.0, residual_time_series=residual_time_series,
+                                    trend_estimate=np.arange(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must be of type np.ndarray.'
+
+
+    def test_SSD_scaling_factor_obj_func_residual_time_series_only_floats(self, test_all=False):
+
+        residual_time_series = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor_obj_func(a=1.0, residual_time_series=residual_time_series,
+                                    trend_estimate=np.arange(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must only contain floats.'
+
+
+    def test_SSD_scaling_factor_obj_func_trend_estimate_array(self, test_all=False):
+
+        trend_estimate = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor_obj_func(a=1.0, residual_time_series=np.arange(1000.0),
+                                    trend_estimate=trend_estimate)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must be of type np.ndarray.'
+
+
+    def test_SSD_scaling_factor_obj_func_trend_estimate_only_floats(self, test_all=False):
+
+        trend_estimate = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor_obj_func(a=1.0, residual_time_series=np.arange(1000.0),
+                                    trend_estimate=trend_estimate)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must only contain floats.'
+
+
+    def test_SSD_scaling_factor_obj_func_residual_time_series_and_trend_estimate_lengths(self, test_all=False):
+
+        trend_estimate = np.arange(6.0)
+
+        with pytest.raises(ValueError) as error_info:
+            scaling_factor_obj_func(a=1.0, residual_time_series=np.arange(1000.0),
+                                    trend_estimate=trend_estimate)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'residual_time_series\' and \'trend_estimate\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'residual_time_series\' and \'trend_estimate\' are incompatible lengths.'
+
+
+    def test_SSD_scaling_factor_residual_time_series_array(self, test_all=False):
+
+        residual_time_series = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor(residual_time_series=residual_time_series,
+                           trend_estimate=np.arange(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must be of type np.ndarray.'
+
+
+    def test_SSD_scaling_factor_residual_time_series_only_floats(self, test_all=False):
+
+        residual_time_series = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor(residual_time_series=residual_time_series,
+                           trend_estimate=np.arange(1000.0))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'residual_time_series\' must only contain floats.'
+
+
+    def test_SSD_scaling_factor_trend_estimate_array(self, test_all=False):
+
+        trend_estimate = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor(residual_time_series=np.arange(1000.0),
+                           trend_estimate=trend_estimate)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must be of type np.ndarray.'
+
+
+    def test_SSD_scaling_factor_trend_estimate_only_floats(self, test_all=False):
+
+        trend_estimate = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            scaling_factor(residual_time_series=np.arange(1000.0),
+                           trend_estimate=trend_estimate)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'trend_estimate\' must only contain floats.'
+
+
+    def test_SSD_scaling_factor_residual_time_series_and_trend_estimate_lengths(self, test_all=False):
+
+        trend_estimate = np.arange(6.0)
+
+        with pytest.raises(ValueError) as error_info:
+            scaling_factor(residual_time_series=np.arange(1000.0),
+                           trend_estimate=trend_estimate)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'residual_time_series\' and \'trend_estimate\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'residual_time_series\' and \'trend_estimate\' are incompatible lengths.'
+
+
+    def test_SSD_CovRegpy_ssd_time_series_array(self, test_all=False):
+
+        time_series = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssd(time_series, initial_trend_ratio=3.0, nmse_threshold=0.01, plot=False,
+                         debug=False, method='l2')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must be of type np.ndarray.'
+
+
+    def test_SSD_CovRegpy_ssd_time_series_only_floats(self, test_all=False):
+
+        time_series = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssd(time_series, initial_trend_ratio=3.0, nmse_threshold=0.01, plot=False,
+                         debug=False, method='l2')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'time_series\' must only contain floats.'
+
+
+    def test_SSD_CovRegpy_ssd_initial_trend_ratio_value(self, test_all=False):
+
+        initial_trend_ratio_bool = True
+        for initial_trend_ratio in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssd(time_series=np.arange(100.0), initial_trend_ratio=initial_trend_ratio, nmse_threshold=0.01,
+                             plot=False, debug=False, method='l2')
+            initial_trend_ratio_bool = \
+                initial_trend_ratio_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'initial_trend_ratio\' must be a positive float.')
+
+        if (not test_all) and initial_trend_ratio_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'initial_trend_ratio\' must be a positive float.')
+        elif initial_trend_ratio_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'initial_trend_ratio\' must be a positive float.'
+
+
+    def test_SSD_CovRegpy_ssd_nmse_threshold_value(self, test_all=False):
+
+        nmse_threshold_bool = True
+        for nmse_threshold in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                CovRegpy_ssd(time_series=np.arange(100.0), initial_trend_ratio=3.0, nmse_threshold=nmse_threshold,
+                             plot=False, debug=False, method='l2')
+            nmse_threshold_bool = \
+                nmse_threshold_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'nmse_threshold\' must be a positive float.')
+
+        if (not test_all) and nmse_threshold_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'nmse_threshold\' must be a positive float.')
+        elif nmse_threshold_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'nmse_threshold\' must be a positive float.'
+
+
+    def test_SSD_CovRegpy_ssd_plot_bool(self, test_all=False):
+
+        plot = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssd(time_series=np.arange(100.0), initial_trend_ratio=3.0, nmse_threshold=0.01,
+                         plot=plot, debug=False, method='l2')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'plot\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'plot\' must be boolean.'
+
+
+    def test_SSD_CovRegpy_ssd_debug_bool(self, test_all=False):
+
+        debug = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            CovRegpy_ssd(time_series=np.arange(100.0), initial_trend_ratio=3.0, nmse_threshold=0.01,
+                         plot=False, debug=debug, method='l2')
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'debug\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'debug\' must be boolean.'
+
+
+    def test_SSD_CovRegpy_ssd_method_type(self, test_all=False):
+
+        method = 'l3'
+
+        with pytest.raises(ValueError) as error_info:
+            CovRegpy_ssd(time_series=np.arange(100.0), initial_trend_ratio=3.0, nmse_threshold=0.01,
+                         plot=False, debug=False, method=method)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'method\' not an acceptable value.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'method\' not an acceptable value.'
+
+
+    def test_RPP_risk_parity_obj_fun_x_array(self, test_all=False):
+
+        x = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            risk_parity_obj_fun(x=x, p_cov=np.asarray([[1, 0.5], [0.5, 1]]), rb=np.asarray([1/2, 1/2]))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'x\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'x\' must be of type np.ndarray.'
+
+
+    def test_RPP_risk_parity_obj_fun_x_only_floats(self, test_all=False):
+
+        x = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            risk_parity_obj_fun(x=x, p_cov=np.asarray([[1, 0.5], [0.5, 1]]), rb=np.asarray([1/2, 1/2]))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'x\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'x\' must only contain floats.'
+
+
+    def test_RPP_risk_parity_obj_fun_p_cov_array(self, test_all=False):
+
+        p_cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            risk_parity_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=p_cov, rb=np.asarray([1/2, 1/2]))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_risk_parity_obj_fun_p_cov_only_floats(self, test_all=False):
+
+        p_cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            risk_parity_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=p_cov, rb=np.asarray([1/2, 1/2]))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must only contain floats.'
+
+
+    def test_RPP_risk_parity_obj_fun_p_cov_psd(self, test_all=False):
+
+        p_cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            risk_parity_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=p_cov, rb=np.asarray([1/2, 1/2]))
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'p_cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'p_cov\' must be PSD.'
+
+
+    def test_RPP_risk_parity_obj_fun_x_p_cov_shape(self, test_all=False):
+
+        x = np.ones(3) / 3
+        p_cov = np.eye(5)
+
+        with pytest.raises(ValueError) as error_info:
+            risk_parity_obj_fun(x=x, p_cov=p_cov, rb=np.ones(3) / 3)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'x\' and \'p_cov\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'x\' and \'p_cov\' are incompatible lengths.'
+
+
+    def test_RPP_risk_parity_obj_fun_rb_array(self, test_all=False):
+
+        rb = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            risk_parity_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=np.eye(2), rb=rb)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'rb\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'rb\' must be of type np.ndarray.'
+
+
+    def test_RPP_risk_parity_obj_fun_rb_only_floats(self, test_all=False):
+
+        rb = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            risk_parity_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=np.eye(2), rb=rb)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'rb\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'rb\' must only contain floats.'
+
+
+    def test_RPP_risk_parity_obj_fun_x_rb_shape(self, test_all=False):
+
+        x = np.ones(3) / 3
+        rb = np.ones(4) / 4
+
+        with pytest.raises(ValueError) as error_info:
+            risk_parity_obj_fun(x=x, p_cov=np.eye(3), rb=rb)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'x\' and \'rb\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'x\' and \'rb\' are incompatible lengths.'
+
+
+    def test_RPP_equal_risk_parity_weights_long_restriction_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_long_restriction(cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_equal_risk_parity_weights_long_restriction_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_long_restriction(cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_equal_risk_parity_weights_long_restriction_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            equal_risk_parity_weights_long_restriction(cov)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_equal_risk_parity_weights_short_restriction_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_short_restriction(cov, short_limit=1.0)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_equal_risk_parity_weights_short_restriction_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_short_restriction(cov, short_limit=1.0)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_equal_risk_parity_weights_short_restriction_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            equal_risk_parity_weights_short_restriction(cov, short_limit=1.0)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_equal_risk_parity_weights_short_restriction_short_limit_value(self, test_all=False):
+
+        short_limit_bool = True
+        for short_limit in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                equal_risk_parity_weights_short_restriction(cov=np.asarray([[1., -1.], [1., -1.]]),
+                                                            short_limit=short_limit)
+            short_limit_bool = \
+                short_limit_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'short_limit\' must be a positive float.')
+
+        if (not test_all) and short_limit_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'short_limit\' must be a positive float.')
+        elif short_limit_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'short_limit\' must be a positive float.'
+
+
+    def test_RPP_equal_risk_parity_weights_summation_restriction_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_equal_risk_parity_weights_summation_restriction_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_equal_risk_parity_weights_summation_restriction_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            equal_risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_limit=1.3)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_equal_risk_parity_weights_summation_restriction_short_limit_value(self, test_all=False):
+
+        short_limit_bool = True
+        for short_limit in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                equal_risk_parity_weights_summation_restriction(cov=np.asarray([[1., -1.], [1., -1.]]),
+                                                                short_limit=short_limit, long_limit=1.3)
+            short_limit_bool = \
+                short_limit_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'short_limit\' must be a positive float.')
+
+        if (not test_all) and short_limit_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'short_limit\' must be a positive float.')
+        elif short_limit_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'short_limit\' must be a positive float.'
+
+
+    def test_RPP_equal_risk_parity_weights_summation_restriction_long_limit_value(self, test_all=False):
+
+        long_limit_bool = True
+        for long_limit in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                equal_risk_parity_weights_summation_restriction(cov=np.asarray([[1., -1.], [1., -1.]]),
+                                                                short_limit=0.3, long_limit=long_limit)
+            long_limit_bool = \
+                long_limit_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'long_limit\' must be a positive float.')
+
+        if (not test_all) and long_limit_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'long_limit\' must be a positive float.')
+        elif long_limit_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'long_limit\' must be a positive float.'
+
+
+    def test_RPP_global_obj_fun_x_array(self, test_all=False):
+
+        x = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            global_obj_fun(x=x, p_cov=np.asarray([[1., -1.], [1., -1.]]))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'x\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'x\' must be of type np.ndarray.'
+
+
+    def test_RPP_global_obj_fun_x_only_floats(self, test_all=False):
+
+        x = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            global_obj_fun(x=x, p_cov=np.asarray([[1., -1.], [1., -1.]]))
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'x\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'x\' must only contain floats.'
+
+
+    def test_RPP_global_obj_fun_p_cov_array(self, test_all=False):
+
+        p_cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            global_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=p_cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_global_obj_fun_p_cov_only_floats(self, test_all=False):
+
+        p_cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            global_obj_fun(x=np.asarray([1/2, 1/2]), p_cov=p_cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'p_cov\' must only contain floats.'
+
+
+    def test_RPP_global_obj_fun_p_cov_psd(self, test_all=False):
+
+        p_cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            global_obj_fun(x=np.asarray([1/3, 1/3, 1/3]), p_cov=p_cov)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'p_cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'p_cov\' must be PSD.'
+
+
+    def test_RPP_global_obj_fun_x_p_cov_shape(self, test_all=False):
+
+        x = np.ones(3) / 3
+        p_cov = np.eye(5)
+
+        with pytest.raises(ValueError) as error_info:
+            global_obj_fun(x=x, p_cov=p_cov)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'x\' and \'p_cov\' are incompatible lengths.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'x\' and \'p_cov\' are incompatible lengths.'
+
+
+    def test_RPP_global_weights_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            global_weights(cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_global_weights_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            global_weights(cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_global_weights_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            global_weights(cov)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_global_weights_long_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            global_weights_long(cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_global_weights_long_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            global_weights_long(cov)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_global_weights_long_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            global_weights_long(cov)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_global_weights_short_and_long_restrict_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            global_weights_short_and_long_restrict(cov, b=0.3, a=1.3)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_global_weights_short_and_long_restrict_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            global_weights_short_and_long_restrict(cov, b=0.3, a=1.3)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_global_weights_short_and_long_restrict_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            global_weights_short_and_long_restrict(cov, b=0.3, a=1.3)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_global_weights_short_and_long_restrict_b_value(self, test_all=False):
+
+        b_bool = True
+        for b in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                global_weights_short_and_long_restrict(cov=np.asarray([[1., -1.], [1., -1.]]), b=b, a=1.3)
+            b_bool = \
+                b_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'b\' must be a positive float.')
+
+        if (not test_all) and b_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'b\' must be a positive float.')
+        elif b_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'b\' must be a positive float.'
+
+
+    def test_RPP_global_weights_short_and_long_restrict_a_value(self, test_all=False):
+
+        a_bool = True
+        for a in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                global_weights_short_and_long_restrict(cov=np.asarray([[1., -1.], [1., -1.]]), b=0.3, a=a)
+            a_bool = \
+                a_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'a\' must be a positive float.')
+
+        if (not test_all) and a_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'a\' must be a positive float.')
+        elif a_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'long_limit\' must be a positive float.'
+
+
+    def test_RPP_equal_risk_parity_weights_individual_restriction_cov_array(self, test_all=False):
+
+        cov = 5.0
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_individual_restriction(cov, short_limit=0.3, long_limit=1.3)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must be of type np.ndarray.'
+
+
+    def test_RPP_equal_risk_parity_weights_individual_restriction_cov_only_floats(self, test_all=False):
+
+        cov = np.arange(6)
+
+        with pytest.raises(TypeError) as error_info:
+            equal_risk_parity_weights_individual_restriction(cov, short_limit=0.3, long_limit=1.3)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'cov\' must only contain floats.'
+
+
+    def test_RPP_equal_risk_parity_weights_individual_restriction_cov_psd(self, test_all=False):
+
+        cov = np.asarray([[1., -1., -1.], [-1., 1., -1.], [-1., -1., 1.]])
+
+        with pytest.raises(ValueError) as error_info:
+            equal_risk_parity_weights_individual_restriction(cov, short_limit=0.3, long_limit=1.3)
+        if not test_all:
+            print(error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.')
+        else:
+            return error_info.type is ValueError and error_info.value.args[0] == '\'cov\' must be PSD.'
+
+
+    def test_RPP_equal_risk_parity_weights_individual_restriction_short_limit_value(self, test_all=False):
+
+        short_limit_bool = True
+        for short_limit in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                equal_risk_parity_weights_individual_restriction(cov=np.asarray([[1., -1.], [1., -1.]]),
+                                                                short_limit=short_limit, long_limit=1.3)
+            short_limit_bool = \
+                short_limit_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'short_limit\' must be a positive float.')
+
+        if (not test_all) and short_limit_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'short_limit\' must be a positive float.')
+        elif short_limit_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'short_limit\' must be a positive float.'
+
+
+    def test_RPP_equal_risk_parity_weights_individual_restriction_long_limit_value(self, test_all=False):
+
+        long_limit_bool = True
+        for long_limit in [6, -1.0]:
+            with pytest.raises(ValueError) as error_info:
+                equal_risk_parity_weights_summation_restriction(cov=np.asarray([[1., -1.], [1., -1.]]),
+                                                                short_limit=0.3, long_limit=long_limit)
+            long_limit_bool = \
+                long_limit_bool and (error_info.type is ValueError and error_info.value.args[0] ==
+                            '\'long_limit\' must be a positive float.')
+
+        if (not test_all) and long_limit_bool:
+            print(error_info.type is ValueError and error_info.value.args[0] ==
+                  '\'long_limit\' must be a positive float.')
+        elif long_limit_bool:
+            return error_info.type is ValueError and error_info.value.args[0] == \
+                '\'long_limit\' must be a positive float.'
+
+
 if __name__ == "__main__":
 
     test_rcr = RCRUnitTests(calc_B_Psi, gamma_v_m_error, cov_reg_given_mean, subgrad_opt, covregpy_dcc, dcc_loglike,
-                            gp_forecast)
+                            risk_parity_obj_fun, CovRegpy_ssa, gaussian, max_bool, spectral_obj_func_l1, spectral_obj_func_l2,
+                            gaus_param, scaling_factor_obj_func, scaling_factor, CovRegpy_ssd, henderson_kernel,
+                            henderson_weights, henderson_ma, seasonal_ma, CovRegpy_X11)
 
-    test_rcr.test_m_array()
-    test_rcr.test_m_only_floats()
-    test_rcr.test_m_shape()
+    # test_rcr.test_m_array()
+    # test_rcr.test_m_only_floats()
+    # test_rcr.test_m_shape()
 
-    test_rcr.test_v_array()
-    test_rcr.test_v_only_floats()
-    test_rcr.test_v_shape()
+    # test_rcr.test_v_array()
+    # test_rcr.test_v_only_floats()
+    # test_rcr.test_v_shape()
 
-    test_rcr.test_m_and_v()
+    # test_rcr.test_m_and_v()
 
-    test_rcr.test_x_array()
-    test_rcr.test_x_only_floats()
+    # test_rcr.test_x_array()
+    # test_rcr.test_x_only_floats()
 
-    test_rcr.test_y_array()
-    test_rcr.test_y_only_floats()
+    # test_rcr.test_y_array()
+    # test_rcr.test_y_only_floats()
 
-    test_rcr.test_basis_array()
-    test_rcr.test_basis_only_floats()
+    # test_rcr.test_basis_array()
+    # test_rcr.test_basis_only_floats()
 
-    test_rcr.test_A_est_array()
-    test_rcr.test_A_est_only_floats()
+    # test_rcr.test_A_est_array()
+    # test_rcr.test_A_est_only_floats()
 
-    test_rcr.test_technique_type()
+    # test_rcr.test_technique_type()
 
-    test_rcr.test_technique_type()
-    test_rcr.test_alpha_type()
-    test_rcr.test_l1_ratio_or_reg_type()
-    test_rcr.test_group_reg_type()
-    test_rcr.test_max_iter_type()
+    # test_rcr.test_technique_type()
+    # test_rcr.test_alpha_type()
+    # test_rcr.test_l1_ratio_or_reg_type()
+    # test_rcr.test_group_reg_type()
+    # test_rcr.test_max_iter_type()
 
-    test_rcr.test_group_array()
-    test_rcr.test_groups_only_integers()
+    # test_rcr.test_group_array()
+    # test_rcr.test_groups_only_integers()
 
-    test_rcr.test_gamma_v_m_error_errors_array()
-    test_rcr.test_gamma_v_m_error_errors_only_floats()
-    test_rcr.test_gamma_v_m_error_x_array()
-    test_rcr.test_gamma_v_m_error_x_only_floats()
-    test_rcr.test_gamma_v_m_error_Psi_array()
-    test_rcr.test_gamma_v_m_error_Psi_only_floats()
-    test_rcr.test_gamma_v_m_error_B_array()
-    test_rcr.test_gamma_v_m_error_B_only_floats()
+    # test_rcr.test_gamma_v_m_error_errors_array()
+    # test_rcr.test_gamma_v_m_error_errors_only_floats()
+    # test_rcr.test_gamma_v_m_error_x_array()
+    # test_rcr.test_gamma_v_m_error_x_only_floats()
+    # test_rcr.test_gamma_v_m_error_Psi_array()
+    # test_rcr.test_gamma_v_m_error_Psi_only_floats()
+    # test_rcr.test_gamma_v_m_error_B_array()
+    # test_rcr.test_gamma_v_m_error_B_only_floats()
 
-    test_rcr.test_cov_reg_given_mean_A_est_array()
-    test_rcr.test_cov_reg_given_mean_A_est_only_floats()
-    test_rcr.test_cov_reg_given_mean_basis_array()
-    test_rcr.test_cov_reg_given_mean_basis_only_floats()
-    test_rcr.test_cov_reg_given_mean_x_array()
-    test_rcr.test_cov_reg_given_mean_x_only_floats()
-    test_rcr.test_cov_reg_given_mean_y_array()
-    test_rcr.test_cov_reg_given_mean_y_only_floats()
-    test_rcr.test_cov_reg_given_mean_iterations_type()
-    test_rcr.test_cov_reg_given_mean_technique_type()
-    test_rcr.test_cov_reg_given_mean_alpha_type()
-    test_rcr.test_cov_reg_given_mean_l1_ratio_or_reg_type()
-    test_rcr.test_cov_reg_given_mean_group_reg_type()
-    test_rcr.test_cov_reg_given_mean_max_iter_type()
-    test_rcr.test_cov_reg_given_mean_groups_array()
-    test_rcr.test_cov_reg_given_mean_groups_only_integers()
+    # test_rcr.test_cov_reg_given_mean_A_est_array()
+    # test_rcr.test_cov_reg_given_mean_A_est_only_floats()
+    # test_rcr.test_cov_reg_given_mean_basis_array()
+    # test_rcr.test_cov_reg_given_mean_basis_only_floats()
+    # test_rcr.test_cov_reg_given_mean_x_array()
+    # test_rcr.test_cov_reg_given_mean_x_only_floats()
+    # test_rcr.test_cov_reg_given_mean_y_array()
+    # test_rcr.test_cov_reg_given_mean_y_only_floats()
+    # test_rcr.test_cov_reg_given_mean_iterations_type()
+    # test_rcr.test_cov_reg_given_mean_technique_type()
+    # test_rcr.test_cov_reg_given_mean_alpha_type()
+    # test_rcr.test_cov_reg_given_mean_l1_ratio_or_reg_type()
+    # test_rcr.test_cov_reg_given_mean_group_reg_type()
+    # test_rcr.test_cov_reg_given_mean_max_iter_type()
+    # test_rcr.test_cov_reg_given_mean_groups_array()
+    # test_rcr.test_cov_reg_given_mean_groups_only_integers()
 
-    test_rcr.test_subgrad_opt_x_tilda_array()
-    test_rcr.test_subgrad_opt_x_tilda_only_floats()
-    test_rcr.test_subgrad_opt_y_tilda_array()
-    test_rcr.test_subgrad_opt_y_tilda_only_floats()
-    test_rcr.test_subgrad_opt_max_iter_type()
-    test_rcr.test_subgrad_opt_alpha_type()
+    # test_rcr.test_subgrad_opt_x_tilda_array()
+    # test_rcr.test_subgrad_opt_x_tilda_only_floats()
+    # test_rcr.test_subgrad_opt_y_tilda_array()
+    # test_rcr.test_subgrad_opt_y_tilda_only_floats()
+    # test_rcr.test_subgrad_opt_max_iter_type()
+    # test_rcr.test_subgrad_opt_alpha_type()
 
     # test_rcr.test_returns_suitable()
     # test_rcr.test_returns_nans()
@@ -1226,5 +3302,169 @@ if __name__ == "__main__":
     # test_rcr.test_gp_forecast_dependent_suitable()
     # test_rcr.test_gp_forecast_dependent_nans()
     # test_rcr.test_gp_forecast_dependent_floats()
-    test_rcr.test_all(print_all=True)
+
+    # test_rcr.test_RPP_risk_parity_obj_fun_x_array()
+    # test_rcr.test_RPP_risk_parity_obj_fun_x_only_floats()
+    # test_rcr.test_RPP_risk_parity_obj_fun_p_cov_array()
+    # test_rcr.test_RPP_risk_parity_obj_fun_p_cov_only_floats()
+    # test_rcr.test_RPP_risk_parity_obj_fun_p_cov_psd()
+    # test_rcr.test_RPP_risk_parity_obj_fun_x_p_cov_shape()
+    # test_rcr.test_RPP_risk_parity_obj_fun_rb_array()
+    # test_rcr.test_RPP_risk_parity_obj_fun_rb_only_floats()
+    # test_rcr.test_RPP_risk_parity_obj_fun_x_rb_shape()
+
+    # test_rcr.test_RPP_equal_risk_parity_weights_long_restriction_cov_array()
+    # test_rcr.test_RPP_equal_risk_parity_weights_long_restriction_cov_only_floats()
+    # test_rcr.test_RPP_equal_risk_parity_weights_long_restriction_cov_psd()
+
+    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_cov_array()
+    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_cov_only_floats()
+    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_cov_psd()
+    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_short_limit_value()
+
+    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_cov_array()
+    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_cov_only_floats()
+    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_cov_psd()
+    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_short_limit_value()
+    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_long_limit_value()
+
+    # test_rcr.test_RPP_global_obj_fun_x_array()
+    # test_rcr.test_RPP_global_obj_fun_x_only_floats()
+    # test_rcr.test_RPP_global_obj_fun_p_cov_array()
+    # test_rcr.test_RPP_global_obj_fun_p_cov_only_floats()
+    # test_rcr.test_RPP_global_obj_fun_p_cov_psd()
+    # test_rcr.test_RPP_global_obj_fun_x_p_cov_shape()
+
+    # test_rcr.test_RPP_global_weights_cov_array()
+    # test_rcr.test_RPP_global_weights_cov_only_floats()
+    # test_rcr.test_RPP_global_weights_cov_psd()
+
+    # test_rcr.test_RPP_global_weights_long_cov_array()
+    # test_rcr.test_RPP_global_weights_long_cov_only_floats()
+    # test_rcr.test_RPP_global_weights_long_cov_psd()
+
+    test_rcr.test_RPP_global_weights_short_and_long_restrict_cov_array()
+    test_rcr.test_RPP_global_weights_short_and_long_restrict_cov_only_floats()
+    test_rcr.test_RPP_global_weights_short_and_long_restrict_cov_psd()
+    test_rcr.test_RPP_global_weights_short_and_long_restrict_b_value()
+    test_rcr.test_RPP_global_weights_short_and_long_restrict_a_value()
+
+    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_cov_array()
+    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_cov_only_floats()
+    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_cov_psd()
+    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_short_limit_value()
+    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_long_limit_value()
+
+    # test_rcr.test_SSA_time_series_array()
+    # test_rcr.test_SSA_time_series_only_floats()
+    # test_rcr.test_SSA_L_value()
+    # test_rcr.test_SSA_est_value()
+    # test_rcr.test_SSA_plot_bool()
+    # test_rcr.test_SSA_KS_test_bool()
+    # test_rcr.test_SSA_plot_KS_test_bool()
+    # test_rcr.test_SSA_KS_scale_limit_value()
+    # test_rcr.test_SSA_max_eig_ratio_value()
+    # test_rcr.test_SSA_KS_start_value()
+    # test_rcr.test_SSA_KS_end_value()
+    # test_rcr.test_SSA_KS_interval_value()
+
+    # test_rcr.test_SSD_gaussian_f_array()
+    # test_rcr.test_SSD_gaussian_f_only_floats()
+    # test_rcr.test_SSD_gaussian_A_value()
+    # test_rcr.test_SSD_gaussian_mu_value()
+    # test_rcr.test_SSD_gaussian_sigma_value()
+
+    # test_rcr.test_SSD_max_bool_time_series_array()
+    # test_rcr.test_SSD_max_bool_time_series_only_floats()
+
+    # test_rcr.test_SSD_spectral_obj_func_l1_theta_array()
+    # test_rcr.test_SSD_spectral_obj_func_l1_theta_only_floats()
+    # test_rcr.test_SSD_spectral_obj_func_l1_theta_length()
+    # test_rcr.test_SSD_spectral_obj_func_l1_f_array()
+    # test_rcr.test_SSD_spectral_obj_func_l1_f_only_floats()
+    # test_rcr.test_SSD_spectral_obj_func_l1_mu_1_value()
+    # test_rcr.test_SSD_spectral_obj_func_l1_mu_2_value()
+    # test_rcr.test_SSD_spectral_obj_func_l1_mu_3_value()
+    # test_rcr.test_SSD_spectral_obj_func_l1_spectrum_array()
+    # test_rcr.test_SSD_spectral_obj_func_l1_spectrum_only_floats()
+    # test_rcr.test_SSD_spectral_obj_func_l1_f_and_spectrum_lengths()
+
+    # test_rcr.test_SSD_spectral_obj_func_l2_theta_array()
+    # test_rcr.test_SSD_spectral_obj_func_l2_theta_only_floats()
+    # test_rcr.test_SSD_spectral_obj_func_l2_theta_length()
+    # test_rcr.test_SSD_spectral_obj_func_l2_f_array()
+    # test_rcr.test_SSD_spectral_obj_func_l2_f_only_floats()
+    # test_rcr.test_SSD_spectral_obj_func_l2_mu_1_value()
+    # test_rcr.test_SSD_spectral_obj_func_l2_mu_2_value()
+    # test_rcr.test_SSD_spectral_obj_func_l2_mu_3_value()
+    # test_rcr.test_SSD_spectral_obj_func_l2_spectrum_array()
+    # test_rcr.test_SSD_spectral_obj_func_l2_spectrum_only_floats()
+    # test_rcr.test_SSD_spectral_obj_func_l2_f_and_spectrum_lengths()
+
+    # test_rcr.test_SSD_gaus_param_w0_array()
+    # test_rcr.test_SSD_gaus_param_w0_only_floats()
+    # test_rcr.test_SSD_gaus_param_w0_length()
+    # test_rcr.test_SSD_gaus_param_f_array()
+    # test_rcr.test_SSD_gaus_param_f_only_floats()
+    # test_rcr.test_SSD_gaus_param_mu_1_value()
+    # test_rcr.test_SSD_gaus_param_mu_2_value()
+    # test_rcr.test_SSD_gaus_param_mu_3_value()
+    # test_rcr.test_SSD_gaus_param_spectrum_array()
+    # test_rcr.test_SSD_gaus_param_spectrum_only_floats()
+    # test_rcr.test_SSD_gaus_param_f_and_spectrum_lengths()
+    # test_rcr.test_SSD_gaus_param_method_value()
+
+    # test_rcr.test_SSD_scaling_factor_obj_func_a_value()
+    # test_rcr.test_SSD_scaling_factor_obj_func_residual_time_series_array()
+    # test_rcr.test_SSD_scaling_factor_obj_func_residual_time_series_only_floats()
+    # test_rcr.test_SSD_scaling_factor_obj_func_trend_estimate_array()
+    # test_rcr.test_SSD_scaling_factor_obj_func_trend_estimate_only_floats()
+    # test_rcr.test_SSD_scaling_factor_obj_func_residual_time_series_and_trend_estimate_lengths()
+
+    # test_rcr.test_SSD_scaling_factor_residual_time_series_array()
+    # test_rcr.test_SSD_scaling_factor_residual_time_series_only_floats()
+    # test_rcr.test_SSD_scaling_factor_trend_estimate_array()
+    # test_rcr.test_SSD_scaling_factor_trend_estimate_only_floats()
+    # test_rcr.test_SSD_scaling_factor_residual_time_series_and_trend_estimate_lengths()
+
+    # test_rcr.test_SSD_CovRegpy_ssd_time_series_array()
+    # test_rcr.test_SSD_CovRegpy_ssd_time_series_only_floats()
+    # test_rcr.test_SSD_CovRegpy_ssd_initial_trend_ratio_value()
+    # test_rcr.test_SSD_CovRegpy_ssd_nmse_threshold_value()
+    # test_rcr.test_SSD_CovRegpy_ssd_plot_bool()
+    # test_rcr.test_SSD_CovRegpy_ssd_debug_bool()
+    # test_rcr.test_SSD_CovRegpy_ssd_method_type()
+
+    # test_rcr.test_X11_henderson_kernel_order_value()
+    # test_rcr.test_X11_henderson_kernel_start_value()
+    # test_rcr.test_X11_henderson_kernel_end_value()
+    # test_rcr.test_X11_henderson_kernel_start_end_value()
+
+    # test_rcr.test_X11_henderson_weights_order_value()
+    # test_rcr.test_X11_henderson_weights_start_value()
+    # test_rcr.test_X11_henderson_weights_end_value()
+    # test_rcr.test_X11_henderson_weights_start_end_value()
+
+    # test_rcr.test_X11_henderson_ma_time_series_array()
+    # test_rcr.test_X11_henderson_ma_time_series_only_floats()
+    # test_rcr.test_X11_henderson_ma_order_value()
+    # test_rcr.test_X11_henderson_ma_method_type()
+
+    # test_rcr.test_X11_seasonal_ma_time_series_array()
+    # test_rcr.test_X11_seasonal_ma_time_series_only_floats()
+    # test_rcr.test_X11_seasonal_ma_factors_type()
+    # test_rcr.test_X11_seasonal_ma_seasonality_type()
+
+    # test_rcr.test_X11_time_array()
+    # test_rcr.test_X11_time_only_floats()
+    # test_rcr.test_X11_time_series_array()
+    # test_rcr.test_X11_time_series_only_floats()
+    # test_rcr.test_X11_time_series_error_length()
+    # test_rcr.test_X11_seasonality_value()
+    # test_rcr.test_X11_seasonal_factor_value()
+    # test_rcr.test_X11_trend_window_width_1_value()
+    # test_rcr.test_X11_trend_window_width_2_value()
+    # test_rcr.test_X11_trend_window_width_3_value()
+
+    # test_rcr.test_all(print_all=True)
 

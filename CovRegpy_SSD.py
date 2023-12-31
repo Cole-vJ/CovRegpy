@@ -52,6 +52,18 @@ def gaussian(f, A, mu, sigma):
     Used in calculation of downsampling range.
 
     """
+
+    if not isinstance(f, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'f\' must be of type np.ndarray.')
+    if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'f\' must only contain floats.')
+    if (not isinstance(A, float)) or A <= 0:
+        raise ValueError('\'A\' must be a positive float.')
+    if (not isinstance(mu, float)) or mu <= 0:
+        raise ValueError('\'mu\' must be a positive float.')
+    if (not isinstance(sigma, float)) or sigma <= 0:
+        raise ValueError('\'sigma\' must be a positive float.')
+
     distribution = A * np.exp(- (f - mu) ** 2 / (2 * sigma ** 2))
 
     return distribution
@@ -76,6 +88,12 @@ def max_bool(time_series):
     Used to calculate centres of each Gaussian distributions.
 
     """
+
+    if not isinstance(time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'time_series\' must be of type np.ndarray.')
+    if np.array(time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'time_series\' must only contain floats.')
+
     max_bool = np.r_[False, time_series[1:] >= time_series[:-1]] & np.r_[time_series[:-1] > time_series[1:], False]
 
     return max_bool
@@ -115,6 +133,30 @@ def spectral_obj_func_l1(theta, f, mu_1, mu_2, mu_3, spectrum):
     Should experiment with different norms.
 
     """
+
+    if not isinstance(theta, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'theta\' must be of type np.ndarray.')
+    if np.array(theta).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'theta\' must only contain floats.')
+    if len(theta) != 6:
+        raise ValueError('\'theta\' must be of length 6.')
+    if not isinstance(f, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'f\' must be of type np.ndarray.')
+    if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'f\' must only contain floats.')
+    if (not isinstance(mu_1, float)) or mu_1 <= 0:
+        raise ValueError('\'mu_1\' must be a positive float.')
+    if (not isinstance(mu_2, float)) or mu_2 <= 0:
+        raise ValueError('\'mu_2\' must be a positive float.')
+    if (not isinstance(mu_3, float)) or mu_3 <= 0:
+        raise ValueError('\'mu_3\' must be a positive float.')
+    if not isinstance(spectrum, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'spectrum\' must be of type np.ndarray.')
+    if np.array(spectrum).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'spectrum\' must only contain floats.')
+    if len(f) != len(spectrum):
+        raise ValueError('\'f\' and \'spectrum\' are incompatible lengths.')
+
     objective_function = sum(np.abs(theta[0] * np.exp(- (f - mu_1) ** 2 / (2 * theta[3] ** 2)) +
                                     theta[1] * np.exp(- (f - mu_2) ** 2 / (2 * theta[4] ** 2)) +
                                     theta[2] * np.exp(- (f - mu_3) ** 2 / (2 * theta[5] ** 2)) - spectrum))
@@ -156,6 +198,30 @@ def spectral_obj_func_l2(theta, f, mu_1, mu_2, mu_3, spectrum):
     Should experiment with different norms.
 
     """
+
+    if not isinstance(theta, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'theta\' must be of type np.ndarray.')
+    if np.array(theta).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'theta\' must only contain floats.')
+    if len(theta) != 6:
+        raise ValueError('\'theta\' must be of length 6.')
+    if not isinstance(f, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'f\' must be of type np.ndarray.')
+    if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'f\' must only contain floats.')
+    if (not isinstance(mu_1, float)) or mu_1 <= 0:
+        raise ValueError('\'mu_1\' must be a positive float.')
+    if (not isinstance(mu_2, float)) or mu_2 <= 0:
+        raise ValueError('\'mu_2\' must be a positive float.')
+    if (not isinstance(mu_3, float)) or mu_3 <= 0:
+        raise ValueError('\'mu_3\' must be a positive float.')
+    if not isinstance(spectrum, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'spectrum\' must be of type np.ndarray.')
+    if np.array(spectrum).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'spectrum\' must only contain floats.')
+    if len(f) != len(spectrum):
+        raise ValueError('\'f\' and \'spectrum\' are incompatible lengths.')
+
     objective_function = sum((theta[0] * np.exp(- (f - mu_1) ** 2 / (2 * theta[3] ** 2)) +
                               theta[1] * np.exp(- (f - mu_2) ** 2 / (2 * theta[4] ** 2)) +
                               theta[2] * np.exp(- (f - mu_3) ** 2 / (2 * theta[5] ** 2)) - spectrum) ** 2)
@@ -221,6 +287,32 @@ def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum, method='l1'):
     -----
 
     """
+
+    if not isinstance(w0, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'w0\' must be of type np.ndarray.')
+    if np.array(w0).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'w0\' must only contain floats.')
+    if len(w0) != 6:
+        raise ValueError('\'w0\' must be of length 6.')
+    if not isinstance(f, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'f\' must be of type np.ndarray.')
+    if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'f\' must only contain floats.')
+    if (not isinstance(mu_1, float)) or mu_1 <= 0:
+        raise ValueError('\'mu_1\' must be a positive float.')
+    if (not isinstance(mu_2, float)) or mu_2 <= 0:
+        raise ValueError('\'mu_2\' must be a positive float.')
+    if (not isinstance(mu_3, float)) or mu_3 <= 0:
+        raise ValueError('\'mu_3\' must be a positive float.')
+    if not isinstance(spectrum, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'spectrum\' must be of type np.ndarray.')
+    if np.array(spectrum).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'spectrum\' must only contain floats.')
+    if len(f) != len(spectrum):
+        raise ValueError('\'f\' and \'spectrum\' are incompatible lengths.')
+    if method not in {'l1', 'l2'}:
+        raise ValueError('\'method\' not an acceptable value.')
+
     cons = ({'type': 'ineq', 'fun': constraint_positive})
     if method == 'l1':
         return minimize(spectral_obj_func_l1, x0=w0,
@@ -256,6 +348,21 @@ def scaling_factor_obj_func(a, residual_time_series, trend_estimate):
     -----
 
     """
+
+    if (not isinstance(a, float)) or a <= 0:
+        raise ValueError('\'a\' must be a positive float.')
+    if not isinstance(residual_time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'residual_time_series\' must be of type np.ndarray.')
+    if np.array(residual_time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'residual_time_series\' must only contain floats.')
+    if not isinstance(trend_estimate, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'trend_estimate\' must be of type np.ndarray.')
+    if np.array(trend_estimate).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'trend_estimate\' must only contain floats.')
+    if len(residual_time_series) != len(trend_estimate):
+        raise ValueError('\'residual_time_series\' and \'trend_estimate\' are incompatible lengths.')
+
+
     l2_error = sum((residual_time_series - a * trend_estimate) ** 2)
 
     return l2_error
@@ -282,13 +389,25 @@ def scaling_factor(residual_time_series, trend_estimate):
     -----
 
     """
+
+    if not isinstance(residual_time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'residual_time_series\' must be of type np.ndarray.')
+    if np.array(residual_time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'residual_time_series\' must only contain floats.')
+    if not isinstance(trend_estimate, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'trend_estimate\' must be of type np.ndarray.')
+    if np.array(trend_estimate).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'trend_estimate\' must only contain floats.')
+    if len(residual_time_series) != len(trend_estimate):
+        raise ValueError('\'residual_time_series\' and \'trend_estimate\' are incompatible lengths.')
+
     cons = ({'type': 'ineq', 'fun': constraint_positive})
     return minimize(scaling_factor_obj_func, x0=np.asarray(1),
                     args=(residual_time_series, trend_estimate),
                     method='nelder-mead', constraints=cons)
 
 
-def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=False, debug=False, method='l2'):
+def CovRegpy_ssd(time_series, initial_trend_ratio=3.0, nmse_threshold=0.01, plot=False, debug=False, method='l2'):
     """
     Singular Spectrum Decomposition based on Bonizzi, Karel, Meste, & Peeters (2014).
 
@@ -297,11 +416,11 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
     time_series : real ndarray
         Time series to decompose.
 
-    initial_trend_ratio : positive integer
-        Recommended initial_trend_ratio=3 in Bonizzi, Karel, Meste, & Peeters (2014).
+    initial_trend_ratio : positive float
+        Recommended initial_trend_ratio=3.0 in Bonizzi, Karel, Meste, & Peeters (2014).
         Not appropriate for some trends as demonstrated in example.
 
-    nmse_threshold : float
+    nmse_threshold : positive float
         Normalised Mean-Squared Error stopping criterion from Bonizzi, Karel, Meste, & Peeters (2014).
         Should explore additional stopping criteria.
 
@@ -324,6 +443,22 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
     Many expansions possible. We explore some of these in attempt to make more robust.
 
     """
+
+    if not isinstance(time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('\'time_series\' must be of type np.ndarray.')
+    if np.array(time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('\'time_series\' must only contain floats.')
+    if (not isinstance(initial_trend_ratio, float)) or initial_trend_ratio <= 0:
+        raise ValueError('\'initial_trend_ratio\' must be a positive float.')
+    if (not isinstance(nmse_threshold, float)) or nmse_threshold <= 0:
+        raise ValueError('\'nmse_threshold\' must be a positive float.')
+    if not isinstance(plot, bool):
+        raise TypeError('\'plot\' must be boolean.')
+    if not isinstance(debug, bool):
+        raise TypeError('\'debug\' must be boolean.')
+    if method not in {'l1', 'l2'}:
+        raise ValueError('\'method\' not an acceptable value.')
+
     # make duplicate of original time series
     time_series_orig = time_series.copy()
     time_series_resid = time_series.copy()
@@ -391,7 +526,7 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3, nmse_threshold=0.01, plot=F
         sigma_3 = 4 * np.abs(mu_1 - mu_2)
         gaus_3 = gaussian(f * dt, A_3, mu_3, sigma_3)
 
-        x0 = np.zeros(6)
+        x0 = np.zeros(6.0)
         x0[0] = A_1
         x0[1] = A_2
         x0[2] = A_3

@@ -18,7 +18,7 @@ from scipy.interpolate import interp1d
 sns.set(style='darkgrid')
 
 
-def henderson_kernel(order=13, start=np.nan, end=np.nan):
+def henderson_kernel(order=13, start=None, end=None):
     """
     Henderson Kernel.
 
@@ -27,11 +27,11 @@ def henderson_kernel(order=13, start=np.nan, end=np.nan):
     order : odd positive integer
         Order of filter.
 
-    start : negative integer or numpy.nan
-        Used in asymmetric weighting. If numpy.nan then symmetric weighting.
+    start : negative integer or None
+        Used in asymmetric weighting. If None then symmetric weighting.
 
-    end : positive integer or numpy.nan
-        Used in asymmetric weighting. If numpy.nan then symmetric weighting.
+    end : positive integer or None
+        Used in asymmetric weighting. If None then symmetric weighting.
 
     Returns
     -------
@@ -45,10 +45,21 @@ def henderson_kernel(order=13, start=np.nan, end=np.nan):
     Renormalised when incomplete - does nothing when complete as weights sum to one.
 
     """
-    if np.isnan(start):
+
+    if start is None:
         start = -int((order - 1) / 2)
-    if np.isnan(end):
+    if end is None:
         end = int((order - 1) / 2)
+
+    if (not isinstance(order, int)) or (not order > 0) or (not order % 2 == 1):
+        raise ValueError('\'order\' must be a positive odd integer.')
+    if (not isinstance(start, int)) or (start >= 0) or (start < -int((order - 1) / 2)):
+        raise ValueError('\'start\' must be negative integer of correct magnitude.')
+    if (not isinstance(end, int)) or (end <= 0) or (end >= int((order - 1) / 2)):
+        raise ValueError('\'end\' must be positive integer of correct magnitude.')
+    if start != -end:
+        raise ValueError('\'start\' and \'end\' must be equal and opposite.')
+
     t = np.asarray(range(start, end + 1)) / (int((order - 1) / 2) + 1)
     y = (15 / 79376) * (5184 - 12289 * t ** 2 + 9506 * t ** 4 - 2401 * t ** 6) * ((2175 / 1274) - (1372 / 265) * t ** 2)
     y = y / sum(y)
@@ -56,7 +67,7 @@ def henderson_kernel(order=13, start=np.nan, end=np.nan):
     return y
 
 
-def henderson_weights(order=13, start=np.nan, end=np.nan):
+def henderson_weights(order=13, start=None, end=None):
     """
     Classical Henderson weights.
 
@@ -65,11 +76,11 @@ def henderson_weights(order=13, start=np.nan, end=np.nan):
     order : odd positive integer
         Order of filter.
 
-    start : negative integer or numpy.nan
-        Used in asymmetric weighting. If numpy.nan then symmetric weighting.
+    start : negative integer or None
+        Used in asymmetric weighting. If None then symmetric weighting.
 
-    end : positive integer or numpy.nan
-        Used in asymmetric weighting. If numpy.nan then symmetric weighting.
+    end : positive integer or None
+        Used in asymmetric weighting. If None then symmetric weighting.
 
     Returns
     -------
@@ -82,10 +93,20 @@ def henderson_weights(order=13, start=np.nan, end=np.nan):
     Renormalised when incomplete - does nothing when complete as weights sum to one.
 
     """
-    if np.isnan(start):
+    if start is None:
         start = -int((order - 1) / 2)
-    if np.isnan(end):
+    if end is None:
         end = int((order - 1) / 2)
+
+    if (not isinstance(order, int)) or (not order > 0) or (not order % 2 == 1):
+        raise ValueError('\'order\' must be a positive odd integer.')
+    if (not isinstance(start, int)) or (start >= 0) or (start < -int((order - 1) / 2)):
+        raise ValueError('\'start\' must be negative integer of correct magnitude.')
+    if (not isinstance(end, int)) or (end <= 0) or (end >= int((order - 1) / 2)):
+        raise ValueError('\'end\' must be positive integer of correct magnitude.')
+    if start != -end:
+        raise ValueError('\'start\' and \'end\' must be equal and opposite.')
+
     p = int((order - 1) / 2)
     n = p + 2
     vector = np.asarray(range(start, (end + 1)))
@@ -128,6 +149,15 @@ def henderson_ma(time_series, order=13, method='kernel'):
         (4) Classical asymmetric results (unknown calculation) - not yet added.
 
     """
+    if not isinstance(time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('time_series must be of type np.ndarray.')
+    if np.array(time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('time_series must only contain floats.')
+    if (not isinstance(order, int)) or (not order > 0) or (not order % 2 == 1):
+        raise ValueError('\'order\' must be a positive odd integer.')
+    if method not in {'renormalise', 'kernel'}:
+        raise ValueError('\'method\' not an acceptable value.')
+
     henderson_filtered_time_series = np.zeros_like(time_series)
 
     if method == 'renormalise':
@@ -166,6 +196,10 @@ def seasonal_ma(time_series, factors='3x3', seasonality='annual'):
     time_series : real ndarray
         Time series to be seasonally filtered.
 
+    ########################################################
+    # Must automate factors creation in subsequent version #
+    ########################################################
+
     factors : string
         Seasonal filter to be applied.
 
@@ -182,6 +216,16 @@ def seasonal_ma(time_series, factors='3x3', seasonality='annual'):
     Need to make an automated factor-weighting calculation.
 
     """
+
+    if not isinstance(time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('time_series must be of type np.ndarray.')
+    if np.array(time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('time_series must only contain floats.')
+    if factors not in {'3x3', '3x5', '3x7', '3x9'}:
+        raise ValueError('\'factors\' not an acceptable value.')
+    if seasonality not in {'annual', 'quarterly'}:
+        raise ValueError('\'seasonality\' not an acceptable value.')
+
     seasonal_filtered_time_series = np.zeros_like(time_series)
 
     if factors == '3x3':
@@ -303,6 +347,27 @@ def CovRegpy_X11(time, time_series, seasonality='annual', seasonal_factor='3x3',
     Standard X11 method.
 
     """
+
+    if not isinstance(time, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('time must be of type np.ndarray.')
+    if np.array(time).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('time must only contain floats.')
+    if not isinstance(time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+        raise TypeError('time_series must be of type np.ndarray.')
+    if np.array(time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
+        raise TypeError('time_series must only contain floats.')
+    if len(time) != len(time_series):
+        raise ValueError('time_series and time are incompatible lengths.')
+    if seasonality not in {'annual', 'quarterly'}:
+        raise ValueError('\'seasonality\' not an acceptable value.')
+    if seasonal_factor not in {'3x3', '3x5', '3x7', '3x9'}:
+        raise ValueError('\'seasonal_factor\' not an acceptable value.')
+    if (not isinstance(trend_window_width_1, int)) or (not trend_window_width_1 > 0) or (not trend_window_width_1 % 2 == 1):
+        raise ValueError('\'trend_window_width_1\' must be a positive odd integer.')
+    if (not isinstance(trend_window_width_2, int)) or (not trend_window_width_2 > 0) or (not trend_window_width_2 % 2 == 1):
+        raise ValueError('\'trend_window_width_2\' must be a positive odd integer.')
+    if (not isinstance(trend_window_width_3, int)) or (not trend_window_width_3 > 0) or (not trend_window_width_3 % 2 == 1):
+        raise ValueError('\'trend_window_width_3\' must be a positive odd integer.')
 
     # step 1
     # initial estimate of trend-cycle
