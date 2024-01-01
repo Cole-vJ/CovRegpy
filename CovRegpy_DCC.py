@@ -49,6 +49,10 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False, res
     print_correlation : boolean
         Debugging to gauge if correlation structure is reasonable.
 
+    rescale : boolean
+        Automatically rescale data to help if encountering convergence problems - see:
+        https://arch.readthedocs.io/en/latest/univariate/introduction.html
+
     Returns
     -------
     forecasted_covariance : real ndarray
@@ -65,6 +69,16 @@ def covregpy_dcc(returns_matrix, p=3, q=3, days=10, print_correlation=False, res
         raise TypeError('Returns must not contain nans.')
     if np.array(returns_matrix).dtype != np.array([[1., 1.], [1., 1.]]).dtype:
         raise TypeError('Returns must only contain floats.')
+    if (not isinstance(p, int)) or (p <= 0):
+        raise ValueError('\'p\' must be a positive integer.')
+    if (not isinstance(q, int)) or (q <= 0):
+        raise ValueError('\'q\' must be a positive integer.')
+    if (not isinstance(days, int)) or (days <= 0):
+        raise ValueError('\'days\' must be a positive integer.')
+    if not isinstance(print_correlation, bool):
+        raise TypeError('\'print_correlation\' must be boolean.')
+    if not isinstance(rescale, bool):
+        raise TypeError('\'rescale\' must be boolean.')
 
     # convert Dataframe
     returns_matrix = np.asarray(returns_matrix)
@@ -192,8 +206,8 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
         raise ValueError('Returns must not contain nans.')
     if np.array(returns_matrix).dtype != np.array([[1., 1.], [1., 1.]]).dtype:
         raise ValueError('Returns must only contain floats.')
-    # if np.shape(modelled_variance)[0] != np.shape(modelled_variance)[1]:
-    #     raise ValueError('Covariance must be square matrix.')
+    if np.shape(modelled_variance)[0] != np.shape(modelled_variance)[1]:
+        raise ValueError('Covariance must be square matrix.')
     if pd.isnull(np.asarray(modelled_variance)).any():
         raise ValueError('Covariance must not contain nans.')
     if np.array(modelled_variance).dtype != np.array([[1., 1.], [1., 1.]]).dtype:

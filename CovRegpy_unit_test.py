@@ -12,7 +12,6 @@ import pandas as pd
 import pytest
 import numpy as np
 import seaborn as sns
-from sklearn.gaussian_process.kernels import RBF
 
 from CovRegpy import calc_B_Psi, gamma_v_m_error, cov_reg_given_mean, subgrad_opt
 from CovRegpy_DCC import covregpy_dcc, dcc_loglike
@@ -31,10 +30,12 @@ sns.set(style='darkgrid')
 class RCRUnitTests:
 
     def __init__(self, calc_B_Psi, gamma_v_m_error, cov_reg_given_mean, subgrad_opt, covregpy_dcc, dcc_loglike,
-                 CovRegpy_ssa, gaussian, max_bool, spectral_obj_func_l1, spectral_obj_func_l2, gaus_param,
-                 scaling_factor_obj_func, scaling_factor, CovRegpy_ssd, risk_parity_obj_fun,
-                 henderson_kernel, henderson_weights,
-                 henderson_ma, seasonal_ma, CovRegpy_X11):
+                 risk_parity_obj_fun, equal_risk_parity_weights_long_restriction,
+                 equal_risk_parity_weights_short_restriction, equal_risk_parity_weights_summation_restriction,
+                 global_obj_fun, global_weights, global_weights_long, global_weights_short_and_long_restrict,
+                 equal_risk_parity_weights_individual_restriction, CovRegpy_ssa, gaussian, max_bool,
+                 spectral_obj_func_l1, spectral_obj_func_l2, gaus_param, scaling_factor_obj_func, scaling_factor,
+                 CovRegpy_ssd, henderson_kernel, henderson_weights, henderson_ma, seasonal_ma, CovRegpy_X11):
 
         self.calc_B_Psi = calc_B_Psi
         self.gamma_v_m_error = gamma_v_m_error
@@ -43,6 +44,16 @@ class RCRUnitTests:
 
         self.covregpy_dcc = covregpy_dcc
         self.dcc_loglike = dcc_loglike
+
+        self.risk_parity_obj_fun = risk_parity_obj_fun
+        self.equal_risk_parity_weights_long_restriction = equal_risk_parity_weights_long_restriction
+        self.equal_risk_parity_weights_short_restriction = equal_risk_parity_weights_short_restriction
+        self.equal_risk_parity_weights_summation_restriction = equal_risk_parity_weights_summation_restriction
+        self.global_obj_fun = global_obj_fun
+        self.global_weights = global_weights
+        self.global_weights_long = global_weights_long
+        self.global_weights_short_and_long_restrict = global_weights_short_and_long_restrict
+        self.equal_risk_parity_weights_individual_restriction = equal_risk_parity_weights_individual_restriction
 
         self.CovRegpy_ssa = CovRegpy_ssa
 
@@ -54,16 +65,6 @@ class RCRUnitTests:
         self.scaling_factor_obj_func = scaling_factor_obj_func
         self.scaling_factor = scaling_factor
         self.CovRegpy_ssd = CovRegpy_ssd
-
-        self.risk_parity_obj_fun = risk_parity_obj_fun
-        self.equal_risk_parity_weights_long_restriction = equal_risk_parity_weights_long_restriction
-        self.equal_risk_parity_weights_short_restriction = equal_risk_parity_weights_short_restriction
-        self.equal_risk_parity_weights_summation_restriction = equal_risk_parity_weights_summation_restriction
-        self.global_obj_fun = global_obj_fun
-        self.global_weights = global_weights
-        self.global_weights_long = global_weights_long
-        self.global_weights_short_and_long_restrict = global_weights_short_and_long_restrict
-        self.equal_risk_parity_weights_individual_restriction = equal_risk_parity_weights_individual_restriction
 
         self.henderson_kernel = henderson_kernel
         self.henderson_weights = henderson_weights
@@ -139,23 +140,155 @@ class RCRUnitTests:
         test_covreg_52 = self.test_subgrad_opt_max_iter_type(test_all=True)
         test_covreg_53 = self.test_subgrad_opt_alpha_type(test_all=True)
 
-        test_1 = self.test_returns_suitable(test_all=True)
-        test_2 = self.test_returns_nans(test_all=True)
-        test_3 = self.test_returns_floats(test_all=True)
-        test_4 = self.test_dcc_loglike_params_nans(test_all=True)
-        test_5 = self.test_dcc_loglike_params_floats(test_all=True)
-        test_6 = self.test_dcc_loglike_returns_nans(test_all=True)
-        test_7 = self.test_dcc_loglike_returns_floats(test_all=True)
-        test_8 = self.test_dcc_loglike_covariance_shape(test_all=True)
-        test_9 = self.test_dcc_loglike_covariance_nans(test_all=True)
-        test_10 = self.test_dcc_loglike_covariance_floats(test_all=True)
+        test_dcc_1 = self.test_returns_suitable(test_all=True)
+        test_dcc_2 = self.test_returns_nans(test_all=True)
+        test_dcc_3 = self.test_returns_floats(test_all=True)
+        test_dcc_4 = self.test_dcc_p_value(test_all=True)
+        test_dcc_5 = self.test_dcc_q_value(test_all=True)
+        test_dcc_6 = self.test_dcc_days_value(test_all=True)
+        test_dcc_7 = self.test_dcc_print_correlation_bool(test_all=True)
+        test_dcc_8 = self.test_dcc_rescale_bool(test_all=True)
 
-        test_11 = self.test_gp_forecast_independent_suitable(test_all=True)
-        test_12 = self.test_gp_forecast_independent_nans(test_all=True)
-        test_13 = self.test_gp_forecast_independent_floats(test_all=True)
-        test_14 = self.test_gp_forecast_dependent_suitable(test_all=True)
-        test_15 = self.test_gp_forecast_dependent_nans(test_all=True)
-        test_16 = self.test_gp_forecast_dependent_floats(test_all=True)
+        test_dcc_9 = self.test_dcc_loglike_params_nans(test_all=True)
+        test_dcc_10 = self.test_dcc_loglike_params_floats(test_all=True)
+        test_dcc_11 = self.test_dcc_loglike_returns_nans(test_all=True)
+        test_dcc_12 = self.test_dcc_loglike_returns_floats(test_all=True)
+        test_dcc_13 = self.test_dcc_loglike_covariance_shape(test_all=True)
+        test_dcc_14 = self.test_dcc_loglike_covariance_nans(test_all=True)
+        test_dcc_15 = self.test_dcc_loglike_covariance_floats(test_all=True)
+
+        test_rpp_1 = self.test_RPP_risk_parity_obj_fun_x_array(test_all=True)
+        test_rpp_2 = self.test_RPP_risk_parity_obj_fun_x_only_floats(test_all=True)
+        test_rpp_3 = self.test_RPP_risk_parity_obj_fun_p_cov_array(test_all=True)
+        test_rpp_4 = self.test_RPP_risk_parity_obj_fun_p_cov_only_floats(test_all=True)
+        test_rpp_5 = self.test_RPP_risk_parity_obj_fun_p_cov_psd(test_all=True)
+        test_rpp_6 = self.test_RPP_risk_parity_obj_fun_x_p_cov_shape(test_all=True)
+        test_rpp_7 = self.test_RPP_risk_parity_obj_fun_rb_array(test_all=True)
+        test_rpp_8 = self.test_RPP_risk_parity_obj_fun_rb_only_floats(test_all=True)
+        test_rpp_9 = self.test_RPP_risk_parity_obj_fun_x_rb_shape(test_all=True)
+
+        test_rpp_10 = self.test_RPP_equal_risk_parity_weights_long_restriction_cov_array(test_all=True)
+        test_rpp_11 = self.test_RPP_equal_risk_parity_weights_long_restriction_cov_only_floats(test_all=True)
+        test_rpp_12 = self.test_RPP_equal_risk_parity_weights_long_restriction_cov_psd(test_all=True)
+
+        test_rpp_13 = self.test_RPP_equal_risk_parity_weights_short_restriction_cov_array(test_all=True)
+        test_rpp_14 = self.test_RPP_equal_risk_parity_weights_short_restriction_cov_only_floats(test_all=True)
+        test_rpp_15 = self.test_RPP_equal_risk_parity_weights_short_restriction_cov_psd(test_all=True)
+        test_rpp_16 = self.test_RPP_equal_risk_parity_weights_short_restriction_short_limit_value(test_all=True)
+
+        test_rpp_17 = self.test_RPP_equal_risk_parity_weights_summation_restriction_cov_array(test_all=True)
+        test_rpp_18 = self.test_RPP_equal_risk_parity_weights_summation_restriction_cov_only_floats(test_all=True)
+        test_rpp_19 = self.test_RPP_equal_risk_parity_weights_summation_restriction_cov_psd(test_all=True)
+        test_rpp_20 = self.test_RPP_equal_risk_parity_weights_summation_restriction_short_limit_value(test_all=True)
+        test_rpp_21 = self.test_RPP_equal_risk_parity_weights_summation_restriction_long_limit_value(test_all=True)
+
+        test_rpp_22 = self.test_RPP_global_obj_fun_x_array(test_all=True)
+        test_rpp_23 = self.test_RPP_global_obj_fun_x_only_floats(test_all=True)
+        test_rpp_24 = self.test_RPP_global_obj_fun_p_cov_array(test_all=True)
+        test_rpp_25 = self.test_RPP_global_obj_fun_p_cov_only_floats(test_all=True)
+        test_rpp_26 = self.test_RPP_global_obj_fun_p_cov_psd(test_all=True)
+        test_rpp_27 = self.test_RPP_global_obj_fun_x_p_cov_shape(test_all=True)
+
+        test_rpp_28 = self.test_RPP_global_weights_cov_array(test_all=True)
+        test_rpp_29 = self.test_RPP_global_weights_cov_only_floats(test_all=True)
+        test_rpp_30 = self.test_RPP_global_weights_cov_psd(test_all=True)
+
+        test_rpp_31 = self.test_RPP_global_weights_long_cov_array(test_all=True)
+        test_rpp_32 = self.test_RPP_global_weights_long_cov_only_floats(test_all=True)
+        test_rpp_33 = self.test_RPP_global_weights_long_cov_psd(test_all=True)
+
+        test_rpp_34 = self.test_RPP_global_weights_short_and_long_restrict_cov_array(test_all=True)
+        test_rpp_35 = self.test_RPP_global_weights_short_and_long_restrict_cov_only_floats(test_all=True)
+        test_rpp_36 = self.test_RPP_global_weights_short_and_long_restrict_cov_psd(test_all=True)
+        test_rpp_37 = self.test_RPP_global_weights_short_and_long_restrict_b_value(test_all=True)
+        test_rpp_38 = self.test_RPP_global_weights_short_and_long_restrict_a_value(test_all=True)
+
+        test_rpp_39 = self.test_RPP_equal_risk_parity_weights_individual_restriction_cov_array(test_all=True)
+        test_rpp_40 = self.test_RPP_equal_risk_parity_weights_individual_restriction_cov_only_floats(test_all=True)
+        test_rpp_41 = self.test_RPP_equal_risk_parity_weights_individual_restriction_cov_psd(test_all=True)
+        test_rpp_42 = self.test_RPP_equal_risk_parity_weights_individual_restriction_short_limit_value(test_all=True)
+        test_rpp_43 = self.test_RPP_equal_risk_parity_weights_individual_restriction_long_limit_value(test_all=True)
+
+        test_ssa_1 = self.test_SSA_time_series_array(test_all=True)
+        test_ssa_2 = self.test_SSA_time_series_only_floats(test_all=True)
+        test_ssa_3 = self.test_SSA_L_value(test_all=True)
+        test_ssa_4 = self.test_SSA_est_value(test_all=True)
+        test_ssa_5 = self.test_SSA_plot_bool(test_all=True)
+        test_ssa_6 = self.test_SSA_KS_test_bool(test_all=True)
+        test_ssa_7 = self.test_SSA_plot_KS_test_bool(test_all=True)
+        test_ssa_8 = self.test_SSA_KS_scale_limit_value(test_all=True)
+        test_ssa_9 = self.test_SSA_max_eig_ratio_value(test_all=True)
+        test_ssa_10 = self.test_SSA_KS_start_value(test_all=True)
+        test_ssa_11 = self.test_SSA_KS_end_value(test_all=True)
+        test_ssa_12 = self.test_SSA_KS_interval_value(test_all=True)
+
+        test_ssd_1 = self.test_SSD_gaussian_f_array(test_all=True)
+        test_ssd_2 = self.test_SSD_gaussian_f_only_floats(test_all=True)
+        test_ssd_3 = self.test_SSD_gaussian_A_value(test_all=True)
+        test_ssd_4 = self.test_SSD_gaussian_mu_value(test_all=True)
+        test_ssd_5 = self.test_SSD_gaussian_sigma_value(test_all=True)
+
+        test_ssd_6 = self.test_SSD_max_bool_time_series_array(test_all=True)
+        test_ssd_7 = self.test_SSD_max_bool_time_series_only_floats(test_all=True)
+
+        test_ssd_8 = self.test_SSD_spectral_obj_func_l1_theta_array(test_all=True)
+        test_ssd_9 = self.test_SSD_spectral_obj_func_l1_theta_only_floats(test_all=True)
+        test_ssd_10 = self.test_SSD_spectral_obj_func_l1_theta_length(test_all=True)
+        test_ssd_11 = self.test_SSD_spectral_obj_func_l1_f_array(test_all=True)
+        test_ssd_12 = self.test_SSD_spectral_obj_func_l1_f_only_floats(test_all=True)
+        test_ssd_13 = self.test_SSD_spectral_obj_func_l1_mu_1_value(test_all=True)
+        test_ssd_14 = self.test_SSD_spectral_obj_func_l1_mu_2_value(test_all=True)
+        test_ssd_15 = self.test_SSD_spectral_obj_func_l1_mu_3_value(test_all=True)
+        test_ssd_16 = self.test_SSD_spectral_obj_func_l1_spectrum_array(test_all=True)
+        test_ssd_17 = self.test_SSD_spectral_obj_func_l1_spectrum_only_floats(test_all=True)
+        test_ssd_18 = self.test_SSD_spectral_obj_func_l1_f_and_spectrum_lengths(test_all=True)
+
+        test_ssd_19 = self.test_SSD_spectral_obj_func_l2_theta_array(test_all=True)
+        test_ssd_20 = self.test_SSD_spectral_obj_func_l2_theta_only_floats(test_all=True)
+        test_ssd_21 = self.test_SSD_spectral_obj_func_l2_theta_length(test_all=True)
+        test_ssd_22 = self.test_SSD_spectral_obj_func_l2_f_array(test_all=True)
+        test_ssd_23 = self.test_SSD_spectral_obj_func_l2_f_only_floats(test_all=True)
+        test_ssd_24 = self.test_SSD_spectral_obj_func_l2_mu_1_value(test_all=True)
+        test_ssd_25 = self.test_SSD_spectral_obj_func_l2_mu_2_value(test_all=True)
+        test_ssd_26 = self.test_SSD_spectral_obj_func_l2_mu_3_value(test_all=True)
+        test_ssd_27 = self.test_SSD_spectral_obj_func_l2_spectrum_array(test_all=True)
+        test_ssd_28 = self.test_SSD_spectral_obj_func_l2_spectrum_only_floats(test_all=True)
+        test_ssd_29 = self.test_SSD_spectral_obj_func_l2_f_and_spectrum_lengths(test_all=True)
+
+        test_ssd_30 = self.test_SSD_gaus_param_w0_array(test_all=True)
+        test_ssd_31 = self.test_SSD_gaus_param_w0_only_floats(test_all=True)
+        test_ssd_32 = self.test_SSD_gaus_param_w0_length(test_all=True)
+        test_ssd_33 = self.test_SSD_gaus_param_f_array(test_all=True)
+        test_ssd_34 = self.test_SSD_gaus_param_f_only_floats(test_all=True)
+        test_ssd_35 = self.test_SSD_gaus_param_mu_1_value(test_all=True)
+        test_ssd_36 = self.test_SSD_gaus_param_mu_2_value(test_all=True)
+        test_ssd_37 = self.test_SSD_gaus_param_mu_3_value(test_all=True)
+        test_ssd_38 = self.test_SSD_gaus_param_spectrum_array(test_all=True)
+        test_ssd_39 = self.test_SSD_gaus_param_spectrum_only_floats(test_all=True)
+        test_ssd_40 = self.test_SSD_gaus_param_f_and_spectrum_lengths(test_all=True)
+        test_ssd_41 = self.test_SSD_gaus_param_method_value(test_all=True)
+
+        test_ssd_42 = self.test_SSD_scaling_factor_obj_func_a_value(test_all=True)
+        test_ssd_43 = self.test_SSD_scaling_factor_obj_func_residual_time_series_array(test_all=True)
+        test_ssd_44 = self.test_SSD_scaling_factor_obj_func_residual_time_series_only_floats(test_all=True)
+        test_ssd_45 = self.test_SSD_scaling_factor_obj_func_trend_estimate_array(test_all=True)
+        test_ssd_46 = self.test_SSD_scaling_factor_obj_func_trend_estimate_only_floats(test_all=True)
+        test_ssd_47 = self.test_SSD_scaling_factor_obj_func_residual_time_series_and_trend_estimate_lengths(
+            test_all=True)
+
+        test_ssd_48 = self.test_SSD_scaling_factor_residual_time_series_array(test_all=True)
+        test_ssd_49 = self.test_SSD_scaling_factor_residual_time_series_only_floats(test_all=True)
+        test_ssd_50 = self.test_SSD_scaling_factor_trend_estimate_array(test_all=True)
+        test_ssd_51 = self.test_SSD_scaling_factor_trend_estimate_only_floats(test_all=True)
+        test_ssd_52 = self.test_SSD_scaling_factor_residual_time_series_and_trend_estimate_lengths(test_all=True)
+
+        test_ssd_53 = self.test_SSD_CovRegpy_ssd_time_series_array(test_all=True)
+        test_ssd_54 = self.test_SSD_CovRegpy_ssd_time_series_only_floats(test_all=True)
+        test_ssd_55 = self.test_SSD_CovRegpy_ssd_initial_trend_ratio_value(test_all=True)
+        test_ssd_56 = self.test_SSD_CovRegpy_ssd_nmse_threshold_value(test_all=True)
+        test_ssd_57 = self.test_SSD_CovRegpy_ssd_plot_bool(test_all=True)
+        test_ssd_58 = self.test_SSD_CovRegpy_ssd_debug_bool(test_all=True)
+        test_ssd_59 = self.test_SSD_CovRegpy_ssd_method_type(test_all=True)
 
         test_x11_1 = self.test_X11_henderson_kernel_order_value(test_all=True)
         test_x11_2 = self.test_X11_henderson_kernel_start_value(test_all=True)
@@ -167,6 +300,27 @@ class RCRUnitTests:
         test_x11_7 = self.test_X11_henderson_weights_end_value(test_all=True)
         test_x11_8 = self.test_X11_henderson_weights_start_end_value(test_all=True)
 
+        test_x11_9 = self.test_X11_henderson_ma_time_series_array(test_all=True)
+        test_x11_10 = self.test_X11_henderson_ma_time_series_only_floats(test_all=True)
+        test_x11_11 = self.test_X11_henderson_ma_order_value(test_all=True)
+        test_x11_12 = self.test_X11_henderson_ma_method_type(test_all=True)
+
+        test_x11_13 = self.test_X11_seasonal_ma_time_series_array(test_all=True)
+        test_x11_14 = self.test_X11_seasonal_ma_time_series_only_floats(test_all=True)
+        test_x11_15 = self.test_X11_seasonal_ma_factors_type(test_all=True)
+        test_x11_16 = self.test_X11_seasonal_ma_seasonality_type(test_all=True)
+
+        test_x11_17 = self.test_X11_time_array(test_all=True)
+        test_x11_18 = self.test_X11_time_only_floats(test_all=True)
+        test_x11_19 = self.test_X11_time_series_array(test_all=True)
+        test_x11_20 = self.test_X11_time_series_only_floats(test_all=True)
+        test_x11_21 = self.test_X11_time_series_error_length(test_all=True)
+        test_x11_22 = self.test_X11_seasonality_value(test_all=True)
+        test_x11_23 = self.test_X11_seasonal_factor_value(test_all=True)
+        test_x11_24 = self.test_X11_trend_window_width_1_value(test_all=True)
+        test_x11_25 = self.test_X11_trend_window_width_2_value(test_all=True)
+        test_x11_26 = self.test_X11_trend_window_width_3_value(test_all=True)
+
         tests = [test_covreg_1, test_covreg_2, test_covreg_3, test_covreg_4, test_covreg_5, test_covreg_6,
                  test_covreg_7, test_covreg_8, test_covreg_9, test_covreg_10, test_covreg_11, test_covreg_12,
                  test_covreg_13, test_covreg_14, test_covreg_15, test_covreg_16, test_covreg_17, test_covreg_18,
@@ -177,10 +331,32 @@ class RCRUnitTests:
                  test_covreg_43, test_covreg_44, test_covreg_45, test_covreg_46, test_covreg_47, test_covreg_48,
                  test_covreg_49, test_covreg_50, test_covreg_51, test_covreg_52, test_covreg_53,
 
-                 test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10, test_11, test_12,
-                 test_13, test_14, test_15, test_16,
+                 test_dcc_1, test_dcc_2, test_dcc_3, test_dcc_4, test_dcc_5, test_dcc_6, test_dcc_7, test_dcc_8,
+                 test_dcc_9, test_dcc_10, test_dcc_11, test_dcc_12, test_dcc_13, test_dcc_14, test_dcc_15,
 
-                 test_x11_1, test_x11_2, test_x11_3, test_x11_4, test_x11_5, test_x11_6, test_x11_7, test_x11_8]
+                 test_rpp_1, test_rpp_2, test_rpp_3, test_rpp_4, test_rpp_5, test_rpp_6, test_rpp_7, test_rpp_8,
+                 test_rpp_9, test_rpp_10, test_rpp_11, test_rpp_12, test_rpp_13, test_rpp_14, test_rpp_15, test_rpp_16,
+                 test_rpp_17, test_rpp_18, test_rpp_19, test_rpp_20, test_rpp_21, test_rpp_22, test_rpp_23, test_rpp_24,
+                 test_rpp_25, test_rpp_26, test_rpp_27, test_rpp_28, test_rpp_29, test_rpp_30, test_rpp_31, test_rpp_32,
+                 test_rpp_33, test_rpp_34, test_rpp_35, test_rpp_36, test_rpp_37, test_rpp_38, test_rpp_39, test_rpp_40,
+                 test_rpp_41, test_rpp_42, test_rpp_43,
+
+                 test_ssa_1, test_ssa_2, test_ssa_3, test_ssa_4, test_ssa_5, test_ssa_6, test_ssa_7, test_ssa_8,
+                 test_ssa_9, test_ssa_10, test_ssa_11, test_ssa_12,
+
+                 test_ssd_1, test_ssd_2, test_ssd_3, test_ssd_4, test_ssd_5, test_ssd_6, test_ssd_7, test_ssd_8,
+                 test_ssd_9, test_ssd_10, test_ssd_11, test_ssd_12, test_ssd_13, test_ssd_14, test_ssd_15, test_ssd_16,
+                 test_ssd_17, test_ssd_18, test_ssd_19, test_ssd_20, test_ssd_21, test_ssd_22, test_ssd_23, test_ssd_24,
+                 test_ssd_25, test_ssd_26, test_ssd_27, test_ssd_28, test_ssd_29, test_ssd_30, test_ssd_31, test_ssd_32,
+                 test_ssd_33, test_ssd_34, test_ssd_35, test_ssd_36, test_ssd_37, test_ssd_38, test_ssd_39, test_ssd_40,
+                 test_ssd_41, test_ssd_42, test_ssd_43, test_ssd_44, test_ssd_45, test_ssd_46, test_ssd_47, test_ssd_48,
+                 test_ssd_49, test_ssd_50, test_ssd_51, test_ssd_52, test_ssd_53, test_ssd_54, test_ssd_55, test_ssd_56,
+                 test_ssd_57, test_ssd_58, test_ssd_59,
+
+                 test_x11_1, test_x11_2, test_x11_3, test_x11_4, test_x11_5, test_x11_6, test_x11_7, test_x11_8,
+                 test_x11_9, test_x11_10, test_x11_11, test_x11_12, test_x11_13, test_x11_14, test_x11_15, test_x11_16,
+                 test_x11_17, test_x11_18, test_x11_19, test_x11_20, test_x11_21, test_x11_22, test_x11_23, test_x11_24,
+                 test_x11_25, test_x11_26]
 
         if print_all:
             print(tests)
@@ -955,7 +1131,7 @@ class RCRUnitTests:
         returns_matrix_test = 1.0
 
         with pytest.raises(TypeError) as error_info:
-            self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False)
+            self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False, rescale=False)
         if not test_all:
             print(error_info.type is TypeError and error_info.value.args[0] == 'Returns must be of type np.ndarray and pd.Dataframe.')
         else:
@@ -967,7 +1143,7 @@ class RCRUnitTests:
         returns_matrix_test[0, 0] = np.nan
 
         with pytest.raises(TypeError) as error_info:
-            self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False)
+            self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False, rescale=False)
         if not test_all:
             print(error_info.type is TypeError and error_info.value.args[0] == 'Returns must not contain nans.')
         else:
@@ -979,11 +1155,98 @@ class RCRUnitTests:
         returns_matrix_test.iloc[0] = True
 
         with pytest.raises(TypeError) as error_info:
-            self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False)
+            self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False, rescale=False)
         if not test_all:
             print(error_info.type is TypeError and error_info.value.args[0] == 'Returns must only contain floats.')
         else:
             return error_info.type is TypeError and error_info.value.args[0] == 'Returns must only contain floats.'
+
+
+    def test_dcc_p_value(self, test_all=False):
+
+        p_bool = True
+        for p in [6.0, -1]:
+            with pytest.raises(ValueError) as error_info:
+                self.covregpy_dcc(returns_matrix=np.asarray([[1., 1.], [1., 1.]]), p=p, q=3, days=10,
+                                  print_correlation=False, rescale=False)
+            p_bool = \
+                p_bool and (error_info.type is ValueError and
+                              error_info.value.args[0] ==
+                              '\'p\' must be a positive integer.')
+
+        if (not test_all) and p_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'p\' must be a positive integer.')
+        elif p_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'p\' must be a positive integer.'
+
+
+    def test_dcc_q_value(self, test_all=False):
+
+        q_bool = True
+        for q in [6.0, -1]:
+            with pytest.raises(ValueError) as error_info:
+                self.covregpy_dcc(returns_matrix=np.asarray([[1., 1.], [1., 1.]]), p=3, q=q, days=10,
+                                  print_correlation=False, rescale=False)
+            q_bool = \
+                q_bool and (error_info.type is ValueError and
+                              error_info.value.args[0] ==
+                              '\'q\' must be a positive integer.')
+
+        if (not test_all) and q_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'q\' must be a positive integer.')
+        elif q_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'q\' must be a positive integer.'
+
+
+    def test_dcc_days_value(self, test_all=False):
+
+        days_bool = True
+        for days in [6.0, -1]:
+            with pytest.raises(ValueError) as error_info:
+                self.covregpy_dcc(returns_matrix=np.asarray([[1., 1.], [1., 1.]]), p=3, q=3, days=days,
+                                  print_correlation=False, rescale=False)
+            days_bool = \
+                days_bool and (error_info.type is ValueError and
+                              error_info.value.args[0] ==
+                              '\'days\' must be a positive integer.')
+
+        if (not test_all) and days_bool:
+            print(error_info.type is ValueError and error_info.value.args[
+                0] == '\'days\' must be a positive integer.')
+        elif days_bool:
+            return error_info.type is ValueError and error_info.value.args[
+                0] == '\'days\' must be a positive integer.'
+
+
+    def test_dcc_print_correlation_bool(self, test_all=False):
+
+        print_correlation = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            self.covregpy_dcc(returns_matrix=np.asarray([[1., 1.], [1., 1.]]), p=3, q=3, days=10,
+                              print_correlation=print_correlation, rescale=False)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'print_correlation\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'print_correlation\' must be boolean.'
+
+
+    def test_dcc_rescale_bool(self, test_all=False):
+
+        rescale = 'not_bool'
+
+        with pytest.raises(TypeError) as error_info:
+            self.covregpy_dcc(returns_matrix=np.asarray([[1., 1.], [1., 1.]]), p=3, q=3, days=10,
+                              print_correlation=False, rescale=rescale)
+        if not test_all:
+            print(error_info.type is TypeError and error_info.value.args[0] == '\'rescale\' must be boolean.')
+        else:
+            return error_info.type is TypeError and error_info.value.args[0] == '\'rescale\' must be boolean.'
+
 
     def test_dcc_loglike_params_nans(self, test_all=False):
 
@@ -1082,112 +1345,6 @@ class RCRUnitTests:
             return error_info.type is ValueError and error_info.value.args[0] == 'Covariance must only contain floats.'
 
 
-    def test_gp_forecast_independent_suitable(self, test_all=False):
-
-        gp_x = 1.0
-        example_kernel = RBF(length_scale=1.0)
-
-        with pytest.raises(TypeError) as error_info:
-            self.gp_forecast(x_fit=gp_x, y_fit=np.asarray(np.arange(0.0, 11.0, 1.0) + np.random.normal(0, 1, 11)),
-                             x_forecast=np.asarray([11.0, 12.0, 13.0]), kernel=example_kernel, confidence_level=0.95,
-                             plot=False)
-        if not test_all:
-            print(error_info.type is TypeError and error_info.value.args[0] == 'Independent variable for fitting must '
-                                                                               'be of type np.ndarray and pd.Dataframe.')
-        else:
-            return error_info.type is TypeError and error_info.value.args[0] == 'Independent variable for fitting must ' \
-                                                                                'be of type np.ndarray and pd.Dataframe.'
-
-    def test_gp_forecast_independent_nans(self, test_all=False):
-
-        gp_x = pd.DataFrame(np.asarray(np.arange(11)))
-        gp_x[3] = np.nan
-
-        example_kernel = RBF(length_scale=1.0)
-
-        with pytest.raises(TypeError) as error_info:
-            self.gp_forecast(x_fit=gp_x, y_fit=np.asarray(np.arange(0.0, 11.0, 1.0) + np.random.normal(0, 1, 11)),
-                             x_forecast=np.asarray([11.0, 12.0, 13.0]), kernel=example_kernel, confidence_level=0.95,
-                             plot=False)
-        if not test_all:
-            print(error_info.type is TypeError and error_info.value.args[0] == 'Independent variable for fitting '
-                                                                               'must not contain nans.')
-        else:
-            return error_info.type is TypeError and error_info.value.args[0] == 'Independent variable for fitting ' \
-                                                                                'must not contain nans.'
-
-    def test_gp_forecast_independent_floats(self, test_all=False):
-
-        gp_x = np.array(np.random.normal(0., 1., 10), dtype=object)
-        gp_x[3] = True
-
-        example_kernel = RBF(length_scale=1.0)
-
-        with pytest.raises(TypeError) as error_info:
-            self.gp_forecast(x_fit=gp_x, y_fit=np.asarray(np.arange(0.0, 11.0, 1.0) + np.random.normal(0, 1, 11)),
-                             x_forecast=np.asarray([11.0, 12.0, 13.0]), kernel=example_kernel, confidence_level=0.95,
-                             plot=False)
-        if not test_all:
-            print(error_info.type is TypeError and error_info.value.args[0] == 'Independent variable for fitting must '
-                                                                               'only contain floats.')
-        else:
-            return error_info.type is TypeError and error_info.value.args[0] == 'Independent variable for fitting must ' \
-                                                                                'only contain floats.'
-
-
-    def test_gp_forecast_dependent_suitable(self, test_all=False):
-
-        gp_y = 1.0
-        example_kernel = RBF(length_scale=1.0)
-
-        with pytest.raises(TypeError) as error_info:
-            self.gp_forecast(x_fit=np.asarray(np.arange(0.0, 11.0, 1.0)), y_fit=gp_y,
-                             x_forecast=np.asarray([11.0, 12.0, 13.0]), kernel=example_kernel, confidence_level=0.95,
-                             plot=False)
-        if not test_all:
-            print(error_info.type is TypeError and error_info.value.args[0] == 'Dependent variable for fitting must '
-                                                                               'be of type np.ndarray and pd.Dataframe.')
-        else:
-            return error_info.type is TypeError and error_info.value.args[0] == 'Dependent variable for fitting must ' \
-                                                                                'be of type np.ndarray and pd.Dataframe.'
-
-    def test_gp_forecast_dependent_nans(self, test_all=False):
-
-        gp_y = pd.DataFrame(np.asarray(np.arange(11)))
-        gp_y[3] = np.nan
-
-        example_kernel = RBF(length_scale=1.0)
-
-        with pytest.raises(TypeError) as error_info:
-            self.gp_forecast(x_fit=np.asarray(np.arange(0.0, 11.0, 1.0)), y_fit=gp_y,
-                             x_forecast=np.asarray([11.0, 12.0, 13.0]), kernel=example_kernel, confidence_level=0.95,
-                             plot=False)
-        if not test_all:
-            print(error_info.type is TypeError and error_info.value.args[0] == 'Dependent variable for fitting '
-                                                                               'must not contain nans.')
-        else:
-            return error_info.type is TypeError and error_info.value.args[0] == 'Dependent variable for fitting ' \
-                                                                                'must not contain nans.'
-
-    def test_gp_forecast_dependent_floats(self, test_all=False):
-
-        gp_y = np.array(np.random.normal(0., 1., 10), dtype=object)
-        gp_y[3] = True
-
-        example_kernel = RBF(length_scale=1.0)
-
-        with pytest.raises(TypeError) as error_info:
-            self.gp_forecast(x_fit=np.asarray(np.arange(0.0, 11.0, 1.0)), y_fit=gp_y,
-                             x_forecast=np.asarray([11.0, 12.0, 13.0]), kernel=example_kernel, confidence_level=0.95,
-                             plot=False)
-        if not test_all:
-            print(error_info.type is TypeError and error_info.value.args[0] == 'Dependent variable for fitting must '
-                                                                               'only contain floats.')
-        else:
-            return error_info.type is TypeError and error_info.value.args[0] == 'Dependent variable for fitting must ' \
-                                                                                'only contain floats.'
-
-
     def test_X11_henderson_kernel_order_value(self, test_all=False):
 
         order_bool = True
@@ -1239,7 +1396,7 @@ class RCRUnitTests:
                 0] == '\'end\' must be positive integer of correct magnitude.')
         elif end_bool:
             return error_info.type is ValueError and error_info.value.args[
-                0] == '\'end\' must be nan or positive integer of correct magnitude.'
+                0] == '\'end\' must be positive integer of correct magnitude.'
 
 
     def test_X11_henderson_kernel_start_end_value(self, test_all=False):
@@ -3136,7 +3293,7 @@ class RCRUnitTests:
                   '\'a\' must be a positive float.')
         elif a_bool:
             return error_info.type is ValueError and error_info.value.args[0] == \
-                '\'long_limit\' must be a positive float.'
+                '\'a\' must be a positive float.'
 
 
     def test_RPP_equal_risk_parity_weights_individual_restriction_cov_array(self, test_all=False):
@@ -3216,255 +3373,12 @@ class RCRUnitTests:
 if __name__ == "__main__":
 
     test_rcr = RCRUnitTests(calc_B_Psi, gamma_v_m_error, cov_reg_given_mean, subgrad_opt, covregpy_dcc, dcc_loglike,
-                            risk_parity_obj_fun, CovRegpy_ssa, gaussian, max_bool, spectral_obj_func_l1, spectral_obj_func_l2,
-                            gaus_param, scaling_factor_obj_func, scaling_factor, CovRegpy_ssd, henderson_kernel,
-                            henderson_weights, henderson_ma, seasonal_ma, CovRegpy_X11)
+                 risk_parity_obj_fun, equal_risk_parity_weights_long_restriction,
+                 equal_risk_parity_weights_short_restriction, equal_risk_parity_weights_summation_restriction,
+                 global_obj_fun, global_weights, global_weights_long, global_weights_short_and_long_restrict,
+                 equal_risk_parity_weights_individual_restriction, CovRegpy_ssa, gaussian, max_bool,
+                 spectral_obj_func_l1, spectral_obj_func_l2, gaus_param, scaling_factor_obj_func, scaling_factor,
+                 CovRegpy_ssd, henderson_kernel, henderson_weights, henderson_ma, seasonal_ma, CovRegpy_X11)
 
-    # test_rcr.test_m_array()
-    # test_rcr.test_m_only_floats()
-    # test_rcr.test_m_shape()
-
-    # test_rcr.test_v_array()
-    # test_rcr.test_v_only_floats()
-    # test_rcr.test_v_shape()
-
-    # test_rcr.test_m_and_v()
-
-    # test_rcr.test_x_array()
-    # test_rcr.test_x_only_floats()
-
-    # test_rcr.test_y_array()
-    # test_rcr.test_y_only_floats()
-
-    # test_rcr.test_basis_array()
-    # test_rcr.test_basis_only_floats()
-
-    # test_rcr.test_A_est_array()
-    # test_rcr.test_A_est_only_floats()
-
-    # test_rcr.test_technique_type()
-
-    # test_rcr.test_technique_type()
-    # test_rcr.test_alpha_type()
-    # test_rcr.test_l1_ratio_or_reg_type()
-    # test_rcr.test_group_reg_type()
-    # test_rcr.test_max_iter_type()
-
-    # test_rcr.test_group_array()
-    # test_rcr.test_groups_only_integers()
-
-    # test_rcr.test_gamma_v_m_error_errors_array()
-    # test_rcr.test_gamma_v_m_error_errors_only_floats()
-    # test_rcr.test_gamma_v_m_error_x_array()
-    # test_rcr.test_gamma_v_m_error_x_only_floats()
-    # test_rcr.test_gamma_v_m_error_Psi_array()
-    # test_rcr.test_gamma_v_m_error_Psi_only_floats()
-    # test_rcr.test_gamma_v_m_error_B_array()
-    # test_rcr.test_gamma_v_m_error_B_only_floats()
-
-    # test_rcr.test_cov_reg_given_mean_A_est_array()
-    # test_rcr.test_cov_reg_given_mean_A_est_only_floats()
-    # test_rcr.test_cov_reg_given_mean_basis_array()
-    # test_rcr.test_cov_reg_given_mean_basis_only_floats()
-    # test_rcr.test_cov_reg_given_mean_x_array()
-    # test_rcr.test_cov_reg_given_mean_x_only_floats()
-    # test_rcr.test_cov_reg_given_mean_y_array()
-    # test_rcr.test_cov_reg_given_mean_y_only_floats()
-    # test_rcr.test_cov_reg_given_mean_iterations_type()
-    # test_rcr.test_cov_reg_given_mean_technique_type()
-    # test_rcr.test_cov_reg_given_mean_alpha_type()
-    # test_rcr.test_cov_reg_given_mean_l1_ratio_or_reg_type()
-    # test_rcr.test_cov_reg_given_mean_group_reg_type()
-    # test_rcr.test_cov_reg_given_mean_max_iter_type()
-    # test_rcr.test_cov_reg_given_mean_groups_array()
-    # test_rcr.test_cov_reg_given_mean_groups_only_integers()
-
-    # test_rcr.test_subgrad_opt_x_tilda_array()
-    # test_rcr.test_subgrad_opt_x_tilda_only_floats()
-    # test_rcr.test_subgrad_opt_y_tilda_array()
-    # test_rcr.test_subgrad_opt_y_tilda_only_floats()
-    # test_rcr.test_subgrad_opt_max_iter_type()
-    # test_rcr.test_subgrad_opt_alpha_type()
-
-    # test_rcr.test_returns_suitable()
-    # test_rcr.test_returns_nans()
-    # test_rcr.test_returns_floats()
-    # test_rcr.test_dcc_loglike_params_nans()
-    # test_rcr.test_dcc_loglike_params_floats()
-    # test_rcr.test_dcc_loglike_returns_nans()
-    # test_rcr.test_dcc_loglike_returns_floats()
-    # test_rcr.test_dcc_loglike_covariance_shape()
-    # test_rcr.test_dcc_loglike_covariance_nans()
-    # test_rcr.test_dcc_loglike_covariance_floats()
-    # test_rcr.test_gp_forecast_independent_suitable()
-    # test_rcr.test_gp_forecast_independent_nans()
-    # test_rcr.test_gp_forecast_independent_floats()
-    # test_rcr.test_gp_forecast_dependent_suitable()
-    # test_rcr.test_gp_forecast_dependent_nans()
-    # test_rcr.test_gp_forecast_dependent_floats()
-
-    # test_rcr.test_RPP_risk_parity_obj_fun_x_array()
-    # test_rcr.test_RPP_risk_parity_obj_fun_x_only_floats()
-    # test_rcr.test_RPP_risk_parity_obj_fun_p_cov_array()
-    # test_rcr.test_RPP_risk_parity_obj_fun_p_cov_only_floats()
-    # test_rcr.test_RPP_risk_parity_obj_fun_p_cov_psd()
-    # test_rcr.test_RPP_risk_parity_obj_fun_x_p_cov_shape()
-    # test_rcr.test_RPP_risk_parity_obj_fun_rb_array()
-    # test_rcr.test_RPP_risk_parity_obj_fun_rb_only_floats()
-    # test_rcr.test_RPP_risk_parity_obj_fun_x_rb_shape()
-
-    # test_rcr.test_RPP_equal_risk_parity_weights_long_restriction_cov_array()
-    # test_rcr.test_RPP_equal_risk_parity_weights_long_restriction_cov_only_floats()
-    # test_rcr.test_RPP_equal_risk_parity_weights_long_restriction_cov_psd()
-
-    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_cov_array()
-    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_cov_only_floats()
-    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_cov_psd()
-    # test_rcr.test_RPP_equal_risk_parity_weights_short_restriction_short_limit_value()
-
-    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_cov_array()
-    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_cov_only_floats()
-    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_cov_psd()
-    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_short_limit_value()
-    # test_rcr.test_RPP_equal_risk_parity_weights_summation_restriction_long_limit_value()
-
-    # test_rcr.test_RPP_global_obj_fun_x_array()
-    # test_rcr.test_RPP_global_obj_fun_x_only_floats()
-    # test_rcr.test_RPP_global_obj_fun_p_cov_array()
-    # test_rcr.test_RPP_global_obj_fun_p_cov_only_floats()
-    # test_rcr.test_RPP_global_obj_fun_p_cov_psd()
-    # test_rcr.test_RPP_global_obj_fun_x_p_cov_shape()
-
-    # test_rcr.test_RPP_global_weights_cov_array()
-    # test_rcr.test_RPP_global_weights_cov_only_floats()
-    # test_rcr.test_RPP_global_weights_cov_psd()
-
-    # test_rcr.test_RPP_global_weights_long_cov_array()
-    # test_rcr.test_RPP_global_weights_long_cov_only_floats()
-    # test_rcr.test_RPP_global_weights_long_cov_psd()
-
-    test_rcr.test_RPP_global_weights_short_and_long_restrict_cov_array()
-    test_rcr.test_RPP_global_weights_short_and_long_restrict_cov_only_floats()
-    test_rcr.test_RPP_global_weights_short_and_long_restrict_cov_psd()
-    test_rcr.test_RPP_global_weights_short_and_long_restrict_b_value()
-    test_rcr.test_RPP_global_weights_short_and_long_restrict_a_value()
-
-    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_cov_array()
-    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_cov_only_floats()
-    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_cov_psd()
-    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_short_limit_value()
-    test_rcr.test_RPP_equal_risk_parity_weights_individual_restriction_long_limit_value()
-
-    # test_rcr.test_SSA_time_series_array()
-    # test_rcr.test_SSA_time_series_only_floats()
-    # test_rcr.test_SSA_L_value()
-    # test_rcr.test_SSA_est_value()
-    # test_rcr.test_SSA_plot_bool()
-    # test_rcr.test_SSA_KS_test_bool()
-    # test_rcr.test_SSA_plot_KS_test_bool()
-    # test_rcr.test_SSA_KS_scale_limit_value()
-    # test_rcr.test_SSA_max_eig_ratio_value()
-    # test_rcr.test_SSA_KS_start_value()
-    # test_rcr.test_SSA_KS_end_value()
-    # test_rcr.test_SSA_KS_interval_value()
-
-    # test_rcr.test_SSD_gaussian_f_array()
-    # test_rcr.test_SSD_gaussian_f_only_floats()
-    # test_rcr.test_SSD_gaussian_A_value()
-    # test_rcr.test_SSD_gaussian_mu_value()
-    # test_rcr.test_SSD_gaussian_sigma_value()
-
-    # test_rcr.test_SSD_max_bool_time_series_array()
-    # test_rcr.test_SSD_max_bool_time_series_only_floats()
-
-    # test_rcr.test_SSD_spectral_obj_func_l1_theta_array()
-    # test_rcr.test_SSD_spectral_obj_func_l1_theta_only_floats()
-    # test_rcr.test_SSD_spectral_obj_func_l1_theta_length()
-    # test_rcr.test_SSD_spectral_obj_func_l1_f_array()
-    # test_rcr.test_SSD_spectral_obj_func_l1_f_only_floats()
-    # test_rcr.test_SSD_spectral_obj_func_l1_mu_1_value()
-    # test_rcr.test_SSD_spectral_obj_func_l1_mu_2_value()
-    # test_rcr.test_SSD_spectral_obj_func_l1_mu_3_value()
-    # test_rcr.test_SSD_spectral_obj_func_l1_spectrum_array()
-    # test_rcr.test_SSD_spectral_obj_func_l1_spectrum_only_floats()
-    # test_rcr.test_SSD_spectral_obj_func_l1_f_and_spectrum_lengths()
-
-    # test_rcr.test_SSD_spectral_obj_func_l2_theta_array()
-    # test_rcr.test_SSD_spectral_obj_func_l2_theta_only_floats()
-    # test_rcr.test_SSD_spectral_obj_func_l2_theta_length()
-    # test_rcr.test_SSD_spectral_obj_func_l2_f_array()
-    # test_rcr.test_SSD_spectral_obj_func_l2_f_only_floats()
-    # test_rcr.test_SSD_spectral_obj_func_l2_mu_1_value()
-    # test_rcr.test_SSD_spectral_obj_func_l2_mu_2_value()
-    # test_rcr.test_SSD_spectral_obj_func_l2_mu_3_value()
-    # test_rcr.test_SSD_spectral_obj_func_l2_spectrum_array()
-    # test_rcr.test_SSD_spectral_obj_func_l2_spectrum_only_floats()
-    # test_rcr.test_SSD_spectral_obj_func_l2_f_and_spectrum_lengths()
-
-    # test_rcr.test_SSD_gaus_param_w0_array()
-    # test_rcr.test_SSD_gaus_param_w0_only_floats()
-    # test_rcr.test_SSD_gaus_param_w0_length()
-    # test_rcr.test_SSD_gaus_param_f_array()
-    # test_rcr.test_SSD_gaus_param_f_only_floats()
-    # test_rcr.test_SSD_gaus_param_mu_1_value()
-    # test_rcr.test_SSD_gaus_param_mu_2_value()
-    # test_rcr.test_SSD_gaus_param_mu_3_value()
-    # test_rcr.test_SSD_gaus_param_spectrum_array()
-    # test_rcr.test_SSD_gaus_param_spectrum_only_floats()
-    # test_rcr.test_SSD_gaus_param_f_and_spectrum_lengths()
-    # test_rcr.test_SSD_gaus_param_method_value()
-
-    # test_rcr.test_SSD_scaling_factor_obj_func_a_value()
-    # test_rcr.test_SSD_scaling_factor_obj_func_residual_time_series_array()
-    # test_rcr.test_SSD_scaling_factor_obj_func_residual_time_series_only_floats()
-    # test_rcr.test_SSD_scaling_factor_obj_func_trend_estimate_array()
-    # test_rcr.test_SSD_scaling_factor_obj_func_trend_estimate_only_floats()
-    # test_rcr.test_SSD_scaling_factor_obj_func_residual_time_series_and_trend_estimate_lengths()
-
-    # test_rcr.test_SSD_scaling_factor_residual_time_series_array()
-    # test_rcr.test_SSD_scaling_factor_residual_time_series_only_floats()
-    # test_rcr.test_SSD_scaling_factor_trend_estimate_array()
-    # test_rcr.test_SSD_scaling_factor_trend_estimate_only_floats()
-    # test_rcr.test_SSD_scaling_factor_residual_time_series_and_trend_estimate_lengths()
-
-    # test_rcr.test_SSD_CovRegpy_ssd_time_series_array()
-    # test_rcr.test_SSD_CovRegpy_ssd_time_series_only_floats()
-    # test_rcr.test_SSD_CovRegpy_ssd_initial_trend_ratio_value()
-    # test_rcr.test_SSD_CovRegpy_ssd_nmse_threshold_value()
-    # test_rcr.test_SSD_CovRegpy_ssd_plot_bool()
-    # test_rcr.test_SSD_CovRegpy_ssd_debug_bool()
-    # test_rcr.test_SSD_CovRegpy_ssd_method_type()
-
-    # test_rcr.test_X11_henderson_kernel_order_value()
-    # test_rcr.test_X11_henderson_kernel_start_value()
-    # test_rcr.test_X11_henderson_kernel_end_value()
-    # test_rcr.test_X11_henderson_kernel_start_end_value()
-
-    # test_rcr.test_X11_henderson_weights_order_value()
-    # test_rcr.test_X11_henderson_weights_start_value()
-    # test_rcr.test_X11_henderson_weights_end_value()
-    # test_rcr.test_X11_henderson_weights_start_end_value()
-
-    # test_rcr.test_X11_henderson_ma_time_series_array()
-    # test_rcr.test_X11_henderson_ma_time_series_only_floats()
-    # test_rcr.test_X11_henderson_ma_order_value()
-    # test_rcr.test_X11_henderson_ma_method_type()
-
-    # test_rcr.test_X11_seasonal_ma_time_series_array()
-    # test_rcr.test_X11_seasonal_ma_time_series_only_floats()
-    # test_rcr.test_X11_seasonal_ma_factors_type()
-    # test_rcr.test_X11_seasonal_ma_seasonality_type()
-
-    # test_rcr.test_X11_time_array()
-    # test_rcr.test_X11_time_only_floats()
-    # test_rcr.test_X11_time_series_array()
-    # test_rcr.test_X11_time_series_only_floats()
-    # test_rcr.test_X11_time_series_error_length()
-    # test_rcr.test_X11_seasonality_value()
-    # test_rcr.test_X11_seasonal_factor_value()
-    # test_rcr.test_X11_trend_window_width_1_value()
-    # test_rcr.test_X11_trend_window_width_2_value()
-    # test_rcr.test_X11_trend_window_width_3_value()
-
-    # test_rcr.test_all(print_all=True)
+    test_rcr.test_all(print_all=True)
 
