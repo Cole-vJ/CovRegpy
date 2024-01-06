@@ -77,7 +77,7 @@ axs[2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
 plt.savefig('../aas_figures/Example_ssa_decomposition')
 plt.show()
 
-ssa_decomp = CovRegpy_ssa(time_series, L=10, est=8, KS_test=True, plot_KS_test=False, figure_plot=True)
+ssa_decomp = CovRegpy_ssa(time_series, L=10, est=8, KS_test=True, plot_KS_test=False)
 
 plt.plot(time, trend_cycle, label='Component')
 plt.plot(time, ssa_decomp[0], 'r--', label='KS-SSA trend')
@@ -92,8 +92,8 @@ plt.show()
 # Kolmogorov–Smirnov assisted SSA experiment
 
 # adequate KS_scale_limit - need to find intelligent way of automating
-ssa_decomp = CovRegpy_ssa(time_series, L=10, est=8, KS_test=True, plot_KS_test=False, figure_plot=False,
+ssa_decomp = CovRegpy_ssa(time_series, L=10, est=8, KS_test=True, plot_KS_test=False,
                           KS_start=4, KS_interval=2, KS_end=30, plot=True, KS_scale_limit=100.0)
 # KS_scale_limit too small - trend collapses to time series
-ssa_decomp = CovRegpy_ssa(time_series, L=10, est=8, KS_test=True, plot_KS_test=False, figure_plot=False,
+ssa_decomp = CovRegpy_ssa(time_series, L=10, est=8, KS_test=True, plot_KS_test=False,
                           KS_start=4, KS_interval=2, KS_end=30, plot=True, KS_scale_limit=1.0)

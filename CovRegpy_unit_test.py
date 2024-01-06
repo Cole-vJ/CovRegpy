@@ -153,9 +153,8 @@ class RCRUnitTests:
         test_dcc_10 = self.test_dcc_loglike_params_floats(test_all=True)
         test_dcc_11 = self.test_dcc_loglike_returns_nans(test_all=True)
         test_dcc_12 = self.test_dcc_loglike_returns_floats(test_all=True)
-        test_dcc_13 = self.test_dcc_loglike_covariance_shape(test_all=True)
-        test_dcc_14 = self.test_dcc_loglike_covariance_nans(test_all=True)
-        test_dcc_15 = self.test_dcc_loglike_covariance_floats(test_all=True)
+        test_dcc_13 = self.test_dcc_loglike_covariance_nans(test_all=True)
+        test_dcc_14 = self.test_dcc_loglike_covariance_floats(test_all=True)
 
         test_rpp_1 = self.test_RPP_risk_parity_obj_fun_x_array(test_all=True)
         test_rpp_2 = self.test_RPP_risk_parity_obj_fun_x_only_floats(test_all=True)
@@ -293,33 +292,32 @@ class RCRUnitTests:
         test_x11_1 = self.test_X11_henderson_kernel_order_value(test_all=True)
         test_x11_2 = self.test_X11_henderson_kernel_start_value(test_all=True)
         test_x11_3 = self.test_X11_henderson_kernel_end_value(test_all=True)
-        test_x11_4 = self.test_X11_henderson_kernel_start_end_value(test_all=True)
 
-        test_x11_5 = self.test_X11_henderson_weights_order_value(test_all=True)
-        test_x11_6 = self.test_X11_henderson_weights_start_value(test_all=True)
-        test_x11_7 = self.test_X11_henderson_weights_end_value(test_all=True)
-        test_x11_8 = self.test_X11_henderson_weights_start_end_value(test_all=True)
+        test_x11_4 = self.test_X11_henderson_weights_order_value(test_all=True)
+        test_x11_5 = self.test_X11_henderson_weights_start_value(test_all=True)
+        test_x11_6 = self.test_X11_henderson_weights_end_value(test_all=True)
+        test_x11_7 = self.test_X11_henderson_weights_start_end_value(test_all=True)
 
-        test_x11_9 = self.test_X11_henderson_ma_time_series_array(test_all=True)
-        test_x11_10 = self.test_X11_henderson_ma_time_series_only_floats(test_all=True)
-        test_x11_11 = self.test_X11_henderson_ma_order_value(test_all=True)
-        test_x11_12 = self.test_X11_henderson_ma_method_type(test_all=True)
+        test_x11_8 = self.test_X11_henderson_ma_time_series_array(test_all=True)
+        test_x11_9 = self.test_X11_henderson_ma_time_series_only_floats(test_all=True)
+        test_x11_10 = self.test_X11_henderson_ma_order_value(test_all=True)
+        test_x11_11 = self.test_X11_henderson_ma_method_type(test_all=True)
 
-        test_x11_13 = self.test_X11_seasonal_ma_time_series_array(test_all=True)
-        test_x11_14 = self.test_X11_seasonal_ma_time_series_only_floats(test_all=True)
-        test_x11_15 = self.test_X11_seasonal_ma_factors_type(test_all=True)
-        test_x11_16 = self.test_X11_seasonal_ma_seasonality_type(test_all=True)
+        test_x11_12 = self.test_X11_seasonal_ma_time_series_array(test_all=True)
+        test_x11_13 = self.test_X11_seasonal_ma_time_series_only_floats(test_all=True)
+        test_x11_14 = self.test_X11_seasonal_ma_factors_type(test_all=True)
+        test_x11_15 = self.test_X11_seasonal_ma_seasonality_type(test_all=True)
 
-        test_x11_17 = self.test_X11_time_array(test_all=True)
-        test_x11_18 = self.test_X11_time_only_floats(test_all=True)
-        test_x11_19 = self.test_X11_time_series_array(test_all=True)
-        test_x11_20 = self.test_X11_time_series_only_floats(test_all=True)
-        test_x11_21 = self.test_X11_time_series_error_length(test_all=True)
-        test_x11_22 = self.test_X11_seasonality_value(test_all=True)
-        test_x11_23 = self.test_X11_seasonal_factor_value(test_all=True)
-        test_x11_24 = self.test_X11_trend_window_width_1_value(test_all=True)
-        test_x11_25 = self.test_X11_trend_window_width_2_value(test_all=True)
-        test_x11_26 = self.test_X11_trend_window_width_3_value(test_all=True)
+        test_x11_16 = self.test_X11_time_array(test_all=True)
+        test_x11_17 = self.test_X11_time_only_floats(test_all=True)
+        test_x11_18 = self.test_X11_time_series_array(test_all=True)
+        test_x11_19 = self.test_X11_time_series_only_floats(test_all=True)
+        test_x11_20 = self.test_X11_time_series_error_length(test_all=True)
+        test_x11_21 = self.test_X11_seasonality_value(test_all=True)
+        test_x11_22 = self.test_X11_seasonal_factor_value(test_all=True)
+        test_x11_23 = self.test_X11_trend_window_width_1_value(test_all=True)
+        test_x11_24 = self.test_X11_trend_window_width_2_value(test_all=True)
+        test_x11_25 = self.test_X11_trend_window_width_3_value(test_all=True)
 
         tests = [test_covreg_1, test_covreg_2, test_covreg_3, test_covreg_4, test_covreg_5, test_covreg_6,
                  test_covreg_7, test_covreg_8, test_covreg_9, test_covreg_10, test_covreg_11, test_covreg_12,
@@ -332,7 +330,7 @@ class RCRUnitTests:
                  test_covreg_49, test_covreg_50, test_covreg_51, test_covreg_52, test_covreg_53,
 
                  test_dcc_1, test_dcc_2, test_dcc_3, test_dcc_4, test_dcc_5, test_dcc_6, test_dcc_7, test_dcc_8,
-                 test_dcc_9, test_dcc_10, test_dcc_11, test_dcc_12, test_dcc_13, test_dcc_14, test_dcc_15,
+                 test_dcc_9, test_dcc_10, test_dcc_11, test_dcc_12, test_dcc_13, test_dcc_14,
 
                  test_rpp_1, test_rpp_2, test_rpp_3, test_rpp_4, test_rpp_5, test_rpp_6, test_rpp_7, test_rpp_8,
                  test_rpp_9, test_rpp_10, test_rpp_11, test_rpp_12, test_rpp_13, test_rpp_14, test_rpp_15, test_rpp_16,
@@ -356,7 +354,7 @@ class RCRUnitTests:
                  test_x11_1, test_x11_2, test_x11_3, test_x11_4, test_x11_5, test_x11_6, test_x11_7, test_x11_8,
                  test_x11_9, test_x11_10, test_x11_11, test_x11_12, test_x11_13, test_x11_14, test_x11_15, test_x11_16,
                  test_x11_17, test_x11_18, test_x11_19, test_x11_20, test_x11_21, test_x11_22, test_x11_23, test_x11_24,
-                 test_x11_25, test_x11_26]
+                 test_x11_25]
 
         if print_all:
             print(tests)
@@ -1139,7 +1137,7 @@ class RCRUnitTests:
 
     def test_returns_nans(self, test_all=False):
 
-        returns_matrix_test = pd.DataFrame(np.asarray([[1, 1], [1, 1]]))
+        returns_matrix_test = np.asarray([[1.0, 1.0], [1.0, 1.0]])
         returns_matrix_test[0, 0] = np.nan
 
         with pytest.raises(TypeError) as error_info:
@@ -1151,8 +1149,8 @@ class RCRUnitTests:
 
     def test_returns_floats(self, test_all=False):
 
-        returns_matrix_test = pd.DataFrame(np.asarray([[1, 1], [1, 1]]))
-        returns_matrix_test.iloc[0] = True
+        returns_matrix_test = np.asarray([[1, 1], [1, 1]])
+        returns_matrix_test[0, 0] = True
 
         with pytest.raises(TypeError) as error_info:
             self.covregpy_dcc(returns_matrix_test, p=3, q=3, days=10, print_correlation=False, rescale=False)
@@ -1302,19 +1300,6 @@ class RCRUnitTests:
         else:
             return error_info.type is ValueError and error_info.value.args[0] == 'Returns must only contain floats.'
 
-    def test_dcc_loglike_covariance_shape(self, test_all=False):
-
-        covariance_test = np.random.normal(0., 1., (5, 6))
-        covariance_test[0, 0] = np.nan
-
-        with pytest.raises(ValueError) as error_info:
-            self.dcc_loglike(params=(0.2, 0.8),
-                             returns_matrix=np.random.normal(0., 1., (5, 100)),
-                             modelled_variance=covariance_test)
-        if not test_all:
-            print(error_info.type is ValueError and error_info.value.args[0] == 'Covariance must be square matrix.')
-        else:
-            return error_info.type is ValueError and error_info.value.args[0] == 'Covariance must be square matrix.'
 
     def test_dcc_loglike_covariance_nans(self, test_all=False):
 
@@ -1370,14 +1355,14 @@ class RCRUnitTests:
             start_bool = \
                 start_bool and (error_info.type is ValueError and
                                 error_info.value.args[0] ==
-                                '\'start\' must be negative integer of correct magnitude.')
+                                '\'start\' must be non-positive integer of correct magnitude.')
 
         if (not test_all) and start_bool:
             print(error_info.type is ValueError and error_info.value.args[
-                0] == '\'start\' must be negative integer of correct magnitude.')
+                0] == '\'start\' must be non-positive integer of correct magnitude.')
         elif start_bool:
             return error_info.type is ValueError and error_info.value.args[
-                0] == '\'start\' must be negative integer of correct magnitude.'
+                0] == '\'start\' must be non-positive integer of correct magnitude.'
 
 
     def test_X11_henderson_kernel_end_value(self, test_all=False):
@@ -1389,29 +1374,14 @@ class RCRUnitTests:
             end_bool = \
                 end_bool and (error_info.type is ValueError and
                               error_info.value.args[0] ==
-                              '\'end\' must be positive integer of correct magnitude.')
+                              '\'end\' must be non-negative integer of correct magnitude.')
 
         if (not test_all) and end_bool:
             print(error_info.type is ValueError and error_info.value.args[
-                0] == '\'end\' must be positive integer of correct magnitude.')
+                0] == '\'end\' must be non-negative integer of correct magnitude.')
         elif end_bool:
             return error_info.type is ValueError and error_info.value.args[
-                0] == '\'end\' must be positive integer of correct magnitude.'
-
-
-    def test_X11_henderson_kernel_start_end_value(self, test_all=False):
-
-        start = -6
-        end = 4
-        with pytest.raises(ValueError) as error_info:
-            henderson_kernel(order=13, start=start, end=end)
-
-        if not test_all:
-            print(error_info.type is ValueError and error_info.value.args[
-                0] == '\'start\' and \'end\' must be equal and opposite.')
-        else:
-            return error_info.type is ValueError and error_info.value.args[
-                0] == '\'start\' and \'end\' must be equal and opposite.'
+                0] == '\'end\' must be non-negative integer of correct magnitude.'
 
 
     def test_X11_henderson_weights_order_value(self, test_all=False):
@@ -1439,14 +1409,14 @@ class RCRUnitTests:
             start_bool = \
                 start_bool and (error_info.type is ValueError and
                                 error_info.value.args[0] ==
-                                '\'start\' must be negative integer of correct magnitude.')
+                                '\'start\' must be non-positive integer of correct magnitude.')
 
         if (not test_all) and start_bool:
             print(error_info.type is ValueError and error_info.value.args[
-                0] == '\'start\' must be negative integer of correct magnitude.')
+                0] == '\'start\' must be non-positive integer of correct magnitude.')
         elif start_bool:
             return error_info.type is ValueError and error_info.value.args[
-                0] == '\'start\' must be negative integer of correct magnitude.'
+                0] == '\'start\' must be non-positive integer of correct magnitude.'
 
 
     def test_X11_henderson_weights_end_value(self, test_all=False):
@@ -1458,14 +1428,14 @@ class RCRUnitTests:
             end_bool = \
                 end_bool and (error_info.type is ValueError and
                               error_info.value.args[0] ==
-                              '\'end\' must be positive integer of correct magnitude.')
+                              '\'end\' must be non-negative integer of correct magnitude.')
 
         if (not test_all) and end_bool:
             print(error_info.type is ValueError and error_info.value.args[
-                0] == '\'end\' must be positive integer of correct magnitude.')
+                0] == '\'end\' must be non-negative integer of correct magnitude.')
         elif end_bool:
             return error_info.type is ValueError and error_info.value.args[
-                0] == '\'end\' must be positive integer of correct magnitude.'
+                0] == '\'end\' must be non-negative integer of correct magnitude.'
 
 
     def test_X11_henderson_weights_start_end_value(self, test_all=False):
@@ -1991,14 +1961,14 @@ class RCRUnitTests:
                 gaussian(f=np.arange(100.0), A=A, mu=1.0, sigma=1.0)
             A_bool = \
                 A_bool and (error_info.type is ValueError and error_info.value.args[0] ==
-                            '\'A\' must be a positive float.')
+                            '\'A\' must be a non-negative float.')
 
         if (not test_all) and A_bool:
             print(error_info.type is ValueError and error_info.value.args[0] ==
-                  '\'A\' must be a positive float.')
+                  '\'A\' must be a non-negative float.')
         elif A_bool:
             return error_info.type is ValueError and error_info.value.args[0] == \
-                '\'A\' must be a positive float.'
+                '\'A\' must be a non-negative float.'
 
 
     def test_SSD_gaussian_mu_value(self, test_all=False):

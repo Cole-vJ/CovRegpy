@@ -53,12 +53,10 @@ def henderson_kernel(order=13, start=None, end=None):
 
     if (not isinstance(order, int)) or (not order > 0) or (not order % 2 == 1):
         raise ValueError('\'order\' must be a positive odd integer.')
-    if (not isinstance(start, int)) or (start >= 0) or (start < -int((order - 1) / 2)):
-        raise ValueError('\'start\' must be negative integer of correct magnitude.')
-    if (not isinstance(end, int)) or (end <= 0) or (end >= int((order - 1) / 2)):
-        raise ValueError('\'end\' must be positive integer of correct magnitude.')
-    if start != -end:
-        raise ValueError('\'start\' and \'end\' must be equal and opposite.')
+    if (not isinstance(start, int)) or (start > 0) or (start < -int((order - 1) / 2)):
+        raise ValueError('\'start\' must be non-positive integer of correct magnitude.')
+    if (not isinstance(end, int)) or (end < 0) or (end > int((order - 1) / 2)):
+        raise ValueError('\'end\' must be non-negative integer of correct magnitude.')
 
     t = np.asarray(range(start, end + 1)) / (int((order - 1) / 2) + 1)
     y = (15 / 79376) * (5184 - 12289 * t ** 2 + 9506 * t ** 4 - 2401 * t ** 6) * ((2175 / 1274) - (1372 / 265) * t ** 2)
@@ -100,10 +98,10 @@ def henderson_weights(order=13, start=None, end=None):
 
     if (not isinstance(order, int)) or (not order > 0) or (not order % 2 == 1):
         raise ValueError('\'order\' must be a positive odd integer.')
-    if (not isinstance(start, int)) or (start >= 0) or (start < -int((order - 1) / 2)):
-        raise ValueError('\'start\' must be negative integer of correct magnitude.')
-    if (not isinstance(end, int)) or (end <= 0) or (end >= int((order - 1) / 2)):
-        raise ValueError('\'end\' must be positive integer of correct magnitude.')
+    if (not isinstance(start, int)) or (start > 0) or (start < -int((order - 1) / 2)):
+        raise ValueError('\'start\' must be non-positive integer of correct magnitude.')
+    if (not isinstance(end, int)) or (end < 0) or (end > int((order - 1) / 2)):
+        raise ValueError('\'end\' must be non-negative integer of correct magnitude.')
     if start != -end:
         raise ValueError('\'start\' and \'end\' must be equal and opposite.')
 

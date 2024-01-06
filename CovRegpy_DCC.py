@@ -206,8 +206,6 @@ def dcc_loglike(params, returns_matrix, modelled_variance):
         raise ValueError('Returns must not contain nans.')
     if np.array(returns_matrix).dtype != np.array([[1., 1.], [1., 1.]]).dtype:
         raise ValueError('Returns must only contain floats.')
-    if np.shape(modelled_variance)[0] != np.shape(modelled_variance)[1]:
-        raise ValueError('Covariance must be square matrix.')
     if pd.isnull(np.asarray(modelled_variance)).any():
         raise ValueError('Covariance must not contain nans.')
     if np.array(modelled_variance).dtype != np.array([[1., 1.], [1., 1.]]).dtype:

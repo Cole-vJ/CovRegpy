@@ -1,5 +1,5 @@
 # Python CovRegpy Package
-Regularised Covariance regression software project based on Hoff and Niu (2012). This package was developed out of research performed by Cole van Jaarsveldt, Gareth W. Peters, Matthew Ames, and Mike Chantler. This package was built entirely using Python 3.7.0 - Python guarantees backwards compatibility which should ensure that this software package functions as expected on all future Python versions.
+Regularised Covariance regression software project based on Hoff and Niu (2012). This package was developed out of research performed by Cole van Jaarsveldt, Gareth W. Peters, Matthew Ames, and Mike Chantler. This package was built entirely using Python 3.11.5 - Python guarantees backwards compatibility which should ensure that this software package functions as expected on all future Python versions.
 
 
 
@@ -11,10 +11,10 @@ Our team acknowledges the financial contributions and support of our  benefactor
 
 ## Linux Installation
 
-Create new environment (if needed) with specific version of Python. Python is backwards compatible such that packages working on Python version 3.7 will work on Python version 3.8 et cetera, but the reverse is not true. Python version 3.7 is recommended for the best user experience.
+Create new environment (if needed) with specific version of Python. Python is backwards compatible such that packages working on Python version 3.11 will work on Python version 3.12 et cetera, but the reverse is not true. Python version 3.11 is recommended for the best user experience. A Docker version of the code will be made available in the subsequent major release.
 
 ```bash
-conda create -n environment_name python=3.7
+conda create -n environment_name python=3.11.5
 ```
 
 Proceed.
@@ -48,7 +48,7 @@ pip install CovRegpy
 Create new environment (if needed) with specific version of Python.
 
 ```bash
-virtualenv --python="/usr/bin/python3.7" environment_name
+virtualenv --python="/usr/bin/python3.11.5" environment_name
 ```
 
 Activate new environment. Navigate to environment location or adjust input accordingly.
@@ -71,7 +71,7 @@ https://stackoverflow.com/questions/54135206/requests-caused-by-sslerrorcant-con
 
 ### Solution
 
-#### Windows 10 | Miniconda 3 | Python 3.7
+#### Windows 10 | Miniconda 3 | Python 3.11.5
 
 Copy the following files:
 

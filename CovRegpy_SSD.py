@@ -57,12 +57,20 @@ def gaussian(f, A, mu, sigma):
         raise TypeError('\'f\' must be of type np.ndarray.')
     if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
         raise TypeError('\'f\' must only contain floats.')
-    if (not isinstance(A, float)) or A <= 0:
-        raise ValueError('\'A\' must be a positive float.')
-    if (not isinstance(mu, float)) or mu <= 0:
-        raise ValueError('\'mu\' must be a positive float.')
-    if (not isinstance(sigma, float)) or sigma <= 0:
-        raise ValueError('\'sigma\' must be a positive float.')
+    try:
+        if (not isinstance(A[0], float)) or A[0] < 0:
+            raise ValueError('\'A\' must be a non-negative float.')
+        if (not isinstance(mu[0], float)) or mu[0] <= 0:
+            raise ValueError('\'mu\' must be a positive float.')
+        if (not isinstance(sigma[0], float)) or sigma[0] <= 0:
+            raise ValueError('\'sigma\' must be a positive float.')
+    except (IndexError, TypeError):
+        if (not isinstance(A, float)) or A < 0:
+            raise ValueError('\'A\' must be a non-negative float.')
+        if (not isinstance(mu, float)) or mu <= 0:
+            raise ValueError('\'mu\' must be a positive float.')
+        if (not isinstance(sigma, float)) or sigma <= 0:
+            raise ValueError('\'sigma\' must be a positive float.')
 
     distribution = A * np.exp(- (f - mu) ** 2 / (2 * sigma ** 2))
 
@@ -144,12 +152,20 @@ def spectral_obj_func_l1(theta, f, mu_1, mu_2, mu_3, spectrum):
         raise TypeError('\'f\' must be of type np.ndarray.')
     if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
         raise TypeError('\'f\' must only contain floats.')
-    if (not isinstance(mu_1, float)) or mu_1 <= 0:
-        raise ValueError('\'mu_1\' must be a positive float.')
-    if (not isinstance(mu_2, float)) or mu_2 <= 0:
-        raise ValueError('\'mu_2\' must be a positive float.')
-    if (not isinstance(mu_3, float)) or mu_3 <= 0:
-        raise ValueError('\'mu_3\' must be a positive float.')
+    try:
+        if (not isinstance(mu_1[0], float)) or mu_1[0] <= 0:
+            raise ValueError('\'mu_1\' must be a positive float.')
+        if (not isinstance(mu_2[0], float)) or mu_2[0] <= 0:
+            raise ValueError('\'mu_2\' must be a positive float.')
+        if (not isinstance(mu_3[0], float)) or mu_3[0] <= 0:
+            raise ValueError('\'mu_3\' must be a positive float.')
+    except (IndexError, TypeError):
+        if (not isinstance(mu_1, float)) or mu_1 <= 0:
+            raise ValueError('\'mu_1\' must be a positive float.')
+        if (not isinstance(mu_2, float)) or mu_2 <= 0:
+            raise ValueError('\'mu_2\' must be a positive float.')
+        if (not isinstance(mu_3, float)) or mu_3 <= 0:
+            raise ValueError('\'mu_3\' must be a positive float.')
     if not isinstance(spectrum, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
         raise TypeError('\'spectrum\' must be of type np.ndarray.')
     if np.array(spectrum).dtype != np.array([[1., 1., 1., 1.]]).dtype:
@@ -209,12 +225,20 @@ def spectral_obj_func_l2(theta, f, mu_1, mu_2, mu_3, spectrum):
         raise TypeError('\'f\' must be of type np.ndarray.')
     if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
         raise TypeError('\'f\' must only contain floats.')
-    if (not isinstance(mu_1, float)) or mu_1 <= 0:
-        raise ValueError('\'mu_1\' must be a positive float.')
-    if (not isinstance(mu_2, float)) or mu_2 <= 0:
-        raise ValueError('\'mu_2\' must be a positive float.')
-    if (not isinstance(mu_3, float)) or mu_3 <= 0:
-        raise ValueError('\'mu_3\' must be a positive float.')
+    try:
+        if (not isinstance(mu_1[0], float)) or mu_1[0] <= 0:
+            raise ValueError('\'mu_1\' must be a positive float.')
+        if (not isinstance(mu_2[0], float)) or mu_2[0] <= 0:
+            raise ValueError('\'mu_2\' must be a positive float.')
+        if (not isinstance(mu_3[0], float)) or mu_3[0] <= 0:
+            raise ValueError('\'mu_3\' must be a positive float.')
+    except (IndexError, TypeError):
+        if (not isinstance(mu_1, float)) or mu_1 <= 0:
+            raise ValueError('\'mu_1\' must be a positive float.')
+        if (not isinstance(mu_2, float)) or mu_2 <= 0:
+            raise ValueError('\'mu_2\' must be a positive float.')
+        if (not isinstance(mu_3, float)) or mu_3 <= 0:
+            raise ValueError('\'mu_3\' must be a positive float.')
     if not isinstance(spectrum, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
         raise TypeError('\'spectrum\' must be of type np.ndarray.')
     if np.array(spectrum).dtype != np.array([[1., 1., 1., 1.]]).dtype:
@@ -298,12 +322,20 @@ def gaus_param(w0, f, mu_1, mu_2, mu_3, spectrum, method='l1'):
         raise TypeError('\'f\' must be of type np.ndarray.')
     if np.array(f).dtype != np.array([[1., 1., 1., 1.]]).dtype:
         raise TypeError('\'f\' must only contain floats.')
-    if (not isinstance(mu_1, float)) or mu_1 <= 0:
-        raise ValueError('\'mu_1\' must be a positive float.')
-    if (not isinstance(mu_2, float)) or mu_2 <= 0:
-        raise ValueError('\'mu_2\' must be a positive float.')
-    if (not isinstance(mu_3, float)) or mu_3 <= 0:
-        raise ValueError('\'mu_3\' must be a positive float.')
+    try:
+        if (not isinstance(mu_1[0], float)) or mu_1[0] <= 0:
+            raise ValueError('\'mu_1\' must be a positive float.')
+        if (not isinstance(mu_2[0], float)) or mu_2[0] <= 0:
+            raise ValueError('\'mu_2\' must be a positive float.')
+        if (not isinstance(mu_3[0], float)) or mu_3[0] <= 0:
+            raise ValueError('\'mu_3\' must be a positive float.')
+    except (IndexError, TypeError):
+        if (not isinstance(mu_1, float)) or mu_1 <= 0:
+            raise ValueError('\'mu_1\' must be a positive float.')
+        if (not isinstance(mu_2, float)) or mu_2 <= 0:
+            raise ValueError('\'mu_2\' must be a positive float.')
+        if (not isinstance(mu_3, float)) or mu_3 <= 0:
+            raise ValueError('\'mu_3\' must be a positive float.')
     if not isinstance(spectrum, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
         raise TypeError('\'spectrum\' must be of type np.ndarray.')
     if np.array(spectrum).dtype != np.array([[1., 1., 1., 1.]]).dtype:
@@ -349,8 +381,12 @@ def scaling_factor_obj_func(a, residual_time_series, trend_estimate):
 
     """
 
-    if (not isinstance(a, float)) or a <= 0:
-        raise ValueError('\'a\' must be a positive float.')
+    try:
+        if (not isinstance(a[0], float)) or a[0] <= 0:
+            raise ValueError('\'a\' must be a positive float.')
+    except (IndexError, TypeError):
+        if (not isinstance(a, float)) or a <= 0:
+            raise ValueError('\'a\' must be a positive float.')
     if not isinstance(residual_time_series, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
         raise TypeError('\'residual_time_series\' must be of type np.ndarray.')
     if np.array(residual_time_series).dtype != np.array([[1., 1., 1., 1.]]).dtype:
@@ -522,11 +558,11 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3.0, nmse_threshold=0.01, plot
 
 
         mu_3 = (mu_1 + mu_2) / 2
-        A_3 = (1 / 4) * s[np.abs(f * dt - mu_3) == min(np.abs(f * dt - mu_3))][0]
+        A_3 = np.asarray([(1 / 4) * s[np.abs(f * dt - mu_3) == min(np.abs(f * dt - mu_3))][0]])
         sigma_3 = 4 * np.abs(mu_1 - mu_2)
         gaus_3 = gaussian(f * dt, A_3, mu_3, sigma_3)
 
-        x0 = np.zeros(6.0)
+        x0 = np.zeros(6)
         x0[0] = A_1
         x0[1] = A_2
         x0[2] = A_3
@@ -559,15 +595,15 @@ def CovRegpy_ssd(time_series, initial_trend_ratio=3.0, nmse_threshold=0.01, plot
             plt.show()
             plt.title('Gaussian Function Optimised')
             plt.plot(f * dt, s, label='Power-spectral density')
-            plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]),
+            plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1[0], thetas[3]),
                      '--', label=r'$g^{opt}_1(f) = A_1^{opt}e^{\frac{(f-\mu_1)^2}{\sigma^{opt2}_1}}$', linewidth=2)
-            plt.plot(f * dt, gaussian(f * dt, thetas[1], mu_2, thetas[4]),
+            plt.plot(f * dt, gaussian(f * dt, thetas[1], mu_2[0], thetas[4]),
                      '--', label=r'$g^{opt}_2(f) = A_2^{opt}e^{\frac{(f-\mu_2)^2}{\sigma^{opt2}_2}}$', linewidth=2)
-            plt.plot(f * dt, gaussian(f * dt, thetas[2], mu_3, thetas[5]),
+            plt.plot(f * dt, gaussian(f * dt, thetas[2], mu_3[0], thetas[5]),
                      '--', label=r'$g^{opt}_3(f) = A_3^{opt}e^{\frac{(f-\mu_3)^2}{\sigma^{opt2}_3}}$', linewidth=2)
-            plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1, thetas[3]) +
-                     gaussian(f * dt, thetas[1], mu_2, thetas[4]) +
-                     gaussian(f * dt, thetas[2], mu_3, thetas[5]), '--',
+            plt.plot(f * dt, gaussian(f * dt, thetas[0], mu_1[0], thetas[3]) +
+                     gaussian(f * dt, thetas[1], mu_2[0], thetas[4]) +
+                     gaussian(f * dt, thetas[2], mu_3[0], thetas[5]), '--',
                      label=r'$\sum_{i=1}^{3}g^{opt}_i(f)$', linewidth=2)
             plt.plot(f_range[0] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--')
             plt.plot(f_range[1] * np.ones(101), np.linspace(0, 1.1 * 2 * A_1, 101), 'k--', label='Frequency bounds')

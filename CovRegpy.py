@@ -11,7 +11,6 @@
 
 import numpy as np
 import group_lasso
-import pandas as pd
 from sklearn import linear_model
 
 np.random.seed(0)
@@ -163,11 +162,18 @@ def calc_B_Psi(m: np.ndarray, v: np.ndarray, x: np.ndarray, y: np.ndarray, basis
         raise ValueError('\'group_reg\' must be a non-negative float.')
     if (not isinstance(max_iter, int)) or max_iter < 1:
         raise ValueError('\'max_iter\' must be a positive integer.')
-
-    if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
-        raise TypeError('groups must be of type np.ndarray.')
-    if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
-        raise TypeError('groups must only contain integers.')
+    try:
+        if (groups is not None) and groups:
+            if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+                raise TypeError('groups must be of type np.ndarray.')
+            if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
+                raise TypeError('groups must only contain integers.')
+    except ValueError:
+        if any(groups):
+            if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+                raise TypeError('groups must be of type np.ndarray.')
+            if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
+                raise TypeError('groups must only contain integers.')
 
     x_tilda = np.vstack([m * x.T, (v ** (1 / 2)) * x.T])
     y_tilda = np.vstack(((y.T - np.matmul(A_est.T, basis).T), np.zeros_like(y.T)))
@@ -425,11 +431,18 @@ def cov_reg_given_mean(A_est: np.ndarray, basis: np.ndarray, x: np.ndarray, y: n
         raise ValueError('\'alpha\' must be a non-negative float.')
     if (not isinstance(l1_ratio_or_reg, float)) or l1_ratio_or_reg < 0:
         raise ValueError('\'l1_ratio_or_reg\' must be a non-negative float.')
-
-    if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
-        raise TypeError('groups must be of type np.ndarray.')
-    if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
-        raise TypeError('groups must only contain integers.')
+    try:
+        if (groups is not None) and groups:
+            if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+                raise TypeError('groups must be of type np.ndarray.')
+            if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
+                raise TypeError('groups must only contain integers.')
+    except ValueError:
+        if any(groups):
+            if not isinstance(groups, (type(np.asarray([[1.0, 2.0], [3.0, 4.0]])))):
+                raise TypeError('groups must be of type np.ndarray.')
+            if np.array(groups).dtype != np.array([[1, 1, 1, 1]]).dtype:
+                raise TypeError('groups must only contain integers.')
 
     if groups is None:
         groups = {}

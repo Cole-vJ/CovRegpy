@@ -42,7 +42,7 @@ variance = np.zeros((3, 3))
 variance[0, 0] = 1  # 1
 variance[1, 1] = 1  # 1
 variance[2, 2] = 4  # 1/2
-variance[0, 1] = variance[1, 0] = 1  # -2? 2?
+variance[0, 1] = variance[1, 0] = 0.5  # -2? 2?
 variance[0, 2] = variance[2, 0] = 0
 variance[2, 1] = variance[1, 2] = 0
 weights = equal_risk_parity_weights_long_restriction(variance).x

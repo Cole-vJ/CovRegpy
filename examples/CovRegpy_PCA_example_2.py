@@ -86,12 +86,13 @@ plt.show()
 for annual_interval in np.arange(12):
 
     # calculate realised covariance of logarithmic returns
-    realised_covariance = np.cov(returns[month_ends[int(annual_interval)]:month_ends[int(annual_interval + 1)], :].T)
+    realised_covariance = np.cov(sector_11_indices_array[end_of_month_vector_cumsum[int(annual_interval)]:
+                                                         end_of_month_vector_cumsum[int(annual_interval + 1)], :].T)
     # calculate weight per stock per component
     pca_weights = pca_func(cov=realised_covariance, n_components=2)
     if annual_interval == 11:
         print('Weights for {} 2020 based on PCA of {} 2019 using two '
-              'components: '.format(month_vector[int(annual_interval + 1)],
+              'components: '.format(month_vector[0],
                                     month_vector[int(annual_interval)]))
     else:
         print('Weights for {} 2019 based on PCA of {} 2019 using two '

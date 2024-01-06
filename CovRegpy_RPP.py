@@ -136,10 +136,10 @@ def equal_risk_parity_weights_long_restriction(cov):
     if not np.all(np.linalg.eigvals(cov) > 0):
         raise ValueError('\'cov\' must be PSD.')
 
-    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    w0 = np.ones(np.shape(cov)[0]) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_only_weight})
-    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    return minimize(risk_parity_obj_fun, w0, args=(cov, (1 / np.shape(cov)[0]) * np.ones_like(w0)),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
@@ -232,10 +232,10 @@ def equal_risk_parity_weights_short_restriction(cov, short_limit=1.0):
     if (not isinstance(short_limit, float)) or short_limit <= 0:
         raise ValueError('\'short_limit\' must be a positive float.')
 
-    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    w0 = np.ones(np.shape(cov)[0]) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
-    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    return minimize(risk_parity_obj_fun, w0, args=(cov, (1 / np.shape(cov)[0]) * np.ones_like(w0)),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
@@ -332,11 +332,11 @@ def equal_risk_parity_weights_summation_restriction(cov, short_limit=0.3, long_l
     if (not isinstance(long_limit, float)) or long_limit <= 0:
         raise ValueError('\'long_limit\' must be a positive float.')
 
-    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    w0 = np.ones(np.shape(cov)[0]) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [short_limit]},
             {'type': 'ineq', 'fun': cons_short_limit_sum_weight, 'args': [long_limit]})
-    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    return minimize(risk_parity_obj_fun, w0, args=(cov, (1 / np.shape(cov)[0]) * np.ones_like(w0)),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})
 
 
@@ -451,7 +451,7 @@ def global_weights_long(cov):
     if not np.all(np.linalg.eigvals(cov) > 0):
         raise ValueError('\'cov\' must be PSD.')
 
-    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    w0 = np.ones(np.shape(cov)[0]) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_only_weight})
     return minimize(global_obj_fun, w0, args=(cov),
@@ -498,7 +498,7 @@ def global_weights_short_and_long_restrict(cov, a, b):
     if (not isinstance(a, float)) or a <= 0:
         raise ValueError('\'a\' must be a positive float.')
 
-    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    w0 = np.ones(np.shape(cov)[0]) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_limit_weight, 'args': [a]},
             {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [b]})
@@ -544,9 +544,9 @@ def equal_risk_parity_weights_individual_restriction(cov, short_limit=1.0, long_
     if (not isinstance(long_limit, float)) or long_limit <= 0:
         raise ValueError('\'long_limit\' must be a positive float.')
 
-    w0 = np.ones((np.shape(cov)[0], 1)) / np.shape(cov)[0]
+    w0 = np.ones(np.shape(cov)[0]) / np.shape(cov)[0]
     cons = ({'type': 'eq', 'fun': cons_sum_weight},
             {'type': 'ineq', 'fun': cons_long_limit_weight, 'args': [long_limit]},
             {'type': 'ineq', 'fun': cons_short_limit_weight, 'args': [short_limit]})
-    return minimize(risk_parity_obj_fun, w0, args=(cov, 1 / np.shape(cov)[0]),
+    return minimize(risk_parity_obj_fun, w0, args=(cov, (1 / np.shape(cov)[0]) * np.ones_like(w0)),
                     method='SLSQP', constraints=cons, options={'ftol': 1e-9})

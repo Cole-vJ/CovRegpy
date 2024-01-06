@@ -244,7 +244,7 @@ for lag in range(forecast_days):
         B_est, Psi_est = cov_reg_given_mean(A_est=np.zeros_like(coef), basis=spline_basis_transform,
                                             x=x[:, :-1], y=returns_subset.T,
                                             iterations=10, technique='lasso', max_iter=500,
-                                            groups=groups, LARS=False, true_coefficients=B, test_lasso=True, alpha=1e-8)
+                                            groups=groups, alpha=1e-8)
 
         x_mesh = np.arange(5)
         y = np.arange(5)

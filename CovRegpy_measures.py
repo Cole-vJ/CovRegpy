@@ -6,9 +6,6 @@
 #        \/
 
 import numpy as np
-import pandas as pd
-import yfinance as yf
-import matplotlib.pyplot as plt
 
 
 def portfolio_return(weights, all_returns):

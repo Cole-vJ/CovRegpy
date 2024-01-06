@@ -79,7 +79,7 @@ plt.plot(np.linspace(0, 12, 100), 0.80 * np.ones(100), 'k--')
 plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0], ['0%', '20%', '40%', '60%', '80%', '100%'])
 plt.xticks([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
            ['31-12-2018', '31-01-2019', '28-02-2019', '31-03-2019', '30-04-2019', '31-05-2019', '30-06-2019',
-            '31-07-2019', '31-08-2019', '30-09-2019', '31-10-2019', '30-11-2019', '31-12-2019'], rotation='30')
+            '31-07-2019', '31-08-2019', '30-09-2019', '31-10-2019', '30-11-2019', '31-12-2019'], rotation=30)
 plt.title(textwrap.fill('Percentage of Cumulative Variation Explained by the First Two Principal Components over the Previous Monthly Window', 60),
           fontsize=16)
 plt.ylabel('Percentage', fontsize=14)

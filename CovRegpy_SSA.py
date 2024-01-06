@@ -21,7 +21,7 @@ sns.set(style='darkgrid')
 
 
 def CovRegpy_ssa(time_series, L, est=3, plot=False, KS_test=False, plot_KS_test=False, KS_scale_limit=1.0,
-                 max_eig_ratio=0.0001, KS_start=10, KS_end=100, KS_interval=10):
+                 max_eig_ratio=0.0001, KS_start=1, KS_end=3, KS_interval=1):
     """
     Singular Spectrum Analysis (SSA) as in Hassani (2007).
 

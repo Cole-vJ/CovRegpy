@@ -66,7 +66,7 @@ plt.xticks([0, 20, 40, 60, 80, 100, 120], fontsize=8)
 plt.yticks([400, 600, 800, 1000, 1200, 1400, 1600], fontsize=8)
 plt.show()
 
-ssd_decomp = CovRegpy_ssd(x11_time_series, initial_trend_ratio=10, plot=True)
+ssd_decomp = CovRegpy_ssd(x11_time_series, initial_trend_ratio=10.0, plot=True)
 
 fig, axs = plt.subplots(3, 1)
 plt.subplots_adjust(hspace=0.3)
