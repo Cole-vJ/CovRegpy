@@ -1,11 +1,11 @@
 # Python CovRegpy Package
-Regularised Covariance regression software project based on Hoff and Niu (2012). This package was developed out of research performed by Cole van Jaarsveldt, Gareth W. Peters, Matthew Ames, and Mike Chantler. This package was built entirely using Python 3.11.5 - Python guarantees backwards compatibility which should ensure that this software package functions as expected on all future Python versions.
+Regularised Covariance regression software project based on Hoff and Niu (2012). This package was developed out of research performed by Cole van Jaarsveldt, Prof. Gareth W. Peters, Dr Matthew Ames, and Prof. Mike Chantler. This package was built entirely using Python 3.11.5 - Python guarantees backwards compatibility which should ensure that this software package functions as expected on all future Python versions.
 
 
 
 # Disclaimer
 
-Our team acknowledges the financial contributions and support of our  benefactors in the production of this research. The authors, owners, and benefactors of this research reserve the right to request compensation  from commercial entities seeking to use our software. All non-commercial usage of this software package is allowed with the associated  permissions, limitations, and conditions as outlined in the GNU General  Public License v3.0. For any commercial usage of this software, the  authors, owners, and benefactors of this research respectfully request  that the commercial entity in question consult the authors, owners, and  benefactors.
+Our team acknowledges the financial contributions and support of our benefactors in the production of this research. The authors, owners, and benefactors of this research reserve the right to request compensation from commercial entities seeking to use our software. All non-commercial usage of this software package is allowed with the associated  permissions, limitations, and conditions as outlined in the Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). For any commercial usage of this software, the  authors, owners, and benefactors of this research respectfully request  that the commercial entity in question consult the authors, owners, and  benefactors.
 
 
 
@@ -118,25 +118,28 @@ pip install CovRegpy
 
 ## Package Folders Content
 
-- 'aas_figures' - __users can ignore__ - contains figures in associated paper and supplement
+- 'aas_examples' - contains scripts for case studies in associated paper and supplement
 
-- 'B and Psi Estimates' - __users can ignore__ - contains detailed figures and coefficients for our team's additional studies
+  - Funded_&_Unfunded_UK_Pensions_example.py
+  - Peter_Hoff_example_and_extended_example.py
 
-- #### __'Case Studies'__ - contains all case studies - explore for simple to complex usage examples
+- 'aas_figures' - contains figures in associated paper and supplement
 
-- 'experimental_figures' - __users can ignore__ - contains detailed figures exploring automated structure recognition study
+- #### 'examples' - contains all case studies - explore for simple to complex usage examples
 
-- 'figures' - __users can ignore__ - contains detailed figures and coefficient for our team's additional studies
+  - CovRegpy_PCA_example_2.py
+
+- 'FTSE_100_Data' - contains FTSE100 data used in Funded_&_Unfunded_UK_Pensions_example.py within 'aas_examples'
 
 - #### __'Jupyter_Notebooks'__ - contains all Jupyter Notebooks - includes link above for new users and others
 
-- 'README_Images' - __users can ignore__ - contains images for this README file as seen below
+- 'Peter_Hoff_Data' - contains original data set from Hoff and Niu (2012) (see full citation below) used in Peter_Hoff_example_and_extended_example.py within 'aas_examples'
 
-- 'S&P500_Data' - __users can ignore__ - contains S&P500 Data for additional studies
+- 'README_Images' - contains images for this README file as seen below
 
-- 'weights' - __users can ignore__ - contains all 250 weights resulting from Monte Carlo study of portfolios
+- 'S&P500_Data' - contains S&P500 data used in CovRegpy_PCA_example_2.py within 'examples'
 
-
+  
 
 ## Replicate Output from Hoff and Niu (2012)
 
