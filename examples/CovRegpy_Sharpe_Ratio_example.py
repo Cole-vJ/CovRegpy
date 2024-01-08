@@ -17,7 +17,7 @@ sns.set(style='darkgrid')
 # from CovRegpy.CovRegpy_sharpe import sharpe_weights, sharpe_obj_fun
 
 # uncomment if using function directly from within this downloaded GitHub package
-from CovRegpy_sharpe import sharpe_weights, sharpe_obj_fun
+from CovRegpy_add_scripts.CovRegpy_sharpe import sharpe_weights, sharpe_obj_fun
 
 # pull all close data
 tickers_format = ['MSFT', 'AAPL']

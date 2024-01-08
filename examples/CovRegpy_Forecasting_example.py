@@ -14,12 +14,12 @@ import matplotlib.pyplot as plt
 from sklearn.gaussian_process.kernels import ExpSineSquared, RBF, RationalQuadratic, WhiteKernel
 
 # uncomment if using installed CovRegpy package in custom environment
-# from CovRegpy.CovRegpy_forecasting import CovRegpy_neural_network, gp_forecast
-# from CovRegpy.CovRegpy_IFF import CovRegpy_IMF_IFF
+# from CovRegpy_add_scripts.CovRegpy.CovRegpy_forecasting import CovRegpy_neural_network, gp_forecast
+# from CovRegpy_add_scripts.CovRegpy.CovRegpy_IFF import CovRegpy_IMF_IFF
 
 # uncomment if using function directly from within this downloaded GitHub package
-from CovRegpy_forecasting import CovRegpy_neural_network, gp_forecast
-from CovRegpy_IFF import CovRegpy_IMF_IFF
+from CovRegpy_add_scripts.CovRegpy_forecasting import CovRegpy_neural_network, gp_forecast
+from CovRegpy_add_scripts.CovRegpy_IFF import CovRegpy_IMF_IFF
 
 from AdvEMDpy import emd_basis
 

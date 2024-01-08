@@ -6,11 +6,11 @@ import seaborn as sns
 import yfinance as yf
 from scipy.stats import norm
 import matplotlib.pyplot as plt
-from CovRegpy_PCA import pca_func
+from CovRegpy_add_scripts.CovRegpy_PCA import pca_func
 from AdvEMDpy import AdvEMDpy, emd_basis
-from CovRegpy_sharpe import sharpe_weights
+from CovRegpy_add_scripts.CovRegpy_sharpe import sharpe_weights
 from CovRegpy import cov_reg_given_mean
-from CovRegpy_utilities_efficient_frontier import global_obj_fun, global_weights
+from CovRegpy_add_scripts.CovRegpy_utilities_efficient_frontier import global_obj_fun, global_weights
 from CovRegpy_RPP import equal_risk_parity_weights_summation_restriction
 
 sns.set(style='darkgrid')

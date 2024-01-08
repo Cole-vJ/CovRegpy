@@ -5,11 +5,13 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 
 # uncomment if using installed CovRegpy package in custom environment
-# from CovRegpy.CovRegpy_SSD import CovRegpy_ssd
+# from CovRegpy_add_scripts.CovRegpy.CovRegpy_SSD import CovRegpy_ssd
 
 # uncomment if using function directly from within this downloaded GitHub package
-from CovRegpy_utilities_efficient_frontier import (global_minimum_information, sharpe_information, efficient_frontier,
-                                                   pca_information)
+from CovRegpy_add_scripts.CovRegpy_utilities_efficient_frontier import (global_minimum_information,
+                                                                        sharpe_information,
+                                                                        efficient_frontier,
+                                                                        pca_information)
 
 # pull all close data
 tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']

@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 # from CovRegpy.CovRegpy_measures import covregpy_dcc
 
 # uncomment if using function directly from within this downloaded GitHub package
-from CovRegpy_measures import (mean_return, variance_return, value_at_risk_return, c_value_at_risk_return,
-                               max_draw_down_return, omega_ratio_return, sortino_ratio_return, sharpe_ratio_return,
-                               cumulative_return)
+from CovRegpy_add_scripts.CovRegpy_measures import (mean_return, variance_return, value_at_risk_return,
+                                                    max_draw_down_return, omega_ratio_return, sortino_ratio_return,
+                                                    sharpe_ratio_return, cumulative_return)
 
 # pull all close data
 tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']

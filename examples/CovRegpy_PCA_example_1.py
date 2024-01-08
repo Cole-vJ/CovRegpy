@@ -18,10 +18,10 @@ from sklearn.decomposition import PCA
 sns.set(style='darkgrid')
 
 # uncomment if using installed CovRegpy package in custom environment
-# from CovRegpy.CovRegpy_PCA import pca_func
+# from CovRegpy_add_scripts.CovRegpy.CovRegpy_PCA import pca_func
 
 # uncomment if using function directly from within this downloaded GitHub package
-from CovRegpy_PCA import pca_func
+from CovRegpy_add_scripts.CovRegpy_PCA import pca_func
 
 # store required stock tickers
 tickers_format = ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'TSLA']

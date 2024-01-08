@@ -6,9 +6,10 @@
 #        \/
 
 import numpy as np
-from CovRegpy_PCA import pca_func
-from CovRegpy_sharpe import (sharpe_weights, sharpe_weights_individual_weight_restriction,
-                             sharpe_weights_summation_weight_restriction)
+from CovRegpy_add_scripts.CovRegpy_PCA import pca_func
+from CovRegpy_add_scripts.CovRegpy_sharpe import (sharpe_weights,
+                                                  sharpe_weights_individual_weight_restriction,
+                                                  sharpe_weights_summation_weight_restriction)
 from CovRegpy_RPP import global_obj_fun, global_weights, global_weights_long
 
 
